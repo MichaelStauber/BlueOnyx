@@ -1,0 +1,167 @@
+<!--
+    Apache request throttling / mod_qos settings
+-->
+
+<typedef name="modQosText" type="re" data="^[\x20-\x7E]*$"/>
+<typedef name="modQosMultiline" type="re" data="^[\x09\x0A\x0D\x20-\x7E]*$"/>
+
+<class name="System" namespace="modQos" version="1.0">
+    <property
+        name="enabled" type="boolean" default="0"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="profile" type="scalar" default="balanced"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="clientEntries" type="int" default="200000"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="srvMaxConnPerIP" type="int" default="20"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="srvMaxConnBusyThreshold" type="int" default="150"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="minDataRate" type="int" default="120"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="maxDataRate" type="int" default="1200"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="minDataRateBusyThreshold" type="int" default="100"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="dynamicEnabled" type="boolean" default="1"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="eventRequestLimit" type="int" default="6"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="eventLimitCount" type="int" default="80"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="eventLimitSeconds" type="int" default="60"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="blockEnabled" type="boolean" default="1"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="blockCount" type="int" default="30"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="blockSeconds" type="int" default="300"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="count400" type="boolean" default="0"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="weight400" type="int" default="1"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="count403" type="boolean" default="1"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="weight403" type="int" default="1"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="count404" type="boolean" default="1"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="weight404" type="int" default="1"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="count408" type="boolean" default="1"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="weight408" type="int" default="1"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="count500" type="boolean" default="1"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="weight500" type="int" default="5"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="countBrokenConnection" type="boolean" default="1"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="countMinDataRate" type="boolean" default="1"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="countMaxConnPerIP" type="boolean" default="1"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="extraDirectives" type="scalar" default="" optional="yes"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="force_update" type="uint" optional="yes"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="reload" type="uint" optional="yes"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="rulesInitialized" type="boolean" default="0"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+</class>
+
+<class
+    name="ModQosRule" namespace="" version="1.0"
+    createacl="ruleCapable(serverHttpd)" destroyacl="ruleCapable(serverHttpd)"
+>
+    <property
+        name="enabled" type="boolean" default="1"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="description" type="scalar" default=""
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="regex" type="scalar" default=""
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="weight" type="int" default="1"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="eventRequest" type="boolean" default="1"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+    <property
+        name="sortOrder" type="int" default="10"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+</class>

@@ -1,0 +1,93 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "shellMenu"
+msgstr "Acceso Servidor"
+
+msgid "shellMenuDescription"
+msgstr "Configura el acceso al servidor para GUI, acceso shell (SSH y Telnet) así como servicios relacionados con archivos como FTP, SFTP y SCP."
+
+msgid "shell"
+msgstr "[[base-shell.shellMenu]]"
+
+msgid "shellName"
+msgstr "Shell Access"
+
+msgid "enableShell"
+msgstr "Acceso a Active Shell"
+
+msgid "enableShell_help"
+msgstr "Habilitar el acceso al shell para permitir a los usuarios suficientemente privilegiados utilizar servicios como Telnet, SSH, SFTP o SCP."
+
+msgid "userEnableShell"
+msgstr "[[base-shell.enableShell]]"
+
+msgid "userEnableShell_help"
+msgstr "Habilite el acceso al shell para que el usuario pueda conectarse al servidor utilizando servicios como Telnet, SSH, SFTP o SCP."
+
+msgid "shellIsEnabled"
+msgstr "Shell Access"
+
+msgid "shellIsEnabled_help"
+msgstr "Acceso Shell está habilitado para este usuario."
+
+msgid "cantEnableNoVsiteShell"
+msgstr "Acceso Shell no puede ser habilitado este usuario, ya que el sitio virtual de la que son parte de no tener acceso a una consola habilitada."
+
+msgid "siteshell"
+msgstr "[[base-shell.shellMenu]]"
+
+msgid "siteshell_help"
+msgstr "Configura el acceso para GUI, acceso shell (SSH y Telnet) así como servicios relacionados con archivos como FTP, SFTP y SCP para este sitio."
+
+msgid "siteShellSettings"
+msgstr "Configuración de Shell para [[VAR.fqdn]]"
+
+msgid "cap_serverShell"
+msgstr "Configuración de Shell"
+
+# --- Jailkit:
+
+msgid "none"
+msgstr "Ninguno"
+
+msgid "jailed_sftp_scp_rsync"
+msgstr "Chroot SFTP, SCP y RSYNC"
+
+msgid "jailed_shell"
+msgstr "Chroot Shell, SFTP, SCP y RSYNC"
+
+msgid "full_shell"
+msgstr "Acceso completo a Shell"
+
+# --- Active Monitor:
+
+msgid "amJailkitNameTag"
+msgstr "Demonio de registro de Jailkit"
+
+msgid "amJailkitDetails"
+msgstr "Detalles ded demonio de registro de Jailkit"
+
+msgid "amNotRunning"
+msgstr "El demonio de registro de Jailkit no se está ejecutando y no se puede reiniciar. Por favor, intente reiniciar Jailkit manualmente y vea si eso ayuda. Compruebe también si hay mensajes de error u otras acusaciones que pueda obtener al reiniciar Jailkit manualmente."
+
+msgid "amStatusOK"
+msgstr "El Jailkit Logging Daemon funciona normalmente."
+
+#
+### Google Authenticator:
+#
+
+msgid "GoogleAuthentication"
+msgstr "[[base-ssh.GoogleAuthentication]]"
+
+msgid "GoogleAuthentication_help"
+msgstr "[[base-ssh.GoogleAuthentication_help]]"
+

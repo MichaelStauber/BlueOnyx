@@ -1,0 +1,6 @@
+<program name="/usr/sausalito/bin/get_opendkim.pl">
+	<capability requires="adminUser" user="root"/>
+</program>
+<program name="/usr/sausalito/bin/get_opendkim.pl">
+	<capability requires="siteAdmin"/>
+</program>

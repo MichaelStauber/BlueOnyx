@@ -1,0 +1,751 @@
+#!/usr/bin/bash
+
+NOMAILMAN=$(grep -E '5211R|5212R' /etc/build | wc -l)
+
+if [ -d /etc/postfix ]; then
+
+    logger "Auto-Configure of Postfix via /usr/sausalito/bin/blueonyx-postfix-confgen"
+
+    #
+    ### AdmServ SSL Start
+    #
+    if [ ! -f /etc/admserv/certs/nginx_cert_ca_combined ]; then
+
+        if [ ! -f /etc/admserv/certs/blank.txt ]; then
+            echo "" > /etc/admserv/certs/blank.txt
+        fi
+
+        if [ -f /etc/admserv/certs/key ] && [ -f /etc/admserv/certs/certificate ]; then
+            if [ -f /etc/admserv/certs/ca-certs ]; then
+                cat /etc/admserv/certs/certificate /etc/admserv/certs/blank.txt /etc/admserv/certs/ca-certs > /etc/admserv/certs/nginx_cert_ca_combined
+            else
+                cat /etc/admserv/certs/certificate > /etc/admserv/certs/nginx_cert_ca_combined
+            fi
+            logger "Created /etc/admserv/certs/nginx_cert_ca_combined via /usr/sausalito/bin/blueonyx-postfix-confgen"
+            chmod 640 /etc/admserv/certs/nginx_cert_ca_combined
+        fi
+    fi
+
+    # Check if nginx_cert_ca_combined is still missing:
+    if [ ! -f /etc/admserv/certs/nginx_cert_ca_combined ]; then
+        touch /etc/admserv/certs/nginx_cert_ca_combined
+        chmod 640 /etc/admserv/certs/nginx_cert_ca_combined
+        logger "Created empty /etc/admserv/certs/nginx_cert_ca_combined via /usr/sausalito/bin/blueonyx-postfix-confgen"
+    fi
+    ### AdmServ SSL End
+
+    #
+    # Create config directory for milter-configs:
+    #
+    if [ ! -d /etc/postfix/milters.d ]; then
+        mkdir -p /etc/postfix/milters.d
+        chown root:root /etc/postfix/milters.d
+        chmod 644 /etc/postfix/milters.d
+    fi
+
+    # Create /etc/postfix/suspended_users if it is missing:
+    if [ ! -f /etc/postfix/suspended_users ]; then
+        touch /etc/postfix/suspended_users
+        chown root:root /etc/postfix/suspended_users
+        chmod 644 /etc/postfix/suspended_users
+    fi
+
+    # Create /etc/postfix/canonical if it is missing:
+    if [ ! -f /etc/postfix/canonical ]; then
+        touch /etc/postfix/canonical
+        chown root:root /etc/postfix/canonical
+        chmod 644 /etc/postfix/canonical
+    fi
+
+    # Create /etc/postfix/suspended_vsites if it is missing:
+    if [ ! -f /etc/postfix/suspended_vsites ]; then
+        touch /etc/postfix/suspended_vsites
+        chown root:root /etc/postfix/suspended_vsites
+        chmod 644 /etc/postfix/suspended_vsites
+    fi
+
+    # Create /etc/postfix/milters.d/00-sample.cf if it's missing:
+    if [ ! -f /etc/postfix/milters.d/00-sample.cf ] && [ -d /etc/postfix/milters.d ]; then
+        {
+            echo "# BlueOnyx Postfix Milter Configuration:"
+            echo "# ======================================="
+            echo "#"
+            echo "# This directory is parsed by Postfix for files ending with *.cf"
+            echo "# If any files are found, comments and blank lines are stripped"
+            echo "# and the content is added as milter via ..."
+            echo "#"
+            echo "# postconf -e \"smtpd_milters = \$MILTERS\""
+            echo "#"
+            echo "# ... where \$MILTERS are the lines from all config files in this"
+            echo "# directory. File names should start with numbers. Config files"
+            echo "# with lower numbers will be put first."
+            echo "#"
+            echo "# Example content:"
+            echo "# unix:/run/service-name/service.sock"
+            echo "# inet:<IP>:<port>"
+            echo "#"
+            echo "# Names reserved for the AV-SPAM:"
+            echo "#"
+            echo "# 01-milter-greylist.cf"
+            echo "# 02-milter-geoip.cf"
+            echo "# 03-spamassassin.cf"
+            echo "# 04-clamav.cf"
+            echo "#"
+        } > /etc/postfix/milters.d/00-sample.cf
+    fi
+
+    #
+    ### Fetch map-files from Sendmail and port them to our Postfix related needs:
+    #
+
+    # Parse Sendmail /etc/mail/access to generate /etc/postfix/access:
+    cat /etc/mail/access \
+        | grep -v ^# \
+        | grep -v -e '^$' \
+        | sed 's@ERROR:.*$@REJECT@g' \
+        | sed 's@550.*$@REJECT@g' \
+        | sed '/^\s*$/d' \
+        | grep -v localhost \
+        | grep -v ::1 \
+        | grep -v 127.0.0.1 \
+        > /etc/postfix/access
+
+    # Get list of Hosts and IPs that we relay for without SMTP-Auth:
+    RELAY_HOSTS=$(cat /etc/mail/access | grep -v ^# | awk '/RELAY/ && !/localhost/ && !/::1/ && !/127.0.0.1/ {print $1}' | tr '\n' ' ')
+
+    # New method to create /etc/postfix/canonical and /etc/postfix/suspended_vsites directly from CODB:
+    CCEUP=$(ps axf | grep "/usr/sausalito/sbin/cced -nd" | grep -v grep | wc -l)
+    if [ "$CCEUP" -gt "0" ]; then
+        /usr/sausalito/bin/blueonyx-postfix-canonical.pl &>/dev/null || :
+    fi
+
+    # Generate Dovecot alias-login maps for SMTP/IMAP auth (fast allowlist):
+    if [ -x /usr/sausalito/sbin/email-auth-helper.pl ]; then
+        /usr/sausalito/sbin/email-auth-helper.pl >/dev/null 2>&1 || :
+    fi
+
+    # Parse /etc/mail/virtusertable to create /etc/postfix/virtual:
+    grep -v 'error:nouser No such user here' /etc/mail/virtusertable | grep -v ^# | sed 's/%1//g' > /etc/postfix/virtual
+
+    #
+    ### Basic addressing / virtual domains
+    #
+
+    # Set 'mydestination':
+    postconf -e 'mydestination = $myhostname, localhost.$mydomain, localhost'
+
+    # Postfix-only virtual domain list (preserves Sendmail compatibility)
+    postconf -e 'virtual_alias_domains = /etc/mail/local-host-names'
+
+    #
+    ### Parse sendmail.mc to extract the GUI defined MTA configs and apply them to Postfix:
+    #
+
+    # Mailbox size (0 = unlimited)
+    postconf -e 'mailbox_size_limit = 0'
+
+    # Submission port:
+    SUBMISSION=$(cat /etc/mail/sendmail.mc | grep DAEMON_OPTIONS | grep Port=submission | grep dnl | wc -l)
+    if [ "$SUBMISSION" -eq "0" ]; then
+        sed -i 's@^#submission inet n       -       n       -       -       smtpd$@submission inet n       -       n       -       -       smtpd@g' /etc/postfix/master.cf
+    else
+        sed -i 's@^submission inet n       -       n       -       -       smtpd$@#submission inet n       -       n       -       -       smtpd@g' /etc/postfix/master.cf
+    fi
+
+    #
+    ### Hide Received-Headers:
+    #
+    NOTHIDEHEADERS=$(cat /etc/mail/sendmail.mc | grep confRECEIVED_HEADER | grep ^dnl | wc -l)
+    # 1 means: NOT hiding headers
+    # 0 means: we HIDE headers
+
+    HAVECLEANUP=$(cat /etc/postfix/master.cf | grep "^  -o cleanup_service_name=subcleanup" | wc -l)
+    HAVESUBCLEANUP_A=$(cat /etc/postfix/master.cf | grep "^subcleanup unix n       -       -       -       0       cleanup" | wc -l)
+    HAVESUBCLEANUP_B=$(cat /etc/postfix/master.cf | grep "^  -o header_checks=regexp:/etc/postfix/submission_header_checks" | wc -l)
+
+    if [ "$NOTHIDEHEADERS" -eq "0" ]; then
+        echo "We ARE hiding headers!"
+
+        if [ "$HAVECLEANUP" -eq "0" ]; then
+            echo "Adding 'subcleanup' to submission service"
+            sed -i 's@^submission inet n       -       n       -       -       smtpd@submission inet n       -       n       -       -       smtpd\n  -o cleanup_service_name=subcleanup@g' /etc/postfix/master.cf
+        else
+            echo "The 'subcleanup' in submission service ARE present"
+        fi
+
+        if [ "$HAVESUBCLEANUP_A" -gt "0" ] && [ "$HAVESUBCLEANUP_B" -gt "0" ]; then
+            echo "The 'subcleanup' lines are present"
+        else
+            echo "Adding 'subcleanup' lines"
+            echo "subcleanup unix n       -       -       -       0       cleanup" >> /etc/postfix/master.cf
+            echo "  -o header_checks=regexp:/etc/postfix/submission_header_checks" >> /etc/postfix/master.cf
+        fi
+
+        if [ ! -f /etc/postfix/submission_header_checks ]; then
+            echo '/^Received:.*\(Postfix/ IGNORE' > /etc/postfix/submission_header_checks
+            postmap /etc/postfix/submission_header_checks
+        fi
+
+    else
+        echo "We are NOT hiding headers!"
+
+        echo "Removing 'subcleanup' from submission service"
+        if [ "$HAVECLEANUP" -eq "1" ]; then
+            sed -i '/^  -o cleanup_service_name=subcleanup$/d' /etc/postfix/master.cf
+        fi
+
+        echo "Removing 'subcleanup' lines"
+        if [ "$HAVESUBCLEANUP_A" -gt "0" ]; then
+            sed -i '/^subcleanup unix n       -       -       -       0       cleanup$/d' /etc/postfix/master.cf
+        fi
+        if [ "$HAVESUBCLEANUP_B" -gt "0" ]; then
+            sed -i '/^  -o header_checks=regexp:\/etc\/postfix\/submission_header_checks$/d' /etc/postfix/master.cf
+        fi
+
+        if [ -f /etc/postfix/submission_header_checks ]; then
+            rm -f /etc/postfix/submission_header_checks
+            rm -f /etc/postfix/submission_header_checks.db
+        fi
+    fi
+
+    #
+    ### smtps port:
+    #
+    SMTPS=$(cat /etc/mail/sendmail.mc | grep DAEMON_OPTIONS | grep Port=smtps | grep dnl | wc -l)
+    if [ "$SMTPS" -eq "0" ]; then
+        sed -i 's@^#smtps     inet  n       -       n       -       -       smtpd$@smtps     inet  n       -       n       -       -       smtpd@g' /etc/postfix/master.cf
+        sed -i 's@^#  -o syslog_name=postfix/submission$@  -o syslog_name=postfix/submission@g' /etc/postfix/master.cf
+        sed -i 's@^#  -o smtpd_tls_wrappermode=yes$@  -o smtpd_tls_wrappermode=yes@g' /etc/postfix/master.cf
+        sed -i 's@^#  -o smtpd_sasl_auth_enable=yes$@  -o smtpd_sasl_auth_enable=yes@g' /etc/postfix/master.cf
+    else
+        sed -i 's@^smtps     inet  n       -       n       -       -       smtpd$@#smtps     inet  n       -       n       -       -       smtpd@g' /etc/postfix/master.cf
+        sed -i 's@^  -o syslog_name=postfix/submission$@#  -o syslog_name=postfix/submission@g' /etc/postfix/master.cf
+        sed -i 's@^  -o smtpd_tls_wrappermode=yes$@#  -o smtpd_tls_wrappermode=yes@g' /etc/postfix/master.cf
+        sed -i 's@^  -o smtpd_sasl_auth_enable=yes$@#  -o smtpd_sasl_auth_enable=yes@g' /etc/postfix/master.cf
+    fi
+
+    #
+    ### SASL and network settings
+    #
+    DOM=$(/usr/bin/hostname --domain)
+    if [ -z "$DOM" ]; then
+        DOM="localhost"
+    fi
+    HN=$(/usr/bin/hostname)
+    NW=$(ip -o -f inet addr show | awk '/scope global/ {print $4}' | sed -E 's#/(.*)$#/32#g' | tr '\n' ' ')
+    postconf -e "mydomain = $DOM"
+    postconf -e "myhostname = $HN"
+    postconf -e "mynetworks = 127.0.0.0/8 127.0.0.1/32 [::1]/128 $NW $RELAY_HOSTS"
+
+    # Maximum Email Size (bytes)
+    MAX_MESSAGE_SIZE=$(
+        awk -F '[,)]' '
+            /confMAX_MESSAGE_SIZE/ {
+                gsub(/[[:space:]]/, "", $2);
+                print $2;
+                exit
+            }
+        ' /etc/mail/sendmail.mc
+    )
+    if [ -z "$MAX_MESSAGE_SIZE" ] || [ "$MAX_MESSAGE_SIZE" -eq "0" ] 2>/dev/null; then
+        MAX_MESSAGE_SIZE=102400000
+    fi
+    postconf -e "message_size_limit = $MAX_MESSAGE_SIZE"
+
+    # Maximum Recipients per Message:
+    MAX_RCPTS_PER_MESSAGE=$(
+        awk -F '[,)]' '
+            /confMAX_RCPTS_PER_MESSAGE/ {
+                gsub(/[[:space:]]/, "", $2);
+                print $2;
+                exit
+            }
+        ' /etc/mail/sendmail.mc
+    )
+    if [ -z "$MAX_RCPTS_PER_MESSAGE" ] || [ "$MAX_RCPTS_PER_MESSAGE" -eq "0" ] 2>/dev/null; then
+        MAX_RCPTS_PER_MESSAGE=50
+    fi
+    postconf -e "default_destination_recipient_limit = $MAX_RCPTS_PER_MESSAGE"
+    postconf -e "smtp_destination_recipient_limit = $MAX_RCPTS_PER_MESSAGE"
+
+    # Smart Relay Server:
+    RELAY=$(cat /etc/mail/sendmail.mc |grep SMART_HOST|cut -d \` -f3|cut -d \' -f1)
+    if [ "$RELAY" = "" ]; then
+        postconf -e 'relayhost ='
+    else
+        postconf -e "relayhost = $RELAY"
+    fi
+
+    #
+    ### Smart Relay via /etc/postfix/sasl_passwd (intentionally overwrites what sendmail.mc may claim as SMART_HOST)
+    #
+    # NOTE: Smart relay handling touches ONLY smtp_* (outbound SMTP client).
+    #       It MUST NOT touch smtpd_* (inbound server) settings.
+    #
+
+    SASL_PASSWD="/etc/postfix/sasl_passwd"
+
+    # helper: fallback to sendmail.mc SMART_HOST
+    fallback_smart_host() {
+        local RELAY
+        RELAY=$(grep SMART_HOST /etc/mail/sendmail.mc | cut -d \` -f3 | cut -d \' -f1)
+        if [ -z "$RELAY" ]; then
+            postconf -e 'relayhost ='
+        else
+            postconf -e "relayhost = $RELAY"
+        fi
+    }
+
+    # Helper: force "safe off" client auth + wrappermode and baseline TLS:
+    disable_relay_auth_and_set_tls_baseline() {
+        postconf -e 'smtp_sasl_auth_enable = no'
+        postconf -X 'smtp_sasl_password_maps' >/dev/null 2>&1 || :
+        postconf -X 'smtp_tls_wrappermode' >/dev/null 2>&1 || :
+        # Keep our historic baseline:
+        postconf -e 'smtp_use_tls = yes'
+        postconf -e 'smtp_tls_security_level = may'
+    }
+
+    if [ -f "$SASL_PASSWD" ]; then
+        chmod 600 "$SASL_PASSWD" >/dev/null 2>&1 || :
+
+        # Refresh hash db if needed:
+        if [ ! -f "${SASL_PASSWD}.db" ] || [ "$SASL_PASSWD" -nt "${SASL_PASSWD}.db" ]; then
+            postmap "$SASL_PASSWD" >/dev/null 2>&1 || logger "WARNING: postmap $SASL_PASSWD failed"
+            chmod 600 "${SASL_PASSWD}.db" >/dev/null 2>&1 || :
+        fi
+
+        # Read security from comment header (default enforced):
+        RELAY_SECURITY=$(
+            awk -F= '/^#[[:space:]]*BX_RELAY_SECURITY=/{gsub(/[[:space:]]/,"",$2); print $2; exit}' "$SASL_PASSWD"
+        )
+        [ -z "$RELAY_SECURITY" ] && RELAY_SECURITY="enforced"
+
+        # Read first non-comment mapping line:
+        RELAY_LINE=$(grep -v '^[[:space:]]*#' "$SASL_PASSWD" | awk 'NF{print; exit}')
+        RELAY_KEY=$(echo "$RELAY_LINE" | awk '{print $1}')      # [host]:port
+        RELAY_VAL=$(echo "$RELAY_LINE" | awk '{print $2}')      # user:pass OR :
+
+        # Extract host/port from [host]:port
+        RELAY_HOST=$(echo "$RELAY_KEY" | sed -nE 's/^\[([^]]+)\](:[0-9]+)?$/\1/p')
+        RELAY_PORT=$(echo "$RELAY_KEY" | sed -nE 's/^\[[^]]+\]:([0-9]+)$/\1/p')
+        [ -z "$RELAY_PORT" ] && RELAY_PORT=25
+
+        # Validate relay key. If invalid: fallback + make sure we do NOT enable client AUTH/TLS policy based on garbage.
+        if [ -z "$RELAY_HOST" ]; then
+            logger "WARNING: $SASL_PASSWD contains an invalid relay key: '$RELAY_KEY' (expected [host]:port). Falling back to SMART_HOST and disabling relay AUTH."
+            fallback_smart_host
+            disable_relay_auth_and_set_tls_baseline
+        else
+            # Valid relay => enforce relayhost always
+            postconf -e "relayhost = [$RELAY_HOST]:$RELAY_PORT"
+
+            # Decide if SMTP AUTH is enabled:
+            if [ -n "$RELAY_VAL" ] && [ "$RELAY_VAL" != ":" ]; then
+                postconf -e 'smtp_sasl_auth_enable = yes'
+                postconf -e "smtp_sasl_password_maps = hash:${SASL_PASSWD}"
+                postconf -e 'smtp_sasl_security_options = noanonymous'
+                postconf -e 'smtp_sasl_tls_security_options = noanonymous'
+            else
+                postconf -e 'smtp_sasl_auth_enable = no'
+                postconf -X 'smtp_sasl_password_maps' >/dev/null 2>&1 || :
+            fi
+
+            # Apply relay TLS policy:
+            case "$RELAY_SECURITY" in
+                enforced)
+                    postconf -e 'smtp_use_tls = yes'
+                    postconf -e 'smtp_tls_security_level = encrypt'
+                    ;;
+                optional)
+                    postconf -e 'smtp_use_tls = yes'
+                    postconf -e 'smtp_tls_security_level = may'
+                    ;;
+                insecure)
+                    postconf -e 'smtp_use_tls = no'
+                    postconf -e 'smtp_tls_security_level = none'
+                    ;;
+                *)
+                    logger "WARNING: Unknown relay_security '$RELAY_SECURITY' - defaulting to enforced"
+                    postconf -e 'smtp_use_tls = yes'
+                    postconf -e 'smtp_tls_security_level = encrypt'
+                    ;;
+            esac
+
+            # Wrappermode only makes sense for implicit TLS (465) and when not insecure:
+            if [ "$RELAY_PORT" = "465" ] && [ "$RELAY_SECURITY" != "insecure" ]; then
+                postconf -e 'smtp_tls_wrappermode = yes'
+                postconf -e 'smtp_tls_security_level = encrypt'
+            else
+                postconf -X 'smtp_tls_wrappermode' >/dev/null 2>&1 || :
+            fi
+        fi
+
+    else
+        # No sasl_passwd => fall back to legacy SMART_HOST from sendmail.mc:
+        fallback_smart_host
+        disable_relay_auth_and_set_tls_baseline
+    fi
+
+    #
+    ### Handle RBL Blacklists:
+    #
+    HAVEVBL=$(cat /etc/mail/sendmail.mc | grep dnsbl | grep -v dnl | wc -l)
+    if [ "$HAVEVBL" -gt "0" ]; then
+        RBLS=$(cat /etc/mail/sendmail.mc |grep dnsbl|grep -v dnl|cut -d \` -f 2|cut -d \' -f1| tr '\n' ', '|sed 's@,$@@g')
+        postconf -e "postscreen_dnsbl_sites = $RBLS"
+        postconf -e 'postscreen_dnsbl_action = enforce'
+        sed -i 's@^smtp      inet  n       -       n       -       -       smtpd$@#smtp      inet  n       -       n       -       -       smtpd@g' /etc/postfix/master.cf
+        sed -i 's@^#smtp      inet  n       -       n       -       1       postscreen$@smtp      inet  n       -       n       -       1       postscreen@g' /etc/postfix/master.cf
+        sed -i 's@^#smtpd     pass  -       -       n       -       -       smtpd$@smtpd     pass  -       -       n       -       -       smtpd@g' /etc/postfix/master.cf
+        sed -i 's@^#dnsblog   unix  -       -       n       -       0       dnsblog$@dnsblog   unix  -       -       n       -       0       dnsblog@g' /etc/postfix/master.cf
+        sed -i 's@^#tlsproxy  unix  -       -       n       -       0       tlsproxy$@tlsproxy  unix  -       -       n       -       0       tlsproxy@g' /etc/postfix/master.cf
+    else
+        postconf -e "postscreen_dnsbl_sites ="
+        postconf -e 'postscreen_dnsbl_action = ignore'
+        sed -i 's@^#smtp      inet  n       -       n       -       -       smtpd$@smtp      inet  n       -       n       -       -       smtpd@g' /etc/postfix/master.cf
+        sed -i 's@^smtp      inet  n       -       n       -       1       postscreen$@#smtp      inet  n       -       n       -       1       postscreen@g' /etc/postfix/master.cf
+        sed -i 's@^smtpd     pass  -       -       n       -       -       smtpd$@#smtpd     pass  -       -       n       -       -       smtpd@g' /etc/postfix/master.cf
+        sed -i 's@^dnsblog   unix  -       -       n       -       0       dnsblog$@#dnsblog   unix  -       -       n       -       0       dnsblog@g' /etc/postfix/master.cf
+        sed -i 's@^tlsproxy  unix  -       -       n       -       0       tlsproxy$@#tlsproxy  unix  -       -       n       -       0       tlsproxy@g' /etc/postfix/master.cf
+    fi
+
+    #
+    ### Dynamically insert milters:
+    #
+    if [ -d /etc/postfix/milters.d ]; then
+        MILTERS=$(cat /etc/postfix/milters.d/*.cf | grep -v "#" | tr '\n' ' ' | tr -s ' ')
+        postconf -e "smtpd_milters = $MILTERS"
+    fi
+
+    #
+    ### Recipient ACL's (keep suspended_* behaviour!)
+    #
+    ACCEPT_FORGERY=$(cat /etc/mail/sendmail.mc | grep ^FEATURE | grep accept_unresolvable_domains | wc -l)
+
+    if [ "$ACCEPT_FORGERY" -gt "0" ]; then
+        # Unsafe: allow unresolvable domains (but still respect suspended_* and access)
+        postconf -e 'smtpd_recipient_restrictions = check_sender_access hash:/etc/postfix/suspended_vsites, check_recipient_access hash:/etc/postfix/suspended_vsites, check_sender_access hash:/etc/postfix/suspended_users, check_recipient_access hash:/etc/postfix/suspended_users, permit_sasl_authenticated, permit_mynetworks, reject_unauth_destination, reject_unauth_pipelining, check_sender_access hash:/etc/postfix/access, permit'
+    else
+        # Safe default (close to your original)
+        postconf -e 'smtpd_recipient_restrictions = check_sender_access hash:/etc/postfix/suspended_vsites, check_recipient_access hash:/etc/postfix/suspended_vsites, check_sender_access hash:/etc/postfix/suspended_users, check_recipient_access hash:/etc/postfix/suspended_users, permit_sasl_authenticated,reject_non_fqdn_sender,reject_non_fqdn_recipient,reject_unknown_sender_domain,reject_unknown_recipient_domain,permit_mynetworks,reject_unauth_destination,reject_unauth_pipelining,reject_invalid_hostname,reject_non_fqdn_hostname,check_sender_access hash:/etc/postfix/access,permit'
+    fi
+
+    #
+    ### Remove 'smtpd_client_restrictions = sleep 5' - if present:
+    #
+    CLIENTRESTRICTIONSET=$(cat /etc/postfix/main.cf | grep smtpd_client_restrictions | grep sleep | wc -l)
+    if [ "$CLIENTRESTRICTIONSET" -eq "1" ]; then
+        postconf -X 'smtpd_client_restrictions'
+    fi
+
+    #
+    ### Mailman:
+    #
+    if [ "$NOMAILMAN" -eq "0" ]; then
+        # Mailman present (5210R)
+        if [ ! -f /etc/mailman/virtual-mailman ]; then
+            touch /etc/mailman/virtual-mailman
+        fi
+
+        if [ -f /etc/mailman/mm_cfg.py ]; then
+            MMPFOPTS=$(cat /etc/mail/local-host-names | grep -v ^# | tr '\n' '|' | sed -e 's#|$##g' | sed -e "s#|#','#g")
+            cat /etc/mailman/mm_cfg.py | grep -v '^MTA.*$' | grep -v '^POSTFIX_STYLE_VIRTUAL_DOMAINS.*' > /etc/mailman/mm_cfg.py.postfix
+            echo "MTA = 'Postfix'" >> /etc/mailman/mm_cfg.py.postfix
+            echo "POSTFIX_STYLE_VIRTUAL_DOMAINS = ['$MMPFOPTS']" >> /etc/mailman/mm_cfg.py.postfix
+            mv /etc/mailman/mm_cfg.py.postfix /etc/mailman/mm_cfg.py
+            chown root:mailman /etc/mailman/mm_cfg.py
+            chmod 644 /etc/mailman/mm_cfg.py
+            /usr/lib/mailman/bin/genaliases --quiet &>/dev/null || :
+            /usr/lib/mailman/bin/check_perms -f &>/dev/null || :
+            /usr/bin/systemctl reload mailman &>/dev/null || :
+        fi
+    else
+        # No Mailman present. Remove lingering rest of it if present:
+        MMFIXNEEDED=$(cat /etc/postfix/main.cf | grep "mailman" | wc -l)
+        if [ "$MMFIXNEEDED" -gt "0" ]; then
+            postconf -e 'alias_maps = hash:/etc/mail/aliases'
+            postconf -e 'virtual_alias_maps = hash:/etc/mail/aliases, hash:/etc/postfix/virtual'
+        fi
+    fi
+
+    #
+    ### Set Basic configuration if it hasn't been applied yet:
+    #
+    INITIALCFGDONE=$(cat /etc/postfix/main.cf | grep "alias_maps =" | grep "hash:/etc/mailman/aliases" | wc -l)
+    INITIALCFGSAFE=$(cat /etc/postfix/main.cf | grep "virtual_alias_maps =" | grep "hash:/etc/postfix/virtual" | wc -l)
+    INITIALCFGMM=$(cat /etc/postfix/main.cf | grep "virtual_alias_maps =" | grep "hash:/etc/mailman/virtual-mailman" | wc -l)
+    if [ "$INITIALCFGDONE" -eq "1" ] || [ "$INITIALCFGSAFE" -eq "0" ] || [ "$INITIALCFGMM" -eq "1" ]; then
+        echo "Reset to defaults: INITIALCFGDONE: $INITIALCFGDONE"
+        echo "Reset to defaults: INITIALCFGSAFE: $INITIALCFGSAFE"
+        echo "Reset to defaults: INITIALCFGMM:   $INITIALCFGMM"
+        # Set general BlueOnyx related settings such as maps, cert location, TLS and so on:
+        postconf -e 'inet_interfaces = all'
+        postconf -e 'inet_protocols = all'
+        if [ "$NOMAILMAN" -eq "0" ]; then
+            postconf -e 'alias_maps = hash:/etc/mail/aliases, hash:/etc/mailman/aliases'
+        else
+            postconf -e 'alias_maps = hash:/etc/mail/aliases'
+        fi
+        postconf -e 'alias_database = $alias_maps'
+        postconf -e 'owner_request_special = yes'
+        postconf -e 'smtpd_use_tls = yes'
+        postconf -e 'smtpd_tls_security_level = may'
+        postconf -e 'smtpd_tls_mandatory_ciphers = high'
+        postconf -e 'smtpd_tls_mandatory_protocols = !SSLv2, !SSLv3'
+        postconf -e 'smtpd_tls_loglevel = 1'
+        postconf -e 'smtpd_tls_received_header = yes'
+        postconf -e 'smtp_use_tls = yes'
+        postconf -e 'smtp_tls_CApath = /etc/pki/tls/certs'
+        postconf -e 'smtp_tls_CAfile = /etc/pki/tls/certs/ca-bundle.crt'
+        postconf -e 'smtp_tls_mandatory_ciphers = high'
+        postconf -e 'smtp_tls_mandatory_protocols = !SSLv2, !SSLv3'
+        postconf -e 'smtp_tls_note_starttls_offer = yes'
+        postconf -e 'mailbox_command = /usr/bin/procmail -a "$EXTENSION"'
+        postconf -e 'disable_vrfy_command = yes'
+        postconf -e 'smtpd_helo_required = yes'
+        postconf -e 'smtpd_delay_reject = yes'
+        postconf -e 'smtpd_error_sleep_time = 30'
+        postconf -e 'smtpd_soft_error_limit = 10'
+        postconf -e 'strict_rfc821_envelopes = yes'
+        postconf -e 'header_checks = regexp:/etc/postfix/header_checks'
+        postconf -e 'smtpd_sasl_auth_enable = yes'
+        postconf -e 'smtpd_sasl_authenticated_header = yes'
+        postconf -e 'smtpd_sasl_security_options = noanonymous'
+        postconf -e 'smtpd_sasl_type = cyrus'
+        postconf -e 'canonical_maps = hash:/etc/postfix/canonical'
+        postconf -e 'milter_default_action = accept'
+        postconf -e 'milter_connect_macros = H, j, _, {daemon_name}, {daemon_port}, {if_name}, {if_addr}, {client_addr}'
+        postconf -e 'milter_protocol = 6'
+    fi
+
+    #
+    ### SMTP AUTH backend for submission/smtps: use Dovecot SASL (alias-aware)
+    ### (Less brittle than sed/awk master.cf surgery)
+    #
+    if command -v postconf >/dev/null 2>&1; then
+
+        #
+        # smtp (25): IMPORTANT — if postscreen is enabled, AUTH happens in smtpd/pass
+        #
+        if command -v postconf >/dev/null 2>&1; then
+            if grep -q '^smtp[[:space:]]\+inet[[:space:]].*[[:space:]]postscreen$' /etc/postfix/master.cf; then
+                logger "Postfix: postscreen active on port 25; forcing SASL backend for smtpd/pass to dovecot (private/auth)"
+                postconf -P 'smtpd/pass/smtpd_sasl_type=dovecot' >/dev/null 2>&1 || logger "WARNING: postconf -P smtpd/pass/smtpd_sasl_type failed"
+                postconf -P 'smtpd/pass/smtpd_sasl_path=private/auth' >/dev/null 2>&1 || logger "WARNING: postconf -P smtpd/pass/smtpd_sasl_path failed"
+                postconf -P 'smtpd/pass/broken_sasl_auth_clients=yes' >/dev/null 2>&1 || logger "WARNING: postconf -P smtpd/pass/broken_sasl_auth_clients failed"
+            else
+                # no postscreen => smtpd runs directly in smtp/inet
+                if grep -q '^smtp[[:space:]]\+inet' /etc/postfix/master.cf; then
+                    logger "Postfix: forcing smtp(25) SASL backend to dovecot (private/auth)"
+                    postconf -P 'smtp/inet/smtpd_sasl_type=dovecot' >/dev/null 2>&1 || logger "WARNING: postconf -P smtp/inet/smtpd_sasl_type failed"
+                    postconf -P 'smtp/inet/smtpd_sasl_path=private/auth' >/dev/null 2>&1 || logger "WARNING: postconf -P smtp/inet/smtpd_sasl_path failed"
+                    postconf -P 'smtp/inet/broken_sasl_auth_clients=yes' >/dev/null 2>&1 || logger "WARNING: postconf -P smtp/inet/broken_sasl_auth_clients failed"
+                fi
+            fi
+        fi
+
+        # submission (587): only if enabled
+        if grep -q '^submission inet ' /etc/postfix/master.cf; then
+            logger "Postfix: forcing submission SASL backend to dovecot (private/auth)"
+            postconf -P 'submission/inet/smtpd_sasl_type=dovecot' >/dev/null 2>&1 || logger "WARNING: postconf -P submission/inet/smtpd_sasl_type failed"
+            postconf -P 'submission/inet/smtpd_sasl_path=private/auth' >/dev/null 2>&1 || logger "WARNING: postconf -P submission/inet/smtpd_sasl_path failed"
+
+            # Require TLS before AUTH on 587 (recommended)
+            # This only affects the submission service stanza.
+            postconf -P 'submission/inet/smtpd_tls_auth_only=no' >/dev/null 2>&1 || logger "WARNING: postconf -P submission/inet/smtpd_tls_auth_only failed"
+
+            # Helps with older MUAs
+            postconf -P 'submission/inet/broken_sasl_auth_clients=yes' >/dev/null 2>&1 || logger "WARNING: postconf -P submission/inet/broken_sasl_auth_clients failed"
+
+            # Make STARTTLS available, just not mandatory for AUTH:
+            postconf -P 'submission/inet/smtpd_tls_security_level=may' >/dev/null 2>&1 || logger "WARNING: postconf -P submission/inet/smtpd_tls_security_level failed"
+
+            # Optional but sane: enforce TLS on submission (you currently leave it commented)
+            # If you want to force encryption on 587, uncomment the next line:
+            # postconf -P 'submission/inet/smtpd_tls_security_level=encrypt' >/dev/null 2>&1 || logger "WARNING: postconf -P submission/inet/smtpd_tls_security_level failed"
+        else
+            logger "Postfix: submission service disabled; skipping dovecot SASL overrides for submission"
+        fi
+
+        # smtps (465): only if enabled
+        if grep -q '^smtps[[:space:]]\+inet' /etc/postfix/master.cf; then
+            logger "Postfix: forcing smtps SASL backend to dovecot (private/auth)"
+            postconf -P 'smtps/inet/smtpd_sasl_type=dovecot' >/dev/null 2>&1 || logger "WARNING: postconf -P smtps/inet/smtpd_sasl_type failed"
+            postconf -P 'smtps/inet/smtpd_sasl_path=private/auth' >/dev/null 2>&1 || logger "WARNING: postconf -P smtps/inet/smtpd_sasl_path failed"
+            postconf -P 'smtps/inet/broken_sasl_auth_clients=yes' >/dev/null 2>&1 || logger "WARNING: postconf -P smtps/inet/broken_sasl_auth_clients failed"
+        else
+            logger "Postfix: smtps service disabled; skipping dovecot SASL overrides for smtps"
+        fi
+
+        # Debug trace (optional): log what we actually set
+        # logger "Postfix -P snapshot: $(postconf -P | egrep '^(submission|smtps)/inet/smtpd_sasl_(type|path)|submission/inet/smtpd_tls_auth_only' | tr '\n' ' ')"
+
+    else
+        logger "WARNING: postconf not found; cannot set per-service dovecot SASL overrides"
+    fi
+
+    #
+    ### virtual_alias_maps final order
+    #
+    if [ "$NOMAILMAN" -eq "0" ]; then
+        postconf -e 'virtual_alias_maps = hash:/etc/mail/aliases, hash:/etc/postfix/virtual, hash:/etc/mailman/virtual-mailman'
+    else
+        postconf -e 'virtual_alias_maps = hash:/etc/mail/aliases, hash:/etc/postfix/virtual'
+    fi
+
+    #
+    ### Activate SNI:
+    #
+    if [ ! -f /etc/postfix/vsite_ssl.map ]; then
+        touch /etc/postfix/vsite_ssl.map
+        echo "# Postfix Vsite SNI configuration" >> /etc/postfix/vsite_ssl.map
+        echo "$HN /etc/admserv/certs/key /etc/admserv/certs/nginx_cert_ca_combined" >> /etc/postfix/vsite_ssl.map
+        postmap -F hash:/etc/postfix/vsite_ssl.map
+    fi
+    postconf -e 'smtpd_tls_chain_files = /etc/admserv/certs/key /etc/admserv/certs/nginx_cert_ca_combined'
+    postconf -e 'tls_server_sni_maps = hash:/etc/postfix/vsite_ssl.map'
+
+    #
+    ### Rebuild Postfix Mapfiles:
+    #
+    postmap /etc/postfix/access
+    postmap /etc/postfix/canonical
+    postmap /etc/postfix/virtual
+    postmap /etc/postfix/suspended_users
+    postmap /etc/postfix/suspended_vsites
+
+    #
+    ### Remove legacy TLS settings:
+    #
+    postconf -X smtpd_tls_cert_file
+    postconf -X smtpd_tls_key_file
+    postconf -X smtpd_tls_CAfile
+    postconf -X smtpd_tls_CApath
+    postconf -X smtpd_tls_dcert_file
+    postconf -X smtpd_tls_eccert_file
+
+    #
+    ### Relay Restrictions:
+    #
+    postconf -e "smtpd_relay_restrictions = permit_mynetworks, permit_sasl_authenticated, reject_unauth_destination"
+    postconf -e 'smtpd_end_of_data_restrictions='
+
+    #
+    ### RBL threshold (for postscreen):
+    #
+    postconf -e 'postscreen_dnsbl_threshold = 3'
+
+    #
+    ### We don't have UTF-8 email addresses:
+    #
+    postconf -e 'smtputf8_enable = no'
+
+    #
+    ### Ensure Dovecot is running (needed for Postfix SASL via private/auth)
+    ### We only care about the auth socket, not IMAP/POP listeners.
+    #
+    if grep -q '^submission inet ' /etc/postfix/master.cf || grep -q '^smtps[[:space:]]\+inet' /etc/postfix/master.cf; then
+        # Enable dovecot persistently (optional, but you said you want to force it)
+        if ! systemctl -q is-enabled dovecot 2>/dev/null; then
+            systemctl enable dovecot >/dev/null 2>&1 || :
+        fi
+
+        # Start it if not active
+        if ! systemctl -q is-active dovecot 2>/dev/null; then
+            systemctl start dovecot >/dev/null 2>&1 || :
+        fi
+
+        # Verify (auth socket must exist for Postfix)
+        if [ -S /var/spool/postfix/private/auth ]; then
+            logger "Postfix AUTH: Dovecot auth socket present (/var/spool/postfix/private/auth)"
+        else
+            logger "WARNING: Postfix AUTH: Dovecot auth socket missing (/var/spool/postfix/private/auth). SASL via dovecot will fail."
+        fi
+    fi
+
+    #
+    ### Compatibility-Level:
+    #
+    postconf -e "compatibility_level = 2"
+
+    #
+    ### Email Sender Security (local anti-spoofing baseline):
+    #
+
+    # Controlled by: /etc/sysconfig/BX-Email-Sender-Security
+    #  - File present  => feature ENABLED
+    #  - File missing  => feature DISABLED (fallback to classic behaviour)
+    #
+
+    if [ -f /etc/sysconfig/BX-Email-Sender-Security ]; then
+        logger "BlueOnyx Email Sender Security: ENABLED"
+
+        # Generate /etc/postfix/sender_canonical from CODB via helper:
+        if [ -x /usr/sausalito/bin/blueonyx-postfix-generate-sender-login-maps.pl ]; then
+            /usr/sausalito/bin/blueonyx-postfix-generate-sender-login-maps.pl || :
+        fi
+
+        # Tell Postfix which map to use for auth vs sender:
+        postconf -e 'smtpd_sender_login_maps = hash:/etc/postfix/sender_canonical'
+
+        # Sender restrictions:
+        # - reject_authenticated_sender_login_mismatch : enforce map for SASL users
+        # - permit_mynetworks                          : trusted local MTAs / cron, etc.
+        # - reject_unknown_sender_domain               : basic sanity
+        # - check_sender_access                        : your access table
+        postconf -e 'smtpd_sender_restrictions = reject_authenticated_sender_login_mismatch, permit_mynetworks, reject_unknown_sender_domain, check_sender_access hash:/etc/postfix/access'
+
+    else
+        logger "BlueOnyx Email Sender Security: DISABLED"
+
+        # Remove mapping requirement so SASL users are not tied to sender_canonical
+        postconf -X 'smtpd_sender_login_maps'
+
+        # Classic, non-anti-spoofing sender restrictions:
+        postconf -e 'smtpd_sender_restrictions = permit_mynetworks, reject_unknown_sender_domain, check_sender_access hash:/etc/postfix/access'
+    fi
+
+    #
+    ### Any 'postconf' overrides can be performed via this custom script:
+    #
+    if [ -f /usr/sausalito/bin/custom-postfix-confgen.sh ]; then
+        logger "Custom-Configure of Postfix via /usr/sausalito/bin/custom-postfix-confgen.sh"
+        /usr/sausalito/bin/custom-postfix-confgen.sh &>/dev/null || :
+    fi
+fi
+
+# 
+# Copyright (c) 2020-2026 Michael Stauber, SOLARSPEED.NET
+# Copyright (c) 2020-2026 Team BlueOnyx, BLUEONYX.IT
+# All Rights Reserved.
+# 
+# 1. Redistributions of source code must retain the above copyright 
+#    notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+#    notice, this list of conditions and the following disclaimer in 
+#    the documentation and/or other materials provided with the 
+#    distribution.
+# 
+# 3. Neither the name of the copyright holder nor the names of its 
+#    contributors may be used to endorse or promote products derived 
+#    from this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
+# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+# POSSIBILITY OF SUCH DAMAGE.
+# 
+# You acknowledge that this software is not designed or intended for 
+# use in the design, construction, operation or maintenance of any 
+# nuclear facility.
+# 

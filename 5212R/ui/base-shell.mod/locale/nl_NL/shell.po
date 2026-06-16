@@ -1,0 +1,93 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "shellMenu"
+msgstr "Servertoegang"
+
+msgid "shellMenuDescription"
+msgstr "Configureer servertoegang voor GUI, shelltoegang (SSH en Telnet) evenals bestandsgerelateerde diensten zoals FTP, SFTP en SCP."
+
+msgid "shell"
+msgstr "[[base-shell.shellMenu]]"
+
+msgid "shellName"
+msgstr "Shell toegang"
+
+msgid "enableShell"
+msgstr "Enable Shell toegang"
+
+msgid "enableShell_help"
+msgstr "Schakel shell-toegang in om voldoende geprivilegieerde gebruikers in staat te stellen diensten zoals Telnet, SSH, SFTP of SCP te gebruiken."
+
+msgid "userEnableShell"
+msgstr "[[base-shell.enableShell]]"
+
+msgid "userEnableShell_help"
+msgstr "Schakel shell-toegang in om de gebruiker in staat te stellen een verbinding te maken met de server via diensten zoals Telnet, SSH, SFTP of SCP."
+
+msgid "shellIsEnabled"
+msgstr "Shell toegang"
+
+msgid "shellIsEnabled_help"
+msgstr "Shell toegang is ingeschakeld voor deze gebruiker."
+
+msgid "cantEnableNoVsiteShell"
+msgstr "Shell toegang kan niet worden ingeschakeld voor deze gebruiker, omdat de virtuele site die ze lid zijn van geen shell toegang ingeschakeld."
+
+msgid "siteshell"
+msgstr "[[base-shell.shellMenu]]"
+
+msgid "siteshell_help"
+msgstr "Configureer toegang voor GUI, shelltoegang (SSH en Telnet) evenals bestandsgerelateerde diensten zoals FTP, SFTP en SCP voor deze site."
+
+msgid "siteShellSettings"
+msgstr "Shell Instellingen voor [[VAR.fqdn]]"
+
+msgid "cap_serverShell"
+msgstr "Shell Instellingen"
+
+# --- Jailkit:
+
+msgid "none"
+msgstr "Geen"
+
+msgid "jailed_sftp_scp_rsync"
+msgstr "Verchroomd SFTP, SCP en RSYNC"
+
+msgid "jailed_shell"
+msgstr "Verchroomde schelp, SFTP, SCP en RSYNC"
+
+msgid "full_shell"
+msgstr "Volledige Shell toegang"
+
+# --- Active Monitor:
+
+msgid "amJailkitNameTag"
+msgstr "Jailkit Logging Daemon"
+
+msgid "amJailkitDetails"
+msgstr "Gevangenisuitrusting Logging Deamon Details"
+
+msgid "amNotRunning"
+msgstr "De Jailkit Logging Daemon loopt niet en kan niet opnieuw worden opgestart. Probeer Jailkit handmatig opnieuw op te starten en kijk of dat helpt. Controleer ook op eventuele foutmeldingen of andere aanklachten die je zou kunnen krijgen tijdens het handmatig herstarten van Jailkit."
+
+msgid "amStatusOK"
+msgstr "De Jailkit Logging Daemon werkt normaal."
+
+#
+### Google Authenticator:
+#
+
+msgid "GoogleAuthentication"
+msgstr "[[base-ssh.GoogleAuthentication]]"
+
+msgid "GoogleAuthentication_help"
+msgstr "[[base-ssh.GoogleAuthentication_help]]"
+

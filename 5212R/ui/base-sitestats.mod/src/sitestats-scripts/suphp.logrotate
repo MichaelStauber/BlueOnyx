@@ -1,0 +1,10 @@
+/var/log/httpd/suphp_log {
+        daily
+        missingok
+        rotate 14
+        prerotate
+          rm -rf /var/log/httpd/suphp_log.*
+        endscript
+        compress
+        notifempty
+}

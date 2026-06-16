@@ -1,0 +1,36 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+# this file should contain product specific strings
+
+msgid "productName"
+msgstr "BlueOnyx XXX_PRODUCT_VERSION_XXX"
+
+msgid "productLicense"
+msgstr "<CENTER>[[base-alpine.osVendor]].<BR>バイナリコードライセンス契約書</CENTER><P><P>BlueOnyxは、Sun Microsystems, Inc. が2003年12月24日にリリースした Sun Cobalt RaQ 550 ソフトウェアに基づいています。Sunは、Sun BSDライセンスの下でオープンソースソフトウェアとしてリリースしました。BlueOnyx自体は同じSUN修正BSDライセンスの下でリリースされていますが、SUNが最初にリリースして以来、基礎となるコードの多くが変更されています。ライセンスの詳細は、<a href='http://devel.blueonyx.it/pub/BlueOnyx/licenses/SUN-modified-BSD-License.txt' target='_blank'>こちら</a>で確認できます。<P>"
+
+msgid "miniNoticeEnglish"
+msgstr "このソフトウェアは Sun 修正 BSD ライセンスに基づいたオープンソースソフトウェアです。"
+
+msgid "miniNoticeFrench"
+msgstr " "
+
+msgid "shortNoticeEnglish"
+msgstr "このソフトウェアには、幾つかのオープンソースソフトウェア、またそれらから派生したものが含まれる場合があります。"
+
+msgid "longNoticeEnglish"
+msgstr "このソフトウェアは、その使用、複製、最頒布および逆コンパイルを制限しない Sun BSD 修正ライセンス条項に基づいて頒布されます。<P>"
+
+msgid "shortNoticeFrench"
+msgstr " "
+
+msgid "longNoticeFrench"
+msgstr " "
+

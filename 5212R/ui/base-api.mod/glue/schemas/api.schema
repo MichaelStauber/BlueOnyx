@@ -1,0 +1,81 @@
+<!-- $Id: api.schema -->
+
+<typedef name="InetAddressListIPv4IPv6" type="re"
+  data="^((([0-9]{1,3}\\.){3}[0-9]{1,3}\\/([0-9]|[1-2][0-9]|3[0-2]))|(([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4})\\/([0-9]|[1-9][0-9]|1[01][0-9]|12[0-8]))(([,]|[\\r\\n])((([0-9]{1,3}\\.){3}[0-9]{1,3}\\/([0-9]|[1-2][0-9]|3[0-2]))|(([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4})\\/([0-9]|[1-9][0-9]|1[01][0-9]|12[0-8])))*$"
+/>
+
+<!-- global settings -->
+
+<class name="System" namespace="API" version="1.0" createacl="ruleAll" destroyacl="ruleAll">
+
+    <!-- Basic -->
+    <property name="enabled" type="boolean"
+        optional="true" default="0"
+        writeacl="ruleCapable(serverServerDesktop)" readacl="ruleAll"
+    />
+
+    <property name="forceHTTPS" type="boolean"
+        optional="true" default="1"
+        writeacl="ruleCapable(serverServerDesktop)" readacl="ruleAll"
+    />
+
+    <property name="apiHosts" type="ipaddr" 
+        array="yes" optional="true" default=""
+        writeacl="ruleCapable(serverServerDesktop)" readacl="ruleAll"
+    />
+
+    <!-- APIv2 related: -->
+
+    <property name="api_enabled" type="boolean"
+        optional="true" default="1"
+        writeacl="ruleCapable(serverServerDesktop)" readacl="ruleAll"
+    />
+
+    <property name="socket_read_timeout" type="int" default="300"
+        writeacl="ruleCapable(serverHttpd)" 
+    />
+
+    <property name="listen_address" type="ipaddr" default="127.0.0.1"
+        writeacl="ruleCapable(serverHttpd)" 
+    />
+
+    <property name="listen_port" type="int" default="9092"
+        writeacl="ruleCapable(serverHttpd)" 
+    />
+
+    <property name="logging" type="boolean"
+        optional="true" default="1"
+        writeacl="ruleCapable(serverServerDesktop)" readacl="ruleAll"
+    />
+
+    <property name="debuglog" type="boolean"
+        optional="true" default="0"
+        writeacl="ruleCapable(serverServerDesktop)" readacl="ruleAll"
+    />
+
+    <property name="api_access"
+        type="InetAddressListIPv4IPv6"
+        array="true"
+        default=""
+        optional="true"
+        writeacl="ruleCapable(serverEmail)"
+    />
+
+    <property name="token_lifetime" type="int" default="300"
+        writeacl="ruleCapable(serverHttpd)" 
+    />
+
+    <property name="api_auth_fails" type="int" default="5"
+        writeacl="ruleCapable(serverHttpd)" 
+    />
+
+    <property name="api_ban_time" type="int" default="60"
+        writeacl="ruleCapable(serverHttpd)" 
+    />
+
+    <property name="force_update" type="int" default="60"
+        writeacl="ruleCapable(serverHttpd)" 
+    />
+
+</class>
+

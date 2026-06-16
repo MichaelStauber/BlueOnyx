@@ -1,0 +1,45 @@
+<!--
+    $Id: base-organizer GUI helper scripts
+-->
+
+<program name="/usr/sausalito/bin/radicale_list.pl">
+    <capability requires="adminUser" user="root"/>
+    <capability requires="siteAdmin" user="root"/>
+    <capability requires="manageSite" user="root"/>
+    <capability requires="modifyUser"/>
+</program>
+
+<program name="/usr/sausalito/bin/radicale_backup.pl">
+    <capability requires="adminUser" user="root"/>
+    <capability requires="siteAdmin" user="root"/>
+    <capability requires="manageSite" user="root"/>
+    <capability requires="modifyUser"/>
+</program>
+
+<program name="/usr/sausalito/bin/radicale_backup_check.pl">
+    <capability requires="adminUser" user="root"/>
+    <capability requires="siteAdmin" user="root"/>
+    <capability requires="manageSite" user="root"/>
+    <capability requires="modifyUser"/>
+</program>
+
+<program name="/usr/sausalito/bin/radicale_update.pl">
+    <capability requires="adminUser" user="root"/>
+    <capability requires="siteAdmin" user="root"/>
+    <capability requires="manageSite" user="root"/>
+    <capability requires="modifyUser"/>
+</program>
+
+<program name="/usr/sausalito/bin/radicale_create.pl">
+    <capability requires="adminUser" user="root"/>
+    <capability requires="siteAdmin" user="root"/>
+    <capability requires="manageSite" user="root"/>
+    <capability requires="modifyUser"/>
+</program>
+
+<program name="/usr/sausalito/bin/radicale_delete.pl">
+    <capability requires="adminUser" user="root"/>
+    <capability requires="siteAdmin" user="root"/>
+    <capability requires="manageSite" user="root"/>
+    <capability requires="modifyUser"/>
+</program>

@@ -1,0 +1,105 @@
+<!--
+    TwoFactorAuth.schema
+    Copyright (c) 2008-2026 Team BlueOnyx, BLUEONYX.IT
+    
+    Schema for storing encrypted 2FA data as User.TwoFactorAuth namespace
+-->
+
+<!-- 
+    User.TwoFactorAuth
+    Stores encrypted 2FA secrets and metadata per user
+    Migration path: Legacy ~/.google_authenticator → CODB (encrypted)
+-->
+<class name="User" namespace="TwoFactorAuth" version="1.0"
+    createacl="ruleSelf OR ruleModifyUser"
+    destroyacl="ruleModifyUser"
+>
+    
+    <!-- 
+        Encrypted TOTP secret (AES-256-GCM + Base64)
+        Empty if user has no 2FA or uses legacy ~/.google_authenticator
+    -->
+    <property 
+        name="secret_encrypted" type="scalar" optional="yes"
+        readacl="ruleSelf OR ruleModifyUser"
+        writeacl="ruleSelf OR ruleModifyUser"
+    />
+    
+    
+    <!-- 
+        Encrypted backup codes (JSON array)
+        Format: [{"code": "12345678", "used": false}, ...]
+    -->
+    <property 
+        name="backup_codes" type="scalar" optional="yes"
+        readacl="ruleSelf OR ruleModifyUser"
+        writeacl="ruleSelf OR ruleModifyUser"
+    />
+
+    <property
+        name="encryption_key" type="scalar" optional="yes"
+        readacl="ruleSelf OR ruleModifyUser"
+        writeacl="ruleSelf OR ruleModifyUser"
+    />
+    
+    
+    <!-- Whether 2FA is enabled for this user -->
+    <property 
+        name="enabled" type="boolean" default="0"
+        readacl="ruleAll"
+        writeacl="ruleSelf OR ruleModifyUser"
+    />
+    
+    
+    <!-- 
+        Source of the 2FA data:
+        - 0: native (created directly in CODB)
+        - 1: legacy (migrated from ~/.google_authenticator)
+    -->
+    <property 
+        name="is_legacy" type="boolean" default="0"
+        readacl="ruleAll"
+        writeacl="ruleSelf OR ruleModifyUser"
+    />
+    
+    
+    <!-- 
+        Count of failed 2FA attempts (for rate limiting)
+        Reset on successful login
+    -->
+    <property 
+        name="failed_attempts" type="int" default="0"
+        readacl="ruleSelf OR ruleModifyUser"
+        writeacl="ruleSelf OR ruleModifyUser"
+    />
+    
+    
+    <!-- 
+        Lockout until timestamp (unix time, 0 = not locked)
+    -->
+    <property 
+        name="locked_until" type="uint" default="0"
+        readacl="ruleSelf OR ruleModifyUser"
+        writeacl="ruleSelf OR ruleModifyUser"
+    />
+    
+    
+    <!-- 
+        When 2FA was first set up (unix timestamp)
+    -->
+    <property 
+        name="created_at" type="uint" optional="yes"
+        readacl="ruleAll"
+        writeacl="ruleSelf OR ruleModifyUser"
+    />
+    
+    
+    <!-- 
+        Last successful 2FA use (unix timestamp)
+    -->
+    <property 
+        name="last_used" type="uint" optional="yes"
+        readacl="ruleSelf OR ruleModifyUser"
+        writeacl="ruleSelf OR ruleModifyUser"
+    />
+</class>

@@ -1,0 +1,25 @@
+For 5210R we used the PHP-7 capable cracklib from this URL: 
+https://github.com/bajoyasujoya/pecl-crack
+
+The above source was used for EL8, but the URL has gone walkies in between. So we have to start over for 5211R.
+
+So for EL9 we now did it this way:
+
+1.) Got original crack-0.4.tgz sources from here: https://pecl.php.net/package/crack
+
+2.) To make it PHP-8 compatible, apply all patches that Gentoo uses: https://gitweb.gentoo.org/repo/gentoo.git/tree/dev-php/pecl-crack/files
+
+	fix-pecl-bug-5765.patch
+        fix-php-5-4-support.patch
+        0.4-php7.patch
+        0.4-php8.patch
+
+3.) Copy over some old files from the previous cracklib/crack/libcrack/src/ directory:
+
+	cracklib/crack/libcrack/src/cracklib.h.i686
+	cracklib/crack/libcrack/src/cracklib.h.old
+	cracklib/crack/libcrack/src/cracklib.h.x86_64
+
+4.) Build
+
+Yes, really. 

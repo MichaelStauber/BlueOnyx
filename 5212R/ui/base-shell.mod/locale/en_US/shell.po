@@ -1,0 +1,101 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2025-01-01 00:00+0000\n"
+"PO-Revision-Date: 2025-01-01 00:00+0000\n"
+"Last-Translator: Michael Stauber <mstauber@blueonyx.it>\n"
+"Language-Team: Team blueonyx\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+
+# strings for shell menu items
+msgid "shellMenu"
+msgstr "Server Access"
+
+msgid "shellMenuDescription"
+msgstr "Configure server access for GUI, shell access (SSH and Telnet) as well as file related services such as FTP, SFTP and SCP."
+
+# server wide shell access page
+msgid "shell"
+msgstr "[[base-shell.shellMenu]]"
+
+# ui extensions
+msgid "shellName"
+msgstr "Shell Access"
+
+msgid "enableShell"
+msgstr "Shell Access"
+
+msgid "enableShell_help"
+msgstr "Enable shell access to allow sufficiently privileged users to use services such as Telnet, SSH, SFTP or SCP."
+
+msgid "userEnableShell"
+msgstr "[[base-shell.enableShell]]"
+
+msgid "userEnableShell_help"
+msgstr "Enable shell access to allow the user to be able to connect to the server using services such as Telnet, SSH, SFTP or SCP."
+
+msgid "shellIsEnabled"
+msgstr "Shell Access"
+
+msgid "shellIsEnabled_help"
+msgstr "Shell access is enabled for this user."
+
+# handler error messages
+# user_shell.pl
+msgid "cantEnableNoVsiteShell"
+msgstr "Shell access cannot be enabled for this user, because the virtual site which they are a member of does not have shell access enabled."
+
+# site shell menus
+msgid "siteshell"
+msgstr "[[base-shell.shellMenu]]"
+
+msgid "siteshell_help"
+msgstr "Configure access for GUI, shell access (SSH and Telnet) as well as file related services such as FTP, SFTP and SCP for this site."
+
+msgid "siteShellSettings"
+msgstr "Shell & FTP Settings for [[VAR.fqdn]]"
+
+msgid "cap_serverShell"
+msgstr "Shell Settings"
+
+# --- Jailkit:
+
+msgid "none"
+msgstr "None"
+
+msgid "jailed_sftp_scp_rsync"
+msgstr "Chrooted SFTP, SCP and RSYNC"
+
+msgid "jailed_shell"
+msgstr "Chrooted Shell, SFTP, SCP and RSYNC"
+
+msgid "full_shell"
+msgstr "Full Shell Access"
+
+# --- Active Monitor:
+
+msgid "amJailkitNameTag"
+msgstr "Jailkit Logging Daemon"
+
+msgid "amJailkitDetails"
+msgstr "Jailkit Logging Deamon Details"
+
+msgid "amNotRunning"
+msgstr "The Jailkit Logging Daemon is not running and could not be restarted. Please try to restart Jailkit manually and see if that helps. Also check for any error messages or other indictations that you might get while restarting Jailkit manually."
+
+msgid "amStatusOK"
+msgstr "The Jailkit Logging Daemon is operating normally."
+
+#
+### Google Authenticator:
+#
+
+msgid "GoogleAuthentication"
+msgstr "[[base-ssh.GoogleAuthentication]]"
+
+msgid "GoogleAuthentication_help"
+msgstr "[[base-ssh.GoogleAuthentication_help]]"
+

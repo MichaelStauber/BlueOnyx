@@ -1,0 +1,14 @@
+Building requires the following RPMs to be installed:
+
+BuildRequires: glib-devel, pam-devel
+BuildRequires: glib-ghash
+BuildRequires: flex, bison
+BuildRequires: php-devel
+BuildRequires: php
+BuildRequires: db4-devel (for pam_abl) <- No longer needed?
+
+NEW for EL9:
+BuildRequires: flex-devel has been replaced by libfl-static
+
+Use:
+yum install glib-devel pam-devel glib-ghash flex bison php php-devel libfl-static

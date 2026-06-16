@@ -1,0 +1,120 @@
+<?php
+// $Id: 60_Shell.php.create.Vsite
+// Copyright (c) 2008-2023 Michael Stauber, SOLARSPEED.NET
+// Copyright (c) 2008-2023 Team BlueOnyx, BLUEONYX.IT
+
+include_once('UIExtension.php');
+
+class ShellExtension extends UIExtension
+{
+    function display(&$ServerScriptHelper, &$container, $parameters)
+    {
+        $CI = get_instance();
+        $BX_SESSION = $CI->getBX_SESSION();
+        $System = $CI->getSystem();
+        $factory = $ServerScriptHelper->getHtmlComponentFactory('base-shell');
+        $cce = $ServerScriptHelper->getCceClient();
+        $Capabilities = new Capabilities($cce, $BX_SESSION['loginName'], $BX_SESSION['sessionId']);
+        $i18n = new I18n("base-shell", $BX_SESSION['loginUser']['localePreference']);
+        
+        $defaults = $cce->get($parameters['CCE_SERVICES_OID'], 'Shell');
+
+        $Shell_enabled_Map = 
+            array(
+                "0" => "none", 
+                "1" => "jailed_sftp_scp_rsync", 
+                "2" => "jailed_shell", 
+                "3" => "full_shell"
+            );
+
+        if (($Capabilities->getAllowed('adminUser')) || ($Capabilities->getAllowed('manageSite'))) {   
+            $access = 'rw';
+            $is_site_admin = false;
+        }
+        elseif ($Capabilities->getAllowed('serverShell') && $group == $Capabilities->loginUser['site']) {
+            $access = 'r';
+            $is_site_admin = true;
+        }
+        else {
+            $access = 'r';
+            $is_site_admin = true;
+        }
+
+        // Sense checks:
+        $System_SSH = $cce->get($System['OID'], 'SSH');
+        if (($System_SSH['GoogleAuthentication'] == '0') && ($defaults['GoogleAuthentication'] == '1')) {
+            // System has 'GoogleAuthentication' OFF, so Users of this Vsite cannot have it ON:
+            $defaults['GoogleAuthentication'] = '0';
+        }
+
+        //
+        //-- Reseller: Can the reseller that owns this Vsite modify this?
+        //
+        $VsiteOwnerObj =  $BX_SESSION['loginUser'];
+
+        $access = 'rw';
+        if ($VsiteOwnerObj['name'] != "admin") {
+            $resellerCaps = $cce->scalar_to_array($VsiteOwnerObj['capabilities']);
+            if (!in_array('resellerShell', $resellerCaps)) {
+                $defaults['enabled'] = '0';
+                $access = 'r';
+            }
+        }
+
+        $page_id = $parameters['PAGED_BLOCK_DEFAULT_PAGE'];
+
+        // Enable Shell Access:
+        if (!$is_site_admin) {
+            $shellEnable = $factory->getMultiChoice("Shell_enabled", array_values($Shell_enabled_Map));
+            $shellEnable->setSelected($Shell_enabled_Map[$defaults['enabled']], true);
+            $container->addFormField($shellEnable, $factory->getLabel("enableShell"), $page_id);
+        }
+        else {
+            $word = $Shell_enabled_Map[$defaults['enabled']];
+            $nokey_info = $i18n->getClean("[[base-shell.$word]]", false, array());
+            $xxx = $factory->getTextField("Shell_enabled", $nokey_info , 'r');
+            $container->addFormField(
+                $xxx,
+                $factory->getLabel("enableShell"),
+                $page_id
+            );
+        }
+
+        // Google Authenticator enabled or not:
+        $GA_access = 'rw';
+        if ($System_SSH['GoogleAuthentication'] == '0') {
+            // 'GoogleAuthentication' is disabled in the server settings or Vsite settings:
+            $defaults['GoogleAuthentication'] = '0';
+            $GA_access = 'r';
+        }
+        $GoogleAuthentication_Field = $factory->getBoolean('GoogleAuthentication', $defaults['GoogleAuthentication'], $GA_access);
+        $container->addFormField(
+            $GoogleAuthentication_Field,
+            $factory->getLabel('GoogleAuthentication'),
+            $page_id
+            );
+    }
+
+    function handle(&$ServerScriptHelper, &$errors, $parameters, &$attributes)
+    {
+        $this->attributes = $attributes;
+
+        $cce = $ServerScriptHelper->getCceClient();
+
+        // Reverse Map to get the numerical value for 'Shell_enabled':
+        $Shell_enabled_Map_Reversed = 
+            array(
+                "none" => "0", 
+                "jailed_sftp_scp_rsync" => "1", 
+                "jailed_shell" => "2", 
+                "full_shell" => "3"
+            );
+
+        $attributes['Shell_enabled'] = $Shell_enabled_Map_Reversed[$this->attributes['Shell_enabled']];
+
+        $cce->set($parameters["CCE_OID"], "Shell", array("enabled" => $attributes['Shell_enabled'], 'GoogleAuthentication' => $attributes['GoogleAuthentication']));
+        $errors = array_merge($errors, $cce->errors());
+    }
+}
+
+?>

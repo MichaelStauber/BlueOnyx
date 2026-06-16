@@ -1,0 +1,111 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "APImenu"
+msgstr "API"
+
+msgid "APImenu_help"
+msgstr "Konfigurer adgang til BlueOnyx API, som muliggør fjernprovisionering og administration af denne server—enten via dine egne API-kald eller ved brug af tredjepartsværktøjer såsom WHMCS (https://www.whmcs.com/)."
+
+msgid "apiSettings"
+msgstr "API-indstillinger"
+
+msgid "API_info"
+msgstr "BlueOnyx API understøtter fjernprovisionering af Vsites, brugere og visse serveradministrationsopgaver. API-anmodninger sendes via HTTP(S) til serverens AdmServ-daemon. Et WHMCS-integrationsmodul er tilgængeligt. Se API-dokumentationen på: https://www.blueonyx.it/api-v2-documentation"
+
+msgid "enableServerField"
+msgstr "Aktivér API"
+
+msgid "enableServerField_help"
+msgstr "API'en er altid tilgængelig fra localhost. For at tillade adgang fra eksterne kilder skal du eksplicit autorisere disse IP-adresser."
+
+msgid "forceHTTPSField"
+msgstr "Tving HTTPS"
+
+msgid "forceHTTPSField_help"
+msgstr "Begrænser API-adgang til kun HTTPS-forbindelser for sikker kommunikation."
+
+msgid "apiHosts"
+msgstr "Fjern-IP-adgang"
+
+msgid "apiHosts_help"
+msgstr "Angiv de IP-adresser (i CIDR-notation), der har tilladelse til at få adgang til denne API. Af sikkerhedshensyn bør kun betroede IP-områder tillades."
+
+msgid "listen_port"
+msgstr "Lytteadresse"
+
+msgid "listen_port_help"
+msgstr "Definerer den IP og port, som API'en lytter på. Standard er 'localhost:9092'. For at tillade adgang fra eksterne systemer skal du ændre dette til '0.0.0.0:9092' (eller en mere specifik IP)."
+
+msgid "securityDesc"
+msgstr "Sikkerhedsindstillinger"
+
+msgid "token_lifetime"
+msgstr "Levetid for sikkerhedstoken"
+
+msgid "token_lifetime_help"
+msgstr "Angiver, hvor længe sikkerhedstokens forbliver gyldige for fjernklienter (standard: 300 sekunder). Når de udløber, skal klienter godkende igen."
+
+msgid "api_auth_fails"
+msgstr "API-godkendelsesfejl"
+
+msgid "api_auth_fails_help"
+msgstr "Antal mislykkede godkendelsesforsøg tilladt inden for API-banetidsvinduet, før den fjerne IP midlertidigt blokeres."
+
+msgid "api_ban_time"
+msgstr "API-banetid"
+
+msgid "api_ban_time_help"
+msgstr "Tidsvindue (i sekunder), hvor mislykkede godkendelsesforsøg tælles. Hvis grænsen overskrides, bliver den fjerne IP midlertidigt blokeret."
+
+msgid "loggingDesc"
+msgstr "Logningsindstillinger"
+
+msgid "logging"
+msgstr "Logning"
+
+msgid "logging_help"
+msgstr "Når aktiveret, logges alle API-adgange og operationer til /var/log/cced-api.log."
+
+msgid "debuglog"
+msgstr "Fejlfinding-logning"
+
+msgid "debuglog_help"
+msgstr "Aktiverer detaljeret logning til fejlfinding og debugging af API-anmodninger."
+
+msgid "AccessTokenTab"
+msgstr "Klienthemmeligheder"
+
+msgid "CIDR"
+msgstr "CIDR"
+
+msgid "CIDR_help"
+msgstr "CIDR-formateret IP-adresse eller subnet, der har adgang til API'en."
+
+msgid "Token"
+msgstr "Klienthemmelighed"
+
+msgid "Token_help"
+msgstr "Godkendelsestoken brugt af klienten til at få adgang til API'en. Denne bør holdes fortrolig."
+
+msgid "basicSettingsTab"
+msgstr "Grundlæggende indstillinger"
+
+msgid "amDetailsTitle"
+msgstr "CCEd-API-status"
+
+msgid "amStatusOK"
+msgstr "CCEd-API'en fungerer normalt."
+
+msgid "amNotAccepting"
+msgstr "CCEd-API'en kører ikke og kunne ikke genstartes. Prøv venligst at genstarte tjenesten manuelt med 'systemctl restart cced-api' for at se, om det løser problemet."
+
+msgid "amAPINameTag"
+msgstr "CCEd-API"

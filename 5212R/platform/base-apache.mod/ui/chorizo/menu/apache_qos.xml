@@ -1,0 +1,10 @@
+<item 
+    id="base_apache_qos" 
+    label="[[base-apache.base_apache_qos]]" 
+    description="[[base-apache.base_apache_qos_help]]" 
+    url="/apache/apacheqos"
+>
+    <parent id="base_security" order="31">
+        <access require="serverHttpd"/>
+    </parent>
+</item>

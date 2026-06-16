@@ -1,0 +1,11 @@
+<item
+  id="base_twoFactorAdminServer"
+  label="[[base-user.twofactor_menu_label]]"
+  description="[[base-user.twofactor_menu_desc_server]]"
+  url="/user/twoFactorAdmin?group=server"
+  icon="lock"
+  module="user">
+    <parent id="base_security" order="65">
+        <access require="systemAdministrator"/>
+    </parent>
+</item>

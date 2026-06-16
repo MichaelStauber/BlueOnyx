@@ -1,0 +1,53 @@
+#!/usr/bin/bash
+
+set -e
+
+FQDN=`hostname`
+ssldotconf=/etc/admserv/conf.d/ssl.conf
+
+if test -f /etc/admserv/certs/certificate -a \
+        -f /etc/admserv/certs/key; then
+    exit 0
+fi
+
+if test -f /etc/admserv/certs/certificate -a \
+        ! -f /etc/admserv/certs/key; then
+    echo "Missing AdmServ certificate key!"
+    exit 1
+fi
+
+if test ! -f /etc/admserv/certs/certificate -a \
+         -f /etc/admserv/certs/key; then
+    echo "Missing AdmServ certificate, but key is present!"
+    exit 1
+fi
+
+if ! test -f ${ssldotconf} || \
+   ! grep -q '^SSLCertificateFile    /etc/admserv/certs/certificate' ${ssldotconf} || \
+   ! grep -q '^SSLCertificateKeyFile /etc/admserv/certs/key' ${ssldotconf}; then
+    # Non-default configuration, do nothing.
+    exit 0
+fi
+
+sscg -q                                                           \
+     --dhparams-file       /etc/admserv/certs/dhparams.pem        \
+     --cert-file           /etc/admserv/certs/certificate         \
+     --cert-key-file       /etc/admserv/certs/key                 \
+     --ca-file             /etc/admserv/certs/certificate         \
+     --lifetime            365                                    \
+     --hostname            $FQDN                                  \
+     --email               root@$FQDN
+
+if [ ! -f /etc/admserv/certs/blank.txt ];then
+        echo "" > /etc/admserv/certs/blank.txt
+fi
+
+if [ ! -f /etc/admserv/certs/nginx_cert_ca_combined ];then
+        if [ -f /etc/admserv/certs/certificate ] && [ -f /etc/admserv/certs/key ];then
+                if [ -f /etc/admserv/certs/ca-certs ];then
+                        cat /etc/admserv/certs/certificate /etc/admserv/certs/blank.txt /etc/admserv/certs/ca-certs > /etc/admserv/certs/nginx_cert_ca_combined
+                else 
+                     cat /etc/admserv/certs/certificate > /etc/admserv/certs/nginx_cert_ca_combined   
+                fi
+        fi
+fi

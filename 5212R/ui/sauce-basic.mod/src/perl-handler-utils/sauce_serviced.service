@@ -1,0 +1,13 @@
+[Unit]
+Description=Sauce Service Daemon
+After=cced.init.service
+Before=cced.construct.service swatch.service blueonyx.service
+
+[Service]
+Type=forking
+ExecStart=/usr/sausalito/perl/Sauce/Service/sauce_serviced.pl
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=default.target

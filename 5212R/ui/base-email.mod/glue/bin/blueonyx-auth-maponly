@@ -1,0 +1,185 @@
+#!/usr/bin/perl
+# Id: /usr/sausalito/bin/blueonyx-auth-maponly
+#
+# Dovecot checkpassword mapper for BlueOnyx (map-only).
+# Reads <login>\0<password>\0 from FD 3 (checkpassword protocol),
+# resolves login -> canonical system user, denies disabled users,
+# sets $ENV{USER}, execs checkpassword-reply (argv[0]).
+#
+use strict;
+use warnings;
+
+use Sys::Syslog qw(openlog syslog closelog);
+
+# Toggle debug logging (syslog 'info' messages):
+my $DEBUG = 0;
+
+my $ALIASES  = '/etc/dovecot/blueonyx-login-aliases.map';
+my $DISABLED = '/etc/dovecot/blueonyx-login-disabled.map';
+
+openlog('blueonyx-auth-maponly', 'pid', 'mail');
+
+sub log_info {
+    return unless $DEBUG;
+    syslog('info', @_);
+}
+
+sub log_err {
+    syslog('err', @_);
+}
+
+my $reply = shift @ARGV;
+if (!$reply || !-x $reply) {
+    log_err("Missing/invalid checkpassword-reply argv0=%s", ($reply // ''));
+    closelog();
+    exit 111;
+}
+
+open(my $fd3, "<&=3") or do {
+    log_err("Failed to open FD3: %s", $!);
+    closelog();
+    exit 111;
+};
+binmode($fd3);
+
+sub read_cstring {
+    my ($fh) = @_;
+    my $buf = '';
+    while (1) {
+        my $c;
+        my $n = read($fh, $c, 1);
+        return undef if !defined($n) || $n == 0;
+        last if $c eq "\0";
+        $buf .= $c;
+        return undef if length($buf) > 8192;
+    }
+    return $buf;
+}
+
+my $login = read_cstring($fd3);
+my $pass  = read_cstring($fd3);  # ignored, but consumed
+
+if (!defined $login) {
+    log_err("No login read from FD3");
+    closelog();
+    exit 111;
+}
+
+$login =~ s/[\r\n]//g;
+$login =~ s/^\s+|\s+$//g;
+$login = lc($login);
+
+log_info("login=%s", $login);
+
+my $user = '';
+
+if ($login =~ /\@/) {
+    my $fh;
+    if (!open($fh, "<", $ALIASES)) {
+        log_err("Cannot open aliases map %s: %s", $ALIASES, $!);
+        closelog();
+        exit 1;
+    }
+
+    while (my $line = <$fh>) {
+        next if $line =~ /^\s*#/;
+        chomp $line;
+        next if $line =~ /^\s*$/;
+
+        # accept TAB or spaces, split into 2 fields max
+        my ($k, $v) = split(/\s+/, $line, 2);
+        next unless defined $k && defined $v;
+
+        $k =~ s/^\s+|\s+$//g;
+        $v =~ s/^\s+|\s+$//g;
+
+        if (lc($k) eq $login) {
+            $user = $v;
+            last;
+        }
+    }
+    close($fh);
+
+    if ($user eq '') {
+        log_info("No mapping found for %s in %s", $login, $ALIASES);
+        closelog();
+        exit 1;
+    }
+} else {
+    # Backward compatible: bare username works as before
+    $user = $login;
+}
+
+log_info("resolved_user=%s", $user);
+
+# disabled check
+if (-f $DISABLED) {
+    my $dfh;
+    if (!open($dfh, "<", $DISABLED)) {
+        log_err("Cannot open disabled map %s: %s", $DISABLED, $!);
+        # fail closed
+        closelog();
+        exit 1;
+    }
+    while (my $line = <$dfh>) {
+        next if $line =~ /^\s*#/;
+        chomp $line;
+        next if $line =~ /^\s*$/;
+
+        my ($u, $reason) = split(/\s+/, $line, 2);
+        next unless defined $u;
+        $u =~ s/^\s+|\s+$//g;
+
+        if (lc($u) eq lc($user)) {
+            $reason = '' unless defined $reason;
+            $reason =~ s/^\s+|\s+$//g;
+            log_info("user %s disabled (%s)", $user, $reason);
+            close($dfh);
+            closelog();
+            exit 1;
+        }
+    }
+    close($dfh);
+}
+
+$ENV{USER} = $user;
+log_info("exec reply=%s as USER=%s", $reply, $ENV{USER});
+
+closelog();
+exec { $reply } $reply;
+exit 111;
+
+# 
+# Copyright (c) 2008-2026 Michael Stauber, SOLARSPEED.NET
+# Copyright (c) 2008-2026 Team BlueOnyx, BLUEONYX.IT
+# All Rights Reserved.
+# 
+# 1. Redistributions of source code must retain the above copyright 
+#    notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+#    notice, this list of conditions and the following disclaimer in 
+#    the documentation and/or other materials provided with the 
+#    distribution.
+# 
+# 3. Neither the name of the copyright holder nor the names of its 
+#    contributors may be used to endorse or promote products derived 
+#    from this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
+# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+# POSSIBILITY OF SUCH DAMAGE.
+# 
+# You acknowledge that this software is not designed or intended for 
+# use in the design, construction, operation or maintenance of any 
+# nuclear facility.
+# 

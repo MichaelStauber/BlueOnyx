@@ -1,0 +1,12 @@
+# For EL10
+
+# We only need provisions for RHEL10 / AlmaLinux 10 / RockyLinux 10 here:
+
+## EL10:
+%dist .el10
+
+%debug_package %{nil}
+%_unpackaged_files_terminate_build 0
+%__perl_requires %{!?nil}
+%__arch_install_post %{nil}
+

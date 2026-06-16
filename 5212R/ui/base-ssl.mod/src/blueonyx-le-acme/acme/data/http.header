@@ -1,0 +1,14 @@
+HTTP/2 200 
+server: nginx
+date: Sun, 30 Oct 2022 05:36:36 GMT
+content-type: application/json
+content-length: 187
+boulder-requester: 800826792
+cache-control: public, max-age=0, no-cache
+link: <https://acme-v02.api.letsencrypt.org/directory>;rel="index"
+link: <https://acme-v02.api.letsencrypt.org/acme/authz-v3/170298904262>;rel="up"
+location: https://acme-v02.api.letsencrypt.org/acme/chall-v3/170298904262/uPmJUg
+replay-nonce: 1DFAte1KcFI3jRuOk8rUvEyjpj7mVc29smI6h69St6ST9Bg
+x-frame-options: DENY
+strict-transport-security: max-age=604800
+

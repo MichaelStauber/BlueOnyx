@@ -1,0 +1,112 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "APImenu"
+msgstr "API"
+
+msgid "APImenu_help"
+msgstr "Konfigurieren Sie den Zugriff auf die BlueOnyx API, die die Fern-Provisionierung und Verwaltung dieses Servers ermöglicht – entweder über eigene API-Aufrufe oder über Drittanbieter-Tools wie WHMCS (https://www.whmcs.com/)."
+
+msgid "apiSettings"
+msgstr "API-Einstellungen"
+
+msgid "API_info"
+msgstr "Die BlueOnyx API unterstützt die Fern-Provisionierung von Vsites, Benutzern und bestimmten Verwaltungsfunktionen. API-Anfragen werden per HTTP(S) an den AdmServ-Daemon des Servers gesendet. Ein WHMCS-Integrationsmodul ist verfügbar. Weitere Informationen finden Sie in der API-Dokumentation unter: https://www.blueonyx.it/api-v2-documentation"
+
+msgid "enableServerField"
+msgstr "API aktivieren"
+
+msgid "enableServerField_help"
+msgstr "Die API ist immer lokal (localhost) erreichbar. Um den Zugriff von externen Quellen zu erlauben, müssen Sie die entsprechenden IP-Adressen explizit autorisieren."
+
+msgid "forceHTTPSField"
+msgstr "HTTPS erzwingen"
+
+msgid "forceHTTPSField_help"
+msgstr "Beschränkt den Zugriff auf die API auf HTTPS-Verbindungen, um eine sichere Kommunikation zu gewährleisten."
+
+msgid "apiHosts"
+msgstr "Remote-IP-Zugriff"
+
+msgid "apiHosts_help"
+msgstr "Geben Sie die IP-Adressen (im CIDR-Format) an, die auf diese API zugreifen dürfen. Aus Sicherheitsgründen sollten nur vertrauenswürdige IP-Bereiche zugelassen werden."
+
+msgid "listen_port"
+msgstr "Listen-Adresse"
+
+msgid "listen_port_help"
+msgstr "Legt die IP und den Port fest, auf dem die API lauscht. Standardmäßig ist dies 'localhost:9092'. Um den Zugriff von externen Systemen zu erlauben, ändern Sie dies z. B. auf '0.0.0.0:9092' (oder eine spezifischere IP-Adresse)."
+
+msgid "securityDesc"
+msgstr "Sicherheitsoptionen"
+
+msgid "token_lifetime"
+msgstr "Gültigkeit des Sicherheitstokens"
+
+msgid "token_lifetime_help"
+msgstr "Legt fest, wie lange Sicherheitstokens für Remote-Clients gültig bleiben (Standard: 300 Sekunden). Danach muss sich der Client erneut authentifizieren."
+
+msgid "api_auth_fails"
+msgstr "API-Authentifizierungsfehler"
+
+msgid "api_auth_fails_help"
+msgstr "Anzahl der fehlgeschlagenen Authentifizierungsversuche innerhalb des Zeitfensters (API-Sperrzeit), bevor die IP-Adresse vorübergehend blockiert wird."
+
+msgid "api_ban_time"
+msgstr "API-Sperrzeit"
+
+msgid "api_ban_time_help"
+msgstr "Zeitfenster (in Sekunden), in dem fehlgeschlagene Authentifizierungsversuche gezählt werden. Wird das Limit überschritten, wird die IP-Adresse vorübergehend gesperrt."
+
+msgid "loggingDesc"
+msgstr "Protokollierungsoptionen"
+
+msgid "logging"
+msgstr "Protokollierung"
+
+msgid "logging_help"
+msgstr "Wenn aktiviert, werden alle API-Zugriffe und -Transaktionen in /var/log/cced-api.log protokolliert."
+
+msgid "debuglog"
+msgstr "Debug-Protokollierung"
+
+msgid "debuglog_help"
+msgstr "Aktiviert eine ausführliche Protokollierung zur Fehlersuche und zum Debuggen von API-Anfragen."
+
+msgid "AccessTokenTab"
+msgstr "Client-Geheimnisse"
+
+msgid "CIDR"
+msgstr "CIDR"
+
+msgid "CIDR_help"
+msgstr "CIDR-formatierte IP-Adresse oder Subnetz, das Zugriff auf die API hat."
+
+msgid "Token"
+msgstr "Client-Geheimnis"
+
+msgid "Token_help"
+msgstr "Authentifizierungstoken, das vom Client für den API-Zugriff verwendet wird. Dieses sollte vertraulich behandelt werden."
+
+msgid "basicSettingsTab"
+msgstr "Grundeinstellungen"
+
+msgid "amDetailsTitle"
+msgstr "CCEd-API-Status"
+
+msgid "amStatusOK"
+msgstr "Die CCEd-API funktioniert einwandfrei."
+
+msgid "amNotAccepting"
+msgstr "Die CCEd-API läuft nicht und konnte nicht neu gestartet werden. Bitte starten Sie den Dienst manuell mit 'systemctl restart cced-api', um zu prüfen, ob das Problem dadurch behoben wird."
+
+msgid "amAPINameTag"
+msgstr "CCEd-API"
+

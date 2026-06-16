@@ -1,0 +1,1269 @@
+# configuration bits for mod_rpmize
+# syntax:
+# <begin [x]section>
+# <end [x]section>
+#
+# x an be $ for a string or % for a hash.
+# if a hash is being used, you can add sub-sections with
+# <begin sub-section>
+# <end sub-section>
+
+
+<begin $DESCRIPTION>
+%package [LABEL]
+Group: System Environment/BlueOnyx
+Summary: [LABEL] for [VENDOR]-[SERVICE].
+[AUTOFILL]
+[BUILDARCH]
+
+%description [LABEL]
+The [VENDOR]-[SERVICE]-[LABEL] package contains the [LABEL]
+information for [VENDOR]-[SERVICE].
+
+<end $DESCRIPTION>
+
+<begin %PREP>
+<end %PREP>
+
+<begin %SETUP>
+<end %SETUP>
+
+<begin %BUILD>
+<end %BUILD>
+
+<begin %INSTALL>
+<end %INSTALL>
+
+<begin %FILES>
+<begin HEADER>
+%files [LABEL]
+%defattr(-,root,root)
+<end HEADER>
+
+<begin locale>
+[AUTOFILL]
+
+<end locale>
+
+<begin glue>
+%attr(0755,root,root)/usr/local/sbin/vacation.pl
+%attr(0755,root,root)/usr/local/sbin/break-smrsh-loop.pl
+%attr(0644,root,root)/etc/cron.d/break-smrsh-loop.cron
+%attr(0644,root,root)/etc/dovecot/conf.d/10-ssl.conf.bx
+%attr(0755,root,root)/etc/cron.daily/mboxfix.pl
+%attr(0755,root,root)/usr/sausalito/bin/remove_domain.pl
+%attr(0755,root,root)/usr/sausalito/bin/findalias.pl
+%attr(0755,root,root)/usr/sausalito/bin/blueonyx-postfix-confgen
+%attr(0755,root,root)/usr/sausalito/bin/blueonyx-postfix-canonical.pl
+%attr(0755,root,root)/usr/sausalito/bin/blueonyx-postfix-generate-sender-login-maps.pl
+%attr(0755,root,root)/usr/sausalito/bin/whichmta
+%attr(0755,root,root)/usr/sausalito/bin/get_opendkim.pl
+%attr(0755,root,root)/usr/sausalito/sbin/email-auth-helper.pl
+%attr(0755,root,root)/usr/sausalito/bin/blueonyx-auth-maponly
+%attr(0644,root,root)/etc/dovecot/conf.d/blueonyx-auth.conf.ext
+%config(noreplace)/usr/sausalito/bin/custom-postfix-confgen.sh
+/etc/smrsh/vacation.pl
+%config(noreplace)/etc/httpd/conf.d/radicale_redirects.conf
+[AUTOFILL]
+
+<end glue>
+
+<begin ui>
+[AUTOFILL]
+
+<end ui>
+
+<begin capstone>
+%{RootDir}/capstone/%{Vendor}-%{Service}.cap
+[AUTOFILL]
+
+<end capstone>
+<end %FILES>
+
+<begin %POST-INSTALL>
+<begin HEADER>
+%post [LABEL]
+<end HEADER>
+
+<begin capstone>
+# capstone post-install
+
+<end capstone>
+
+<begin glue>
+# glue post-install
+if [ ! -d /etc/mail ]; then \
+	mkdir -p /etc/mail; \
+fi
+
+if [ $1 -gt 1 ]; then
+    /usr/sausalito/bin/remove_domain.pl &>/dev/null || :
+fi
+
+if [ -f /usr/sausalito/bin/custom-postfix-confgen.sh ];then
+    chmod 0755 /usr/sausalito/bin/custom-postfix-confgen.sh
+    chown root:root /usr/sausalito/bin/custom-postfix-confgen.sh
+fi
+
+# Check if we already have the Dovecot 2.3.8 provisions set:
+if [ -f /etc/dovecot/conf.d/10-ssl.conf ]; then
+  ISPRESENT=`cat /etc/dovecot/conf.d/10-ssl.conf|grep '^ssl_dh ='|wc -l`
+else
+  ISPRESENT=0
+fi
+
+# If the ciphers are not yet set, copy the new config over:
+if (test $ISPRESENT = 0 ); then
+  cat /etc/dovecot/conf.d/10-ssl.conf.bx > /etc/dovecot/conf.d/10-ssl.conf
+fi
+
+# Create 4096 Bit DH:
+if [ -f /var/lib/dovecot/ssl-parameters.dat ] && [ ! -f /etc/dovecot/dh.pem ];then
+  dd if=/var/lib/dovecot/ssl-parameters.dat bs=1 skip=88 | openssl dhparam -inform der > /etc/dovecot/dh.pem
+fi
+
+# Disable NetworkManager check in /usr/libexec/dovecot/prestartscript:
+sed -i 'sX^/bin/systemctlX#/bin/systemctlXg' /usr/libexec/dovecot/prestartscript
+
+# Fix Z-Push:
+if [ -f /usr/sausalito/bin/z-push-fixes.sh ];then
+	/usr/sausalito/bin/z-push-fixes.sh &>/dev/null || :
+fi
+
+if [ -f /var/run/dovecot/login/imap ]; then
+  if [ -S /usr/sausalito/cced.socket ]; then
+	 systemctl condrestart dovecot &>/dev/null || :
+  fi
+fi
+
+# Restart CCEd and run Swatch for good measure:
+if [ -S /usr/sausalito/cced.socket ]; then
+    # Restart CCEd: 
+    if [ -d "/usr/sausalito/yumcce" ];then 
+      touch /usr/sausalito/yumcce/restart
+    fi 
+    /usr/sausalito/constructor/base/email/syncEmailOpenDKIM.pl &>/dev/null || :
+    /usr/sausalito/constructor/base/email/syncEmailService.pl &>/dev/null || :
+fi
+
+<end glue>
+<begin ui>
+# ui post-install
+
+<end ui>
+<begin locale>
+# locale post-install
+
+<end locale>
+<end %POST-INSTALL>
+
+<begin %POST-UNINSTALL>
+<begin HEADER>
+%postun [LABEL]
+<end HEADER>
+
+<begin glue>
+# glue post-uninstall
+
+<end glue>
+<begin ui>
+# ui post-uninstall
+
+<end ui>
+<begin locale>
+# locale post-uninstall
+
+<end locale>
+<end %POST-UNINSTALL>
+
+<begin $CHANGELOG>
+
+* Thu May 28 2026 Michael Stauber <mstauber@solarspeed.net> 2.2.8-2
+- Modified glue/handlers/enable.pl to no longer add duplicate confAUTH_OPTIONS
+  to sendmail.mc. It will also clean up existing duplicates on the next run.
+
+* Wed Feb 04 2026 Michael Stauber <mstauber@solarspeed.net> 2.2.8-1
+- Extended Smart Relay functionality to be more configurable. Now accepts
+  smart relay host, port, optional username/password and TLS settings.
+- Modified constructor/syncEmailService.pl to convert legacy settings
+  for Smart Relay into new format and submit them to CODB.
+- Modified glue/bin/blueonyx-postfix-confgen to configure Postfix with
+  the new Smart Relay settings.
+- Added new triggers to glue/conf/email.conf
+- Updated glue/handlers/system.pl to write new Smart Relay config.
+- Updated glue/schemas/email.schema with new key/value pairs for this.
+- Updated ui/chorizo/web/Controllers/Emailsettings.php to turn UI
+  element for Smart Relay into a getMultiChoice() IF the MTA is Postfix.
+  For Sendmail we fall back to the simple textfield input as we do not
+  go through the troubles to port this all the way back to Sendmail.
+- Updated locales
+
+* Fri Jan 23 2026 Michael Stauber <mstauber@solarspeed.net> 2.2.7-6
+- Modified glue/handlers/enable.pl to ditch 'p' from confAUTH_OPTIONS
+
+* Wed Jan 14 2026 Michael Stauber <mstauber@solarspeed.net> 2.2.7-5
+- Modified glue/bin/blueonyx-postfix-confgen to set 
+  submission/inet/smtpd_tls_auth_only=no instead of forcing yes.
+  Otherwise RoundCube breaks hard on sending emails unless it in
+  itself is wired to use TLS only for auth. Which it usually is not.
+
+* Tue Jan 13 2026 Michael Stauber <mstauber@solarspeed.net> 2.2.7-3
+- Modified glue/bin/blueonyx-postfix-confgen to conditionally add
+  Dovecot-Auth to port 25 as well and to make sure that if postscreen
+  is enabled we need to do things slightly different.
+- Modified glue/handlers/restart.pl to turn off debugging.
+
+* Tue Jan 13 2026 Michael Stauber <mstauber@solarspeed.net> 2.2.7-2
+- Modified glue/handlers/enable.pl to fix /etc/sasl2/Sendmail.conf
+  and /etc/sasl2/smtpd.conf. Also add Sendmail Systemd override file 
+  to call /usr/sausalito/sbin/email-auth-helper.pl and to fix PID 
+  location. We can't modify Sendmail to use Dovecot-Auth, but logins
+  with unaliased email-address still work.
+- Modified ui/chorizo/web/Controllers/EmailAutoconfig.php to detect
+  if Sendmail is used as MTA. If so, the XML for Outlook returns the
+  unaliased email address, as this is the best we can do. If Postfix
+  is used, the XML will still return whatever email address was
+  asked for to begin with.
+
+* Mon Jan 12 2026 Michael Stauber <mstauber@solarspeed.net> 2.2.7-1
+- Allow Postfix and Dovecot logins with email-address, even if it's
+  an aliased email address.
+- Modified constructor/syncEmailService.pl to make sure Dovecot
+  config is updated properly on CCEd restarts.
+- Added glue/bin/blueonyx-auth-maponly
+- Added glue/sbin/email-auth-helper.pl
+- Added glue/etc/dovecot/conf.d/blueonyx-auth.conf.ext
+- Modified glue/bin/blueonyx-postfix-confgen to switch Postfix's auth
+  mechanism to Dovecot Auth for ports 465 and 587. Also make sure that
+  Dovecot is running AND run the new glue/sbin/email-auth-helper.pl to
+  build the map files that have the association between ALL active 
+  email addesses AND the users they belong to.
+- Modified glue/conf/email.conf to tie the trigger 'force_mc_rebuild'
+  into also running glue/handlers/enable.pl so that the Dovecot config
+  is rebuilt.
+- Modified glue/handlers/enable.pl to make all the required changes to
+  Dovecot to get Dovecot Auth working with our custom blueonyx-auth.conf.ext
+  and glue/bin/blueonyx-auth-maponly.
+- Modified glue/handlers/restart.pl so that MTA restarts now also
+  restart Dovecot.
+- Modified ui/chorizo/web/Controllers/EmailAutoconfig.php so that
+  AutoDiscover for Outlook now returns whatever email address we
+  asked for and not the unaliased email address. If no emailaddress
+  was given, then we return the macro EMAILADDRESS instead.
+
+* Mon Jan 05 2026 Michael Stauber <mstauber@solarspeed.net> 2.2.6-3
+- Modified ui/chorizo/web/Controllers/EmailAutoconfig.php to only
+  render XML for enabled (secure!) protocols AND include POP3s
+  if it is enabled. But IMAP comes first, as it's the better choice.
+
+* Sun Jan 04 2026 Michael Stauber <mstauber@solarspeed.net> 2.2.6-2
+- Modified ui/chorizo/web/Controllers/EmailAutoconfig.php to better
+  cope with hostname extraction if multiple Vsites share the same
+  domain name.
+
+* Fri Jan 02 2026 Michael Stauber <mstauber@solarspeed.net> 2.2.6-1
+- Added Email Autoconfigure
+- Modified constructor/syncEmailService.pl to allow login to Dovecot
+  with the Email address, provided the LHS is the username.
+- Modified ui/chorizo/web/Config/Routes.php to add new routes.
+- Added ui/chorizo/web/Controllers/EmailAutoconfig.php to generate
+  the XML for Email Autoconfig/Autodiscovery.
+
+* Wed Nov 26 2025 Michael Stauber <mstauber@solarspeed.net> 2.2.5-4
+- Modified glue/bin/blueonyx-postfix-generate-sender-login-maps.pl
+  to handle Users with the flag 'allow_sender_spoof' in a way so
+  that they can also use whatever allowed email sender address they
+  like to use. Also improved email alias handling.
+- Modified glue/schemas/email.schema to add the new flag 
+  'allow_sender_spoof' to 'System' . 'UserDefaults'
+- Locales updated
+- Modified glue/conf/email.conf to add triggers for handlers dealing
+  with Vsite and User 'allow_sender_spoof' changes.
+- Added glue/handlers/user_sender_spoof.pl to force MTA restarts on
+  'allow_sender_spoof' changes of Users.
+- Added glue/handlers/vsite_sender_spoof.pl to force 'allow_sender_spoof'
+  off on all Users (but 'siteadmin who owns /web') if the feature
+  is disabled on the Vsite level.
+
+* Tue Nov 18 2025 Michael Stauber <mstauber@solarspeed.net> 2.2.5-3
+- Modified glue/bin/blueonyx-postfix-generate-sender-login-maps.pl
+  to streamline it and make it more robust.
+
+* Sun Nov 16 2025 Michael Stauber <mstauber@solarspeed.net> 2.2.5-2
+- Modified glue/bin/blueonyx-postfix-confgen for better deduplication.
+
+* Sat Nov 15 2025 Michael Stauber <mstauber@solarspeed.net> 2.2.5-1
+- Modified glue/bin/blueonyx-postfix-confgen to add some tweaks and
+  improvements. Also included provisions for our all new feature 
+  'Email Sender Security' that prevents email sender address spoofs
+  from SASL-authenticated users (local and remote). It does NOT
+  protect against local scripts or processes forging senders. Unless
+  they also uses SASL-auth for the emails.
+- Added glue/bin/blueonyx-postfix-generate-sender-login-maps.pl to
+  dynamically generate /etc/postfix/sender_canonical from CODB
+- Modified ui/chorizo/web/Controllers/Emailsettings.php to add
+  switch to enable/disable 'Prevent Sender Identity Spoofing'.
+- Modified glue/conf/email.conf to add handler trigger.
+- Modified glue/handlers/system.pl to write out config file.
+- Modified constructor/syncEmailService.pl as well.
+- Modified glue/schemas/email.schema to add 'authsend_protect' to
+  'System' namespace 'Email'.
+- Updated locales
+
+* Wed Oct 01 2025 Michael Stauber <mstauber@solarspeed.net> 2.2.4-10
+- Making sure to enforce proper ownership on /etc/opendkim/
+- Modified constructor/syncEmailOpenDKIM.pl
+- Modified glue/handlers/opendkim_enable.pl
+
+* Tue Sep 09 2025 Michael Stauber <mstauber@solarspeed.net> 2.2.4-9
+- Code cleanup and fixes to make sure Milter uses 127.0.0:8891
+- Modified constructor/syncEmailOpenDKIM.pl
+- Modified glue/handlers/opendkim_enable.pl
+- Modified glue/handlers/enable.pl for cleaner Dovecot config.
+- Modified glue/handlers/virtual_server.pl to NOT include server name
+  in /etc/mail/local-host-names. Sendmail doesn't need it and Postfix
+  otherwise complains about it.
+- Modified constructor/syncEmailService.pl to make sure /etc/shells
+  has all relevant Jailkit shells. Otherwise Vacation messages will
+  not work if Sendmail is the MTA and the user has Jails.
+
+* Thu Jul 03 2025 Michael Stauber <mstauber@solarspeed.net> 2.2.4-8
+- Modified glue/bin/blueonyx-postfix-confgen to remove Remove legacy 
+  TLS settings
+
+* Sat Jun 21 2025 Michael Stauber <mstauber@solarspeed.net> 2.2.4-7
+- Modified glue/bin/blueonyx-postfix-confgen with Mailman exceptions
+  for both BlueOnyx 5211R and 5212R.
+
+* Fri Jun 06 2025 Michael Stauber <mstauber@solarspeed.net> 2.2.4-6
+- Reworked the over-quota suspend/unsuspend Email for Users by
+  introducing a new CODB key as <useroid> . 'Disk' 'quota_toggle'.
+  This allows us to run the quota-treatment on Users even if their
+  over-quota status hasn't changed.
+- Added 'quota_toggle' trigger to glue/conf/user.conf
+- Modified glue/handlers/user_disable.pl to not freak out over Users
+  of type 'serverAdmin', who belong to no Vsite group. Implemented
+  better and cleaner written out access files by ditching the old
+  'replaceblock' with a newer function. 
+
+* Sat May 24 2025 Michael Stauber <mstauber@solarspeed.net> 2.2.4-5
+- Modified glue/handlers/user_disable.pl to restart MTA on suspend 
+  or unsuspend
+
+* Mon Dec 23 2024 Michael Stauber <mstauber@solarspeed.net> 2.2.4-4
+- Added glue/etc/httpd/conf.d/radicale_redirects.conf to provide URL
+  redirects so that Apple fondleslabs can reach Caldav/Carddav.
+  Many thanks to Christoph Schneeberger for pointing this out.
+
+* Sun Dec 15 2024 Michael Stauber <mstauber@solarspeed.net> 2.2.4-3
+- Modified glue/bin/blueonyx-postfix-confgen to create the AdmServ
+  /etc/admserv/certs/nginx_cert_ca_combined if it is missing.
+
+* Wed Dec 04 2024 Michael Stauber <mstauber@solarspeed.net> 2.2.4-2
+- Modified constructor/syncEmailService.pl to handle postfix.pem too
+- Modified glue/handlers/copy_certs.pl to handle postfix.pem too
+
+* Wed Nov 06 2024 Michael Stauber <mstauber@solarspeed.net> 2.2.4-1
+- Modified glue/handlers/personal.pl: Code cleanup and added debugging
+
+* Wed Nov 06 2024 Michael Stauber <mstauber@solarspeed.net> 2.2.3-1
+- glue/bin/blueonyx-postfix-canonical.pl more debugging added
+- glue/handlers/user_disable.pl code reformatted
+
+* Sun Jun 09 2024 Michael Stauber <mstauber@solarspeed.net> 2.2.2-1
+- Small fix in post-install of RPM to remove extra swatch run.
+
+* Sat Jun 08 2024 Michael Stauber <mstauber@solarspeed.net> 2.2.1-1
+- Small fixes in Handler and Constructor to determine IP via Network.pm
+- Modified constructor/syncEmailService.pl
+- Modified glue/handlers/enable.pl
+
+* Fri May 17 2024 Michael Stauber <mstauber@solarspeed.net> 2.2.0-3
+- Modified glue/conf/user.conf to run base/email/user_disable.pl on
+  change of User.Disk.over_quota
+- Modified glue/handlers/user_disable.pl to not only handle full
+  suspension of users via GUI, but also soft suspension via over_quota.
+  In cases of over_quota case we just turn off email with a proper
+  error message in the MTA about the reason. If email or user is
+  completly disabled for the user, we set a generic REJECT as before.
+- Small fixes in glue/handlers/personal.pl 
+
+* Mon Feb 19 2024 Michael Stauber <mstauber@solarspeed.net> 2.2.0-2
+- Version number bump for Elmer release
+
+* Tue Nov 21 2023 Michael Stauber <mstauber@solarspeed.net> 2.2.0-1
+- Fixed invalid regexp in glue/schemas/email.schema
+- Elmer related fixes in ui/chorizo/web/Controllers/Blacklist.php
+- Elmer related fixes in ui/chorizo/web/Controllers/Emailsettings.php
+
+* Tue Oct 17 2023 Michael Stauber <mstauber@solarspeed.net> 2.1.0-25
+- Bugfix in glue/handlers/mapmaker.pl
+
+* Mon Oct 16 2023 Michael Stauber <mstauber@solarspeed.net> 2.1.0-24
+- Modified glue/handlers/mapmaker.pl for cleaner mapmaker routine
+
+* Mon Sep 25 2023 Michael Stauber <mstauber@solarspeed.net> 2.1.0-23
+- Modified glue/bin/blueonyx-postfix-confgen to automatically add
+  RELAY hosts and IPs from 'Network Services' / 'Email' / 'Advanced'
+  'Relay Email From Hosts/Domains/IP Addresses' to 'mynetworks'.
+
+* Mon Sep 18 2023 Michael Stauber <mstauber@solarspeed.net> 2.1.0-22
+- Fixes in constructor/activate_sni.pl
+- Fixes in glue/handlers/sni_certs.pl
+
+* Fri Sep 15 2023 Michael Stauber <mstauber@solarspeed.net> 2.1.0-21
+- Small fixes in glue/handlers/sni_certs.pl
+
+* Fri Sep 15 2023 Michael Stauber <mstauber@solarspeed.net> 2.1.0-20
+- Small fixes in constructor/activate_sni.pl
+
+* Sat Aug 12 2023 Michael Stauber <mstauber@solarspeed.net> 2.1.0-19
+- Modified Sauce::Service calls to remove 'nobg' parameter.
+- Modified glue/handlers/personal.pl
+- Modified glue/handlers/restart.pl
+
+* Thu Apr 13 2023 Michael Stauber <mstauber@solarspeed.net> 2.1.0-18
+- Modified glue/bin/blueonyx-postfix-confgen to set a default hostname
+  if /usr/bin/hostname --domain returns nothing.
+
+* Thu Apr 13 2023 Michael Stauber <mstauber@solarspeed.net> 2.1.0-17
+- Modified glue/handlers/personal.pl, as the restart of the MTA
+  via Sauce::Service really needs a 'nobg' to not qeue it.
+
+* Mon Mar 13 2023 Michael Stauber <mstauber@solarspeed.net> 2.1.0-16
+- Small fix in glue/bin/blueonyx-postfix-confgen
+
+* Mon Mar 13 2023 Michael Stauber <mstauber@solarspeed.net> 2.1.0-15
+- Modified ui/chorizo/web/Controllers/Emailsettings.php to allow
+  hiding of previous headers again if we are using Postfix
+- Modified glue/bin/blueonyx-postfix-confgen to modify master.cf to
+  add the 'subcleanup' sections if hiding of headers is enabled.
+  Also creates the /etc/postfix/submission_header_checks mapping
+
+* Tue Feb 21 2023 Michael Stauber <mstauber@solarspeed.net> 2.1.0-14
+- Modified glue/handlers/system.pl to fix Cam AV Milter port
+
+* Tue Feb 21 2023 Michael Stauber <mstauber@solarspeed.net> 2.1.0-13
+- Modified glue/handlers/restart.pl for more reliable MTA restarts
+
+* Sun Feb 19 2023 Michael Stauber <mstauber@solarspeed.net> 2.1.0-12
+- Updated glue/handlers/system.pl to make it compatible with the latest
+  AV-SPAM.
+
+* Mon Feb 13 2023 Michael Stauber <mstauber@solarspeed.net> 2.1.0-11
+- Modified glue/handlers/vsite_opendkim_c.pl counter had wrong base value
+
+* Sun Feb 12 2023 Michael Stauber <mstauber@solarspeed.net> 2.1.0-10
+- Modified glue/schemas/email.schema to set default for 'enableOpenDKIM'
+  to '0' to not conflict on new Vsite creation.
+
+* Tue Feb 07 2023 Michael Stauber <mstauber@solarspeed.net> 2.1.0-9
+- Fixed glue/handlers/sni_certs.pl to work on 5211R.
+
+* Sat Jan 14 2023 Michael Stauber <mstauber@solarspeed.net> 2.1.0-8
+- Added obligatory spacer when concatenating cert data
+- Modified constructor/syncEmailService.pl
+- Modified glue/handlers/copy_certs.pl
+
+* Fri Jan 06 2023 Michael Stauber <mstauber@solarspeed.net> 2.1.0-7
+- More complete approach to DKIM handling: If multiple Vsites with the
+  same domain name exist and one gets DKIM activated, they all get it
+  activated. Both in CODB as well as in the DKIM configs.
+- When a multi-Vsite domain gets DKIM ticked off in the settings, they
+  all loose it.
+- If a Vsite is deleted, but other domains of it still have DKIM active,
+  we just remove the deleted Vsites data from the SigningTable.
+- Modifying FQDN, host-, domain or aliases now updates the SigningTable
+- If a Vsite is created and belongs to a Domain with DKIM? It gets it
+  as well.
+- Key and dirs and configs are only deleted if there are no more DKIM
+  members of that domain present.
+- Modified glue/conf/email.conf
+- Modified glue/handlers/vsite_opendkim.pl
+- Added glue/handlers/vsite_opendkim_c.pl to handle Vsite creation
+- Added glue/handlers/vsite_opendkim_d.pl to handle Vsite deletion
+- Added glue/handlers/vsite_opendkim_m.pl to handle Vsite modifications
+- Locale fix in ui/chorizo/extensions/01_OpenDKIM.php.modifyEmail.Vsite
+
+* Fri Jan 06 2023 Michael Stauber <mstauber@solarspeed.net> 2.1.0-6
+- Modified glue/schemas/email-am.schema to enable monitoring by default.
+  If OpenDKIM is enabled by default, then we also need to monitor by
+  default.
+- Small fix in ui/chorizo/extensions/01_OpenDKIM.php.modifyEmail.Vsite
+
+* Thu Jan 05 2023 Michael Stauber <mstauber@solarspeed.net> 2.1.0-5
+- Added OpenDKIM support
+- Added requirements for opendkim opendkim-tools sendmail-milter
+- Added constructor/syncEmailOpenDKIM.pl
+- Added glue/bin/get_opendkim.pl
+- Added glue/ccewrap
+- Added glue/ccewrap/email.xml
+- Added glue/handlers/opendkim_enable.pl
+- Added glue/handlers/vsite_opendkim.pl
+- Modified constructor/syncEmailService.pl
+- Modified glue/Makefile
+- Modified glue/bin/blueonyx-postfix-confgen
+- Modified glue/conf/email.conf
+- Modified glue/handlers/enable.pl
+- Modified glue/handlers/system.pl
+- Modified glue/schemas/email.schema
+- Added ui/chorizo/extensions/01_OpenDKIM.php.modifyEmail.Vsite
+- Modified ui/chorizo/web/Controllers/Emailsettings.php
+
+* Tue Dec 06 2022 Michael Stauber <mstauber@solarspeed.net> 2.1.0-4
+- Modified glue/bin/blueonyx-postfix-confgen to purge mailman handling
+  from 5211R Postfix configs.
+- Fixed path in glue/etc/cron.daily/mboxfix.pl
+
+* Wed Nov 30 2022 Michael Stauber <mstauber@solarspeed.net> 2.1.0-3
+- Modified constructor/syncEmailService.pl for lingering Z-Push artefact
+  and for setting more sensible confPRIVACY_FLAGS in sendmail.mc
+- Same in glue/handlers/system.pl for confPRIVACY_FLAGS
+
+* Fri Nov 18 2022 Michael Stauber <mstauber@solarspeed.net> 2.1.0-2
+- Release version for BlueOnyx 5211R
+
+* Sat Aug 20 2022 Michael Stauber <mstauber@solarspeed.net> 2.1.0-0BX01
+- Version number bump for EL9
+- Removed requires for Z-Push, as it needs php-imap, which no longer
+  is part of the upstream PHP
+
+* Thu Nov 11 2021 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX43
+- Modified glue/handlers/enable.pl to replace a chkconfig call
+
+* Mon Nov 01 2021 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX42
+- Modified constructor/syncEmailService.pl to conditionally merge ca-cert 
+  into dovecot.pem - provided we have intermediates.
+
+* Thu Sep 30 2021 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX41
+- Modified glue/handlers/copy_certs.pl to conditionally merge ca-cert 
+  into dovecot.pem - provided we have intermediates.
+
+* Wed Jul 07 2021 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX40
+- Bugfix in glue/usr/local/sbin/vacation.pl as supplied by Rickard Osser
+
+* Sat Apr 24 2021 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX39
+- Modified glue/bin/z-push-fixes.sh to have correct UID/GID on rotated
+  Z-Push logfiles.
+
+* Fri Apr 23 2021 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX38
+- Added requirements for blueonyx-z-push-backend-imap and php-awl
+- Modified glue/handlers/zpush.pl
+- Added constructor/zpush.pl
+- Added glue/bin/z-push-fixes.sh
+
+* Fri Apr 23 2021 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX37
+- Updated Z-Push requirements for newer version
+
+* Wed Dec 09 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX36
+- Modified glue/conf/blacklist.conf to trigger MTA restart on dnsbl._CREATE
+  and dnsbl._DESTROY as well.
+- Modified glue/handlers/restart.pl to add debugging and to even restart
+  MTA is only SMTPS is enabled and not just SMTP.
+
+* Thu Dec 03 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX35
+- Modified glue/bin/blueonyx-postfix-confgen to enable Postscreen if one 
+  or more RBLs are enabled.
+
+* Fri Nov 13 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX34
+- Modified smtpd_sender_restrictions in glue/bin/blueonyx-postfix-confgen
+
+* Fri Nov 13 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX33
+- Relaxed smtpd_sender_restrictions in glue/bin/blueonyx-postfix-confgen
+
+* Thu Nov 12 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX32
+- Modified glue/bin/blueonyx-postfix-confgen for more sensible main.cf 
+  smtpd_sender_restrictions handling. It now also calls our new 
+  /usr/sausalito/bin/custom-postfix-confgen.sh at the end to honor any
+  user specified custom Postfix config changes.
+- Added glue/bin/custom-postfix-confgen.sh
+
+* Sat Nov 07 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX31
+- Modified /glue/bin/blueonyx-postfix-confgen to create empty 
+  /etc/mailman/virtual-mailman if it's missing.
+
+* Fri Nov 06 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX30
+- Modified glue/conf/email_alias.conf to restart MTA on Alias changes.
+
+* Fri Nov 06 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX29
+- Modified glue/bin/blueonyx-postfix-confgen to fix [Devel:01530]
+- Fixed Mailman integration by also adapting Postfix and Mailman cfg.
+- Added 'System' . 'Email' 'accept_unresolv' switch to allow to configure
+  Postfix and Sendmail to accept emails from unresolvable domains.
+  Default is 0, as we don't want to allow that. But some might want to.
+- Modified constructor/syncEmailService.pl
+- Modified /glue/bin/blueonyx-postfix-confgen
+- Modified /glue/conf/email.conf
+- Modified /glue/handlers/system.pl
+- Modified /glue/schemas/email.schema
+- Modified /ui/chorizo/web/controllers/Emailsettings.php
+
+* Wed Oct 28 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX28
+- Conditional restarts of Dovecot enabled in glue/handlers/sni_certs.pl
+- Conditional restarts of Postfix enabled in glue/handlers/sni_certs.pl
+
+* Wed Oct 28 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX27
+- Modified glue/handlers/sni_certs.pl to handle nginx_cert_ca_combined
+
+* Mon Sep 07 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX26
+- Security fix: If the default 'queueTime' is modified from 'immediate'
+  to any other value AND the MTA is Sendmail, then there is a scenario
+  where authentication and ACLs can be bypassed. 
+- Modified constructor/syncEmailService.pl to force 'queueTime' to 
+  'immediate' regardless of MTA. Our Postfix always uses 'immediate'
+  anyway.
+- Modified ui/chorizo/web/controllers/Emailsettings.php to make sure the
+  only available option for 'queueTime' is 'immediate'. Regardless of MTA.
+
+* Wed Aug 26 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX25
+- Modified ui/chorizo/web/controllers/Emailsettings.php as is_int() check
+  on maxMessageSize didn't work as desired. Replaced is_int() with custom
+  function isInteger() instead.
+
+* Tue Jul 22 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX24
+- Modified glue/bin/blueonyx-postfix-confgen to handle SMTPS.
+  Thanks to Rickard Osser.
+
+* Tue Jul 07 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX23
+- Modified glue/bin/blueonyx-postfix-confgen to remove counter-productive
+  'smtpd_client_restrictions = sleep 5' line - if present. Many thanks to
+  Martin Schepers for finding that one.
+
+* Tue Jun 16 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX22
+- Modified glue/bin/blueonyx-postfix-confgen to improve the parameter 
+  smtpd_recipient_restrictions. Better canonicals and better rejection
+  for emails to/from suspended Vsites and Users.
+- Added glue/bin/blueonyx-postfix-canonical.pl to generate a proper
+  /etc/postfix/canonical as well as a new /etc/postfix/suspended_vsites
+- Fixes in glue/handlers/user_disable.pl
+
+* Tue Jun 16 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX21
+- Improved constructor/activate_sni.pl
+- Improved glue/handlers/sni_certs.pl
+- Yeah, no kidding. Somehwere in there was a massive facepalm.
+
+* Tue Jun 16 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX20
+- CentOS 8.2 related fixes revolving around Dovecot 2.3.8-2
+- Updated config options in glue/etc/dovecot/conf.d/10-ssl.conf.bx
+- Updated post-install scripts to check if we need to rotate in our
+  fixed new 10-ssl.conf.bx
+- Updated constructor/syncEmailService.pl to handle creation of 
+  /etc/dovecot/dh.pem and disabling of /usr/libexec/dovecot/prestartscript
+- Updated glue/handlers/enable.pl to adapt check for rotating 10-ssl.conf.bx
+  in place or not.
+
+* Thu Jun 11 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX19
+- Fixes in constructor/activate_sni.pl to fix a broken cert check.
+- Fixes in glue/handlers/sni_certs.pl to fix a broken cert check.
+
+* Tue Jun 09 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX18
+- Modified ui/chorizo/web/controllers/Emailsettings.php to add provisions
+  to change the Mailbox format between Mbox and Maildir.
+- Added rudimentary provisions to allow conversion of Mailboxes via the GUI.
+
+* Mon Jun 08 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX17
+- Locales extended for Postfix
+
+* Mon Jun 08 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX16
+- Further improvements of glue/bin/blueonyx-postfix-confgen
+
+* Mon Jun 08 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX15
+- Modified constructor/activate_sni.pl to handle Postfix SNI as well
+- Updated glue/bin/blueonyx-postfix-confgen for Postfix 3.5.2 and SNI
+- Modified glue/handlers/sni_certs.pl to handle Postfix SNI as well
+- Modified ui/chorizo/web/controllers/Emailsettings.php for Postfix
+- Added requirement for blueonyx-postfix
+
+* Wed Jun 03 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX14
+- Updated src/base-email-am/am_smtp.exp to handle Postfix as well.
+- Added glue/bin/whichmta as helper for src/base-email-am/am_smtp.exp
+
+* Tue Jun 02 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX13
+- Modified glue/bin/blueonyx-postfix-confgen to populate main.cf with
+  all sensible GUI configurable MTA options on Postfix restart.
+
+* Tue Jun 02 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX12
+- Added glue/bin/blueonyx-postfix-confgen, which is our ExecStartPre
+  script for the Postfix Systemd Unit-File.
+
+* Tue Jun 02 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX11
+- Modified glue/conf/vsite.conf to let update of MTA trigger MTA restart
+
+* Tue Jun 02 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX10
+- Suspension related changes for Postfix
+- Modified glue/conf/user.conf
+- Modified glue/conf/vsite.conf
+- Modified glue/handlers/user_disable.pl to write /etc/postfix/suspended_users
+
+* Thu May 28 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX09
+- Added Dovecot SNI support.
+- Added constructor/activate_sni.pl
+- Added glue/handlers/sni_certs.pl
+- Modified glue/conf/email.conf
+
+* Wed May 27 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX08
+- [BlueOnyx:23903] Japanese locales updated by Tomohiro Hosaka
+
+* Tue May 26 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX07
+- [BlueOnyx:23901] System.Email.queueTime did not apply - fixed
+
+* Fri May 22 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX06
+- [BlueOnyx:23879] ca-bundle.crt is now updated: glue/handlers/copy_certs.pl
+
+* Fri May 22 2020 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX05
+- [BlueOnyx:23877] access.db is not updated - fixed
+
+* Fri Sep 27 2019 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX04
+- Modified glue/usr/local/sbin/vacation.pl to remove usage of perl-Quota
+
+* Sun Sep 22 2019 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX03
+- Modified glue/schemas/email.schema to add 'do_not_reply' to 'User'
+  NameSpace 'Email'.
+- Modified glue/schemas/email.schema as several keys in 'User' NameSpace
+  'Email' that vacation.pl was using didn't have the proper Read-ACL
+  in order for vacation.pl to read them.
+- Modifed glue/usr/local/sbin/vacation.pl to not trigger on
+  'Precedence: list' as well as ignoring 'List-Id:' and 'List-Unsubscribe:'
+- Modified glue/usr/local/sbin/vacation.pl to not trigger if recipient
+  email address is on 'do_not_reply' list. Partially honors wildcards, too.
+
+* Wed Jun 19 2019 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX02
+- Updated glue/etc/dovecot/conf.d/10-ssl.conf.bx
+- Modernized glue/handlers/enable.pl
+- Externalized some Dovecot parameters to glue/schemas/email.schema
+
+* Wed Jun 05 2019 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX01
+- Updated for 5210R.
+
+* Tue Feb 26 2019 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX50
+- Dropped requirement for php-pear-Mail
+
+* Sun Jul 08 2018 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX49
+- Modified glue/usr/local/sbin/vacation.pl to fix Mojibake. Fix provided
+  by Tomohiro Hosaka <bokutin@gmail.com> - many thanks.
+
+* Wed Nov 17 2017 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX48
+- IPv6 support added. On Gateway changes (IPv4/IPv6) or when otherwise
+  triggered, our handlers/constructors check if IPv4, IPv6 or dual stack
+  is possible beased on the presence of the respective gateways. 
+  Depending on these checks dovecot.conf gets a new listen directive and
+  sendmail.mc is extended to bind to IPv4, IPv6 or both. The catch is
+  that Sendmail isn't truly dual stack. Best we can do in dual stack is
+  to bind it to all IPv4 addresses and the primary IPv6 IP address.
+- Modified constructor/syncEmailService.pl
+- Modified glue/handlers/enable.pl
+- Modified glue/conf/email.conf
+
+* Sat Nov 11 2017 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX47
+- Small conf update
+
+* Sat Sep 23 2017 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX46
+- Between the AV-SPAM modifying sendmail.mc and base-email doing the same
+  we started to see massive discrepancies in the results. Same for the
+  base-email constructor and handler. All three of them wiggled different
+  settings in and forgot about others. Unified the routine in all three
+  of them that updates sendmail.mc. The results should now be much more
+  uniform.
+- Fixed bug of 'popauth' provision never being removed from sendmail.mc
+  even if the service was disabled.
+- Massively improved the 'Hide previous headers' feature and turned it
+  into something usable. Full credit for this to Andreas Schamanek from
+  the TU Wien who mentioned this approach in his blog. We now check if
+  am email came in via SMTP-AUTH and if so, we leave the header instead
+  of removing it. But we change its format to show the username of the
+  authed user, the FQDN and IP of our server. That way: If someone 
+  reports abuse, we can track the user immediately. But even better:
+  Headers from non-SMTP-Auth emails remain unchanged, which is what we
+  need if we're going after the IPs of people who send us shit. That
+  saves us digging the IP out of the log by using the MessageID. Or
+  doing some more arcane stuff like using Milter-Addheader.
+- Modified constructor/syncEmailService.pl
+- Modified glue/conf/email.conf
+- Modified glue/handlers/system.pl
+
+* Fri Sep 15 2017 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX45
+- Fixed constructor/syncEmailService.pl to now honor all relevant GUI
+  settings. If need be by appending missing settings to sendmail.mc
+
+* Wed Feb 22 2017 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX44
+- Adapted Controllers for base-alpine 2.0
+
+* Mon Jan 16 2017 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX43
+- Small fixes to constructor/syncEmailService.pl
+
+* Mon Jan 16 2017 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX42
+- Fixed constructor/syncEmailService.pl to handle the 'forgotten' params
+  as well. Like smarthost, hideHeaders, delayChecks, masqAddress and
+  maxRecipientsPerMessage.
+
+* Thu Aug 25 2016 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX41
+- Modified glue/usr/local/sbin/vacation.pl to allow config of aliases
+  as sender address of vacation messages.
+
+* Thu Jun 16 2016 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX40
+- Made service restarts in constructor/syncEmailService.pl dependent on
+  if one is needed.
+
+* Thu Jun 16 2016 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX39
+- Modified constructor/syncEmailService.pl to also copy present admserv
+  intermediates to ca-bundle.
+
+* Mon Mar 21 2016 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX38
+- Updated Italian locales added as provided by Simone Capra.
+
+* Wed Dec 23 2015 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX37
+- Small fix in glue/usr/local/sbin/vacation.pl
+
+* Mon Oct 12 2015 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX36
+- Modified debugging in glue/handlers/validate_alias.pl
+
+* Wed Jul 01 2015 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX35
+- Modified glue/usr/local/sbin/vacation.pl to add Postlayer work around.
+
+* Wed Jun 24 2015 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX34
+- Another mod to constructor/syncEmailService.pl to fix a typo in the
+  cipher list. Interestingly enough it had no effect for the better or
+  worse.
+
+* Tue Jun 16 2015 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX33
+- Another mod to constructor/syncEmailService.pl to allow two wildly 
+  supported (but weaker) extra ciphers to make sure that we can talk to
+  even the most crappy servers out there. As long as they still support
+  at least TLSv1.0. This isn't ideal, but will have to do for now.
+
+* Mon Jun 15 2015 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX32
+- Modified constructor/syncEmailService.pl to make sure the new additions
+  to sendmail.mc are printed only once.
+
+* Fri Jun 12 2015 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX31
+- To deal with Logjam and OpenSSL related oddities we will now start using
+  2048 bit Diffie-Hellman certs. Additionally we disable SSLv3 and SSLv2 in
+  Sendmail as well and enforce stricter cipher usage.
+- Modified base-email.mod/constructor/syncEmailService.pl to deal with the
+  sendmail.mc / sendmail.cf related changes of this.
+- Minor code indentation changes in base-email.mod/glue/handlers/system.pl
+
+* Mon Mar 09 2015 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX30
+- Sendmail.cf wasn't rebuild after RBL changes.
+- Modified glue/handlers/blacklist.pl to wiggle in a cf rebuild.
+- Modified glue/handlers/restart.pl
+
+* Sat Mar 07 2015 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX29
+- Prepared package for merge down to release it for 5106R, 5207R and 5108R
+  as well. Modified various post-install transactions for that.
+
+* Thu Mar 05 2015 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX28
+- Added feature to (optionally) suppress previous headers from sent email
+  messages. Configureable under 'Network Services' / 'Email' / 'Advanced'.
+- Modified glue/schemas/email.schema to add 'hideHeaders' to 'System' . 
+  'Email'.
+- Modified glue/handlers/system.pl to handle the required sendmail.mc 
+  configuration to implement this feature.
+- Modified ui/chorizo/web/controllers/emailsettings.php to add the needed
+  checkbox to toggle this feature in the new GUI.
+- Modified glue/conf/email.conf to trigger this config change.
+- Extended all locales with the new texts for this feature.
+- Modified ui/web/email.php and ui/web/emailHandler.php to also add this
+  to the old GUI.
+
+* Tue Feb 24 2015 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX27
+- Added requirement for cyrus-sasl-plain to Makefile.
+
+* Thu Dec 04 2014 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX26
+- Some Systemd love in post-install and AM-scripts.
+
+* Wed Dec 03 2014 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX25
+- One more fix in constructor/syncEmailService.pl. We better use 
+  Sauce::Service consistently for best compatability with InitV, Upstart
+  and Systemd.
+
+* Wed Dec 03 2014 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX24
+- Modified constructor/syncEmailService.pl to deal with EL7 related oddities.
+
+* Wed Dec 03 2014 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX23
+- Updated constructor/syncEmailService.pl to handle RBL settings as well.
+
+* Tue Oct 28 2014 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX22
+- Modified glue/handlers/enable.pl to handle the new config file format
+  of Dovecot > 2.2.
+
+* Mon Oct 27 2014 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX21
+- Updated 10-ssl.conf.bx for Dovecot 2.2.15
+- Updated Require in Makefile to require Dovecot >= 2.2.15
+- Disabled SSLv3 for Dovecot, set ssl_prefer_server_ciphers to yes changed
+  ssl_dh_parameters_length from 1024 to 2048 and updated ssl_cipher_list
+  with latest suggestion from bettercrypto.org
+
+* Sat Oct 11 2014 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX20
+- Modified glue/handlers/forward.pl to turn off forwarding on suspend.
+
+* Tue Sep 09 2014 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX19
+- Dovecot was not properly disabled when turned off in the GUI. Fixed.
+- Modified constructor/syncEmailService.pl
+- Modified glue/handlers/enable.pl
+- Fiddled a newalias run into various handlers. I trust this more than
+  makemap hash after all.
+
+* Wed Jul 16 2014 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX18
+- Several locale fixes.
+
+* Fri Jul 11 2014 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX17
+- Chorizo GUI added, old GUI disabled.
+
+* Wed May 28 2014 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX16
+- Small mod to glue/usr/local/sbin/vacation.pl to handle quota better.
+
+* Thu Apr 17 2014 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX15
+- Modified glue/handlers/vacation.pl yet again. Massive code cleanup.
+  Better debugging straight to maillog added. Fiddled with UTF-8 ecoding
+  again, because non-Japanese Subjects with non-ASCII chars were buggered
+  up yet again. This should fix it. If not, then I am close to give this
+  the axe. Or blow it to the moon. Or kill it with fire.
+
+* Wed Apr 02 2014 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX14
+- Modified glue/handlers/vacation.pl yet again. 510XR was moved entirely
+  to UTF-8, too. So we no longer need to transform from EUC-JP to UTF-8,
+  as it is stored in UTF-8 right away.
+
+* Sat Mar 29 2014 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX13 
+- Modified glue/handlers/vacation.pl yet again. 520XR was moved entirely 
+  to UTF-8. This neccesitates that the vacation message is written off 
+  in pure UTF-8 for all languages including Japanese. 
+
+* Sat Mar 29 2014 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX13
+- Modified glue/handlers/vacation.pl yet again. 520XR was moved entirely
+  to UTF-8. This neccesitates that the vacation message is written off
+  in pure UTF-8 for all languages including Japanese.
+
+* Thu Mar 27 2014 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX12
+- Added improved French translation as provided by Meaulnes Legler.
+
+* Thu Mar 27 2014 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX11
+- Fix for Japanese vacation messages.
+- Modified glue/handlers/vacation.pl to store .vacation_msg in UTF-8 format
+  even (and especially if) the locale preference is set to Japanese.
+- Modified glue/usr/local/sbin/vacation.pl to email out Japanese vacation
+  messages in UTF-8 encoding. For this the subject had to be turned from
+  EUC-JP into UTF-8 as well and the subject itself needed proper 
+  MIME-encoding.
+
+* Thu Feb 18 2014 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX10
+- Modified constructor/syncEmailService.pl and glue/handlers/copy_certs.pl
+  to copy/create the intermediate cert files for Dovecot. If no intermediates
+  are being used by AdmServ, then a blank file is created instead. 
+  10-ssl.conf is thenupdated and the needed 'ssl_ca' line is added, pointing
+  to the intermediate. The editing uses Sauce::Util, which will prevent that
+  the line shows up twice in case someone has already added it.
+
+* Thu Feb 13 2014 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX09
+- On Server host- and domain-name changes handler hostname.pl failed.
+  We actually don't need it, as it's only needed for Postfix.
+- Modified glue/handlers/hostname.pl to disable the disturbing sections.
+- Modified glue/conf/email.conf to disable calling hostname.pl
+- Modified glue/handlers/system.pl to nicen up formatting.
+
+* Sun Feb 09 2014 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX08
+- The concatenation fix for sendmail.pem had gone walkies. Added it again.
+- Fixed glue/handlers/copy_certs.pl
+- Fixed constructor/syncEmailService.pl
+
+* Wed Feb 05 2014 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX07
+- Added cleaned up French translation as provided by Meaulnes Legler.
+
+* Tue Feb 04 2014 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX06
+- Added /etc/dovecot/conf.d/10-ssl.conf.bx, which on post-install will be
+  dumped into /etc/dovecot/conf.d/10-ssl.conf. With that we now specify
+  the ciphers and protocols, which will allow TLSv1.2 on EL6 based boxes.
+  We also use it to specify the SSL cipher list and use the recommended
+  one from https://bettercrypto.org/static/applied-crypto-hardening.pdf
+
+* Tue Jan 28 2014 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX05
+- Modified glue/handlers/copy_certs.pl and glue/conf/email.conf as email
+  related services were not restarted on SSL certificate updates.
+- Added restart for xinetd as well.
+
+* Fri Dec 27 2013 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX04
+- German locale had incorrect charset.
+
+* Sat Dec 14 2013 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX03
+- Merged in locales for the Netherlands ('nl_NL').
+
+* Sun Dec 08 2013 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX02
+- Added missing localization string for 'cap_serverEmail'.
+
+* Thu Dec 05 2013 Michael Stauber <mstauber@solarspeed.net> 1.6.0-0BX01
+- Preparational build for 5207R/5208R. Doesn't include new GUI yet.
+- Merged in new locales from 5207R ("es_ES", "fr_FR", "it_IT", "pt_PT").
+- Dropped all two character locales.
+- Converted "ja_JP" from EUC-JP to UTF-8.
+- Updated dependency list in Makefile.
+- Modified glue/usr/local/sbin/vacation.pl so that ja_JP encoded messages now use UTF-8 again.
+
+* Fri Aug 23 2013 Michael Stauber <mstauber@solarspeed.net> 1.5.1-0BX13
+- Modified constructor/syncEmailService.pl with provisions for 5106R only that allow us to bypass the problem with
+  'TLS message: tlsv1 alert insufficient security:s3_pkt.c:1092:SSL alert number 71' as per 
+  http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=461802. Fix suggeste by Tobias Gablunsky in [BlueOnyx:13533].
+
+* Sat Mar 31 2012 Michael Stauber <mstauber@solarspeed.net> 1.5.1-0BX12
+- Modified glue/usr/local/sbin/vacation.pl to switch 'content-type.charset' to 'EUC-JP' for Japanese messages.
+  This is far from being perfect, as the subject encoding is now a bit illegal. But it'll have to do for now.
+
+* Tue Mar 20 2012 Michael Stauber <mstauber@solarspeed.net> 1.5.1-0BX11
+- Converted locale encoding from UTF-8 to ISO-8859-1.
+
+* Tue Sep 27 2011 Michael Stauber <mstauber@solarspeed.net> 1.5.1-0BX10
+- Updated locale/ja/email.po again with updated Japanese translation as provided by Eiji Hamano. Many thanks.
+
+* Mon Sep 23 2011 Michael Stauber <mstauber@solarspeed.net> 1.5.1-0BX9
+- Changed sendmail 'start' to 'restart' in glue/handlers/restart.pl, as start often doesn't fire up sm-client.
+- Added conditional Sendmail restart to glue/handlers/personal.pl, as it runs last after useradd/userdelete.
+
+* Mon Sep 19 2011 Michael Stauber <mstauber@solarspeed.net> 1.5.1-0BX8
+- Updated locale/ja/email.po with Japanese translation as provided by Eiji Hamano. Many thanks.
+
+* Wed Aug 24 2011 Michael Stauber <mstauber@solarspeed.net> 1.5.1-0BX7
+- Modified glue/etc/cron.daily/mboxfix.pl to remove path from find command as it is different between EL5 and EL6
+
+* Thu Jul 21 2011 Rickard Osser <rickard.osser@bluapp.com> 1.5.1-0BX6
+- Added support for date handling in vacation messages.
+
+* Tue Apr 26 2011 Michael Stauber <mstauber@solarspeed.net> 1.5.1-0BX5
+- Modified glue/handlers/Email.pm to handle both MailMan or Majordomo presence.
+
+* Wed Nov 17 2010 Taco Scargo <taco@scargo.nl> 1.5.1-0BX4
+- Removed games from the reserved aliases
+
+* Sat Apr 10 2010 Michael Stauber <mstauber@solarspeed.net> 1.5.1-0BX3
+- Japanese locales are busted. Removed them by copying over the English ones. Getting pointless anyway.
+- Fixed typo in German locales.
+
+* Sat Apr 10 2010 Michael Stauber <mstauber@solarspeed.net> 1.5.1-0BX2
+- Forgot to add dependency for php-pear-Mail to Makefile. Fixed.
+
+* Sat Apr 10 2010 Michael Stauber <mstauber@solarspeed.net> 1.5.1-0BX1
+- Added Z-Push support
+- Added requirement for blueonyx-z-push to Makefile
+- Extended GUI with ability to enable Z-Push support
+
+* Fri Mar 05 2010 Rickard Osser <rickard.osser@bluapp.com> 1.5.0-0BQ4
+- Added delay_checks to Advanced settings.
+
+* Tue Mar 02 2010 Rickard Osser <rickard.osser@bluapp.com> 1.5.0-0BQ3
+- Changed system.pl to dynamically add maxRecipientsPerMessage to sendmail.mc if it's not there.
+
+* Mon Mar 01 2010 Michael Stauber <mstauber@solarspeed.net> 1.5.0-0BQ2
+- constructor/syncEmailService.pl didn't update maxMessageSize correctly and by factor 1024 too small
+- Added provisions for maxRecipientsPerMessage to module
+- Added cronjob /etc/cron.daily/mboxfix.pl work around to fix issue with UID 0 owned mbox files
+- Fixed display problem in non-English versions of "blackist" in ui/web/email.php
+- Added missing blacklist strings to da_DK, de_DE and ja locales. In English for now
+- Added missing 'error_writing_sendmail_mc' string to all locales
+
+* Tue Aug 25 2009 Rickard Osser <rickard.osser@bluapp.com> 1.5.0-0BQ1
+- Reverted back to use sendmail.mc only.
+- Fixed so that all MAILER() records always gets added last.
+- Added support for using DNSBL blacklisting in the GUI.
+
+* Fri Jul 17 2009 Rickard Osser <rickard.osser@bluapp.com> 1.4.0-0BQ1
+- Major rewrite in sendmail configuration.
+- We don't hack sendmail.cf directly, all GUI changes are done in bgui.mc.
+- New sendmail.mc file which will be static is needed.
+
+* Fri Mar 27 2009 Rickard Osser <rickard.osser@bluapp.com> 1.3.2-0BQ49
+- Fixed type in emailHandler.php.
+
+* Fri Mar 20 2009 Michael Stauber <mstauber@solarspeed.net> 1.3.2-0BQ48
+- Added missing schema file mx2email.schema 
+- Updated ui/web/email.php to display missing help text for add button
+- Removed unneeded Add-button label text from all locales.
+
+* Wed Mar 18 2009 Michael Stauber <mstauber@solarspeed.net> 1.3.2-0BQ47
+- Copied new locale strings from 'en' to 'ja' and 'da_DK'
+- German translation 100% done.
+
+* Wed Mar 18 2009 Rickard Osser <rickard.osser@bluapp.com> 1.3.2-0BQ46
+- Fixed problem in scrollList for Secondary mailservice.
+
+* Wed Mar 18 2009 Rickard Osser <rickard.osser@bluapp.com> 1.3.2-0BQ45
+- Fixed some small bugs in the gui, turned off DEBUG in mailertable handler.
+
+* Wed Mar 18 2009 Rickard Osser <rickard.osser@bluapp.com> 1.3.2-0BQ44
+- Added capability to manage secondary mailservers in the GUI.
+
+* Mon Dec 22 2008 Michael Stauber <mstauber@solarspeed.net> 1.3.1-0BQ43
+- Removed requirement for base-squirrelmail-capstone again. Makes no sense to force the install.
+
+* Sun Dec 21 2008 Michael Stauber <mstauber@solarspeed.net> 1.3.1-0BQ42
+- Added requirement for base-squirrelmail-capstone
+
+* Sat Dec 20 2008 Michael Stauber <mstauber@solarspeed.net> 1.3.1-0BQ41
+- Fixed glue/usr/local/sbin/vacation.pl again to break loop if reply had been sent.
+
+* Sat Dec 20 2008 Michael Stauber <mstauber@solarspeed.net> 1.3.1-0BQ40
+- Added requirement for base-email-am to Makefile.
+
+* Thu Dec 18 2008 Michael Stauber <mstauber@solarspeed.net> 1.3.1-0BQ39
+- Modified vacation.pl to set charset to ISO-8859-1.
+
+* Thu Dec 18 2008 Michael Stauber <mstauber@solarspeed.net> 1.3.1-0BQ38
+- Vacation messages were pretty much foobar thanks to the crappy Sauce::I18nMail.
+- Switched vacation.pl to use MIME::Lite instead.
+- Added requires for MIME::Lite and its dependency perl-Email-Date-Format
+
+* Sun Dec 07 2008 Michael Stauber <mstauber@solarspeed.net> 1.3.1-0BQ37
+- Forgot to remove comment in glue/usr/local/sbin/vacation.pl. Clear case of 'doh!' :p
+
+* Sat Dec 06 2008 Michael Stauber <mstauber@solarspeed.net> 1.3.1-0BQ36
+- Modified glue/usr/local/sbin/vacation.pl to not send vacation messages if user or group are over quota.
+
+* Wed Dec 03 2008 Michael Stauber <mstauber@solarspeed.net> 1.3.1-0BQ35
+- Rebuilt for BlueOnyx.
+
+* Thu Nov 13 2008 Michael Stauber <mstauber@solarspeed.net> 1.3.1-0BQ34
+- Fixed ca-bundle.crt location for CentOS5 in constructor/syncEmailService.pl
+
+* Wed Jul 04 2008 Michael Stauber <mstauber@solarspeed.net> 1.3.1-0BQ32
+- Fixes for BlueQuartz 5106, removed APOP feature again (slipped back into code-tree when merging code bases :p)
+
+* Thu May 22 2008 Michael Stauber <mstauber@solarspeed.net> 1.3.1-0BQ31
+- Added /usr/sausalito/bin/findalias.pl - small helper script that lists 
+- all web- and email-server aliasses.
+
+* Tue Apr 15 2008 Michael Stauber <mstauber@solarspeed.net> 1.3.1-0BQ30
+- POP before SMTP for Active Monitor set to disabled by default.
+
+* Thu Feb 28 2008 Hisao SHIBUYA <shibuya@bluequartz.org> 1.3.1-0BQ29
+- clean up APOP feature to remove extension, conf, schema, handler (#14).
+
+* Sun Jan 27 2008 Michael Stauber <mstauber@solarspeed.net> 1.3.1-0BQ28
+- German locales added.
+- Fixed /usr/sausalito/swatch/bin/check-popb4smtp.sh in base-email-am *again*.
+- Was not working right with German locales. Should be fine for all now.
+
+* Wed Jan 23 2008 Michael Stauber <mstauber@solarspeed.net> 1.3.1-0BQ27
+- Fixed /usr/sausalito/swatch/bin/check-popb4smtp.sh in base-email-am
+- Was not working right with non English locales.
+
+* Tue Jan 22 2008 Michael Stauber <mstauber@solarspeed.net> 1.3.1-0BQ26
+- Danish locales added. Thanks to Jes Klittum!
+
+* Wed Dec 19 2007 <brian@nuonce.net> 1.3.1-0BQ25
+- loosen sendmail permission by hardcoding Envelope fields.
+- patch submited by Patricko
+
+* Sun Dec 16 2007 05:36 PM EST <mstauber@solarspeed.net> 1.3.1-0BQ24
+- Added provisions to monitor SMTP-Auth and POP before SMTP in Active Monitor
+
+* Sat Dec 14 2007 Brian N. Smith <brian@nuonce.net> 1.3.0-0BQ23
+- Fixed the issue with the "server map".  Duplicate keys in
+- the /etc/mail/access file caused issues
+
+* Sat Dec 2 2006 Brian N. Smith <brian@nuonce.net> 1.3.0-0BQ22
+- added a killall -9 in the restart script.  Also made it so it
+- stops and starts the service instead of just restarting it.
+
+* Tue Aug 22 2006 Brian N. Smith <brian@nuonce.net> 1.3.0-0BQ21
+- fixed break-smrsh-loop.cron.  Piped to /dev/null
+
+* Tue Aug 15 2006 Brian N. Smith <brian@nuonce.net> 1.3.0-0BQ20
+- fixed "user.conf" & "vsite.conf" needed to add; _CREATE to both
+
+* Thu Aug 10 2006 Brian N. Smith <brian@nuonce.net> 1.3.0-0BQ19
+- Added contrib: break-smrsh-loop.pl by; Patrick
+
+* Thu Aug 10 2006 Brian N. Smith <brian@nuonce.net> 1.3.0-0BQ18
+- Updated vacation.pl w/ Patrick (patricko@staff.singnet.com.sg) fixes
+
+* Sun Aug 06 2006 Brian N. Smith <brian@nuonce.net> 1.3.0-0BQ17
+- Removed: abuse, postmaster, operator, manager from protected
+- Aliases
+
+* Thu Aug 03 2006 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.3.0-0BQ16
+- add disable email feature by Brian.
+
+* Sun Jul 16 2006 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.3.0-0BQ15
+- fixed the error that the block or relay list is removed by Brian.
+
+* Sat Jul 15 2006 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.3.0-0BQ14
+- add remove_domain.pl.
+
+* Sat Jul 15 2006 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.3.0-0BQ13
+- modify syncEmailService.pl to remove .backup files.
+
+* Sat Jul 15 2006 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.3.0-0BQ12
+- modified validate_alias.pl back to Cobalt codes.
+
+* Sun Jun 15 2006 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.3.0-0BQ11
+- enable imap and pop services by default to fix the issue that service is disabled after update.
+- remove server's domain name from '/etc/mail/access' by Brian.
+- modify system.pl to fix the issue that the handler doesn't set queue time correctly.
+
+* Thu Jun 15 2006 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.3.0-0BQ10
+- disable ActiveMonitor for imap by default.
+
+* Thu Jun 15 2006 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.3.0-0BQ9
+- require base-bluequartz-glue >= 1.20060618.
+
+* Thu Jun 15 2006 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.3.0-0BQ8
+- require base-bluequartz-glue >= 1.20060615.
+
+* Mon Jun 12 2006 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.3.0-0BQ7
+- disable ActiveMonitor for pop and imap by default.
+
+* Sun Jun 11 2006 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.3.0-0BQ6
+- remove backup scripts at syncEmailService.pl.
+
+* Sun Jun 11 2006 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.3.0-0BQ5
+- require base-bluequartz-glue >= 1.20060611.
+
+* Sun Jun 11 2006 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.3.0-0BQ4
+- restart cced after updating glue package.
+
+* Sun Jun 11 2006 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.3.0-0BQ3
+- to copy certs file for ssl services.
+
+* Sat Jun 10 2006 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.3.0-0BQ2
+- remove APOP extensions.
+
+* Sat Jun 10 2006 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.3.0-0BQ1
+- add SMTPS, submission port, SMTP Auth, POPS and IMAPS functions.
+
+* Thu May 04 2006 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.2.0-92BQ21
+- modify forward.pl to fix the .forward issue with cmu by C. Hemsing.
+
+* Tue Apr 18 2006 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.2.0-92BQ20
+- modify validate_alias.pl to remove 'amanda' alias from the reserved list by Brian.
+
+* Sun Apr 16 2006 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.2.0-92BQ19
+- modify validate_alias.pl to add 'amanda' alias to the reserved list.
+
+* Sat Apr 15 2006 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.2.0-92BQ18
+- modify validate_alias.pl to remove address usuful used.
+
+* Tue Mar 14 2006 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.2.0-92BQ17
+- Relaying for your entire network is kind of stupid. By Brian.
+
+* Fri Feb 17 2006 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.2.0-92BQ16
+- modify the link for smrsh.
+
+* Tue Feb 13 2006 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.2.0-92BQ15
+- modified validate_alias.pl to reject the user who will be reserved.
+
+* Tue Nov 29 2005 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.2.0-92BQ14
+- modified validate_alias.pl to reject the user which in /etc/mail/aliases.
+
+* Wed Nov 16 2005 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.2.0-92BQ13
+- don't restart sendmail, if sendmail is already enabled.
+
+* Fri Oct 28 2005 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.2.0-92BQ12
+- modified apop handler that quoated popauth command.
+
+* Tue Oct 18 2005 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.2.0-92BQ11
+- rebuild with devel-tools 0.5.1
+
+* Fri Aug 12 2005 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.2.0-92BQ10
+- modified Group tag in rpmdefs.tmpl.
+
+* Thu Aug 11 2005 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.2.0-92BQ9
+- clean up spec file.
+<end $CHANGELOG>

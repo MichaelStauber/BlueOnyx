@@ -1,0 +1,14 @@
+[Unit]
+Description = GoAccess - GoAccess is an open source real-time web log analyzer and interactive viewer
+After=nss-lookup.target network.target plymouth-quit-wait.service blueonyx.service admserv.service
+Before=cced.construct.service swatch.service
+
+[Service]
+Type = simple
+ExecStart = /usr/sausalito/sbin/goaccess_init.sh
+Restart = on-failure
+
+[Install]
+WantedBy = multi-user.target
+Alias=goaccess
+

@@ -1,0 +1,12 @@
+<item
+	id="base_manageAdmin"
+	label="[[base-vsite.manageAdminUsers]]"
+	description="[[base-vsite.manageAdminDescription]]"
+	icon="users_2"
+	elmer_icon="fa fa-user-md"
+	url="/vsite/adminList"
+>
+	<parent id="base_sysmanage" order="11">
+        <access require="systemAdministrator"/>
+    </parent>
+</item>

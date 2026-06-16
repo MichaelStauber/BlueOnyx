@@ -1,0 +1,116 @@
+<!--
+    $Id: ssh.schema
+    Copyright (c) 2008-2023 Michael Stauber, SOLARSPEED.NET
+    Copyright (c) 2008-2023 Team BlueOnyx, BLUEONYX.IT
+    All Rights Reserved.
+-->
+
+<!-- Define 'ternary' to allow enumerated 0,1 and 2 as valid: -->
+<typedef name="ternary"     type="re"   data="^(0|1|2)$"/>
+
+<class name="System" namespace="SSH" version="2.0">
+
+    <property
+        name="enabled" type="boolean" default="1"
+        writeacl="ruleCapable(serverShell)"
+    />
+
+    <property
+        name="PermitRootLogin" type="ternary" default="0"
+        writeacl="ruleCapable(serverShell)"
+    />
+
+    <property
+        name="Port" type="uint" default="22"
+        writeacl="ruleCapable(serverShell)"
+    />
+
+    <property
+        name="Protocol" type="scalar" default="2"
+        writeacl="ruleCapable(serverShell)"
+    />
+
+    <property
+        name="bits" type="int" default="2048"
+        writeacl="ruleCapable(serverShell)"
+    />
+
+    <property 
+        name="keycreate" type="int" default="0"
+        readacl="ruleSelf OR ruleModifyUser"
+        writeacl="ruleModifyUser"
+    />
+
+    <property 
+        name="certcreate" type="int" default="0"
+        readacl="ruleSelf OR ruleModifyUser"
+        writeacl="ruleModifyUser"
+    />
+
+    <property
+        name="XPasswordAuthentication" type="boolean" default="1"
+        writeacl="ruleCapable(serverShell)"
+    />
+
+    <property
+        name="RSAAuthentication" type="boolean" default="0"
+        writeacl="ruleCapable(serverShell)"
+    />
+
+    <property
+        name="PubkeyAuthentication" type="boolean" default="1"
+        writeacl="ruleCapable(serverShell)"
+    />
+
+    <property
+        name="GoogleAuthentication" type="boolean" default="1"
+        writeacl="ruleCapable(serverShell)"
+    />
+
+    <property
+        name="AllowTcpForwarding" type="boolean" default="0"
+        writeacl="ruleCapable(serverShell)" 
+    />
+
+    <property
+        name="AllowSFTP" type="boolean" default="0"
+        writeacl="ruleCapable(serverShell)"
+    />
+
+    <property
+        name="force_update" type="scalar" default=""
+        writeacl="ruleCapable(serverShell)"
+    />
+
+</class>
+
+<class 
+    name="User" namespace="SSH" version="1.0"
+    createacl="ruleAll" destroyacl="ruleAll"
+    writeacl="ruleSelf OR ruleModifyUser"
+>
+    <property 
+        name="keycreate" type="int" default="0"
+        readacl="ruleSelf OR ruleModifyUser"
+        writeacl="ruleSelf OR ruleModifyUser"
+    />
+
+    <property 
+        name="certcreate" type="int" default="0"
+        readacl="ruleSelf OR ruleModifyUser"
+        writeacl="ruleSelf OR ruleModifyUser"
+    />
+
+    <property 
+        name="bits" type="int" default="2048"
+        readacl="ruleSelf OR ruleModifyUser"
+        writeacl="ruleSelf OR ruleModifyUser"
+    />
+
+    <property
+        name="GoogleAuthentication" type="boolean" default="0"
+        writeacl="ruleCapable(serverShell)"
+        writeacl="ruleSelf OR ruleModifyUser"
+    />
+
+</class>

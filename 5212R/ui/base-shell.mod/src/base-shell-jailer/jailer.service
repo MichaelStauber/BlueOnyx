@@ -1,0 +1,18 @@
+[Unit]
+Description=BlueOnyx - JailKit Warden
+After=network-pre.target dbus.service
+Before=network.target network.service
+
+[Service]
+Type=oneshot
+
+ExecStart=/usr/sausalito/sbin/jailer.sh
+ExecReload=/usr/sausalito/sbin/jailer.sh
+ExecStop=/usr/bin/true
+RemainAfterExit=no
+
+KillSignal=SIGTERM
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

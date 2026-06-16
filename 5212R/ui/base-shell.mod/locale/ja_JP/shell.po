@@ -1,0 +1,99 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+# strings for shell menu items
+msgid "shellMenu"
+msgstr "サーバーアクセス"
+
+msgid "shellMenuDescription"
+msgstr "GUI、シェルアクセス（SSHおよびTelnet）、FTP、SFTP、SCPなどのファイル関連サービスのサーバーアクセスを設定します。"
+
+# server wide shell access page
+msgid "shell"
+msgstr "[[base-shell.shellMenu]]"
+
+# ui extensions
+msgid "shellName"
+msgstr "シェルアクセス"
+
+msgid "enableShell"
+msgstr "シェルアクセスを有効にする"
+
+msgid "enableShell_help"
+msgstr "十分な特権を持つユーザーがTelnet、SSH、SFTP、SCPなどのサービスを使用できるように、シェルアクセスを有効にします。"
+
+msgid "userEnableShell"
+msgstr "[[base-shell.enableShell]]"
+
+msgid "userEnableShell_help"
+msgstr "シェルアクセスを有効にして、ユーザーがTelnet、SSH、SFTP、またはSCPなどのサービスを使用してサーバーに接続できるようにします。"
+
+msgid "shellIsEnabled"
+msgstr "シェルアクセス"
+
+msgid "shellIsEnabled_help"
+msgstr "このユーザにはシェルアクセスが許可されています。 "
+
+# handler error messages
+# user_shell.pl
+msgid "cantEnableNoVsiteShell"
+msgstr "このユーザの属している仮想サイトはシェルアクセスが有効にされていないため、このユーザのシェルアクセスを有効にできません。"
+
+# site shell menus
+msgid "siteshell"
+msgstr "[[base-shell.shellMenu]]"
+
+msgid "siteshell_help"
+msgstr "このサイトのGUI、シェルアクセス（SSHおよびTelnet）、FTP、SFTP、SCPなどのファイル関連サービスのアクセスを設定します。"
+
+msgid "siteShellSettings"
+msgstr "シェルの設定 - [[VAR.fqdn]]"
+
+msgid "cap_serverShell"
+msgstr "シェルの設定"
+
+# --- Jailkit:
+
+msgid "none"
+msgstr "なし"
+
+msgid "jailed_sftp_scp_rsync"
+msgstr "ChrootされたSFTP、SCPおよびRSYNC"
+
+msgid "jailed_shell"
+msgstr "Chrooted Shell、SFTP、SCP、およびRSYNC"
+
+msgid "full_shell"
+msgstr "フルシェルアクセス"
+
+# --- Active Monitor:
+
+msgid "amJailkitNameTag"
+msgstr "Jailkitロギングデーモン"
+
+msgid "amJailkitDetails"
+msgstr "Jailkit Logging Deamonの詳細"
+
+msgid "amNotRunning"
+msgstr "Jailkit Logging Daemonが実行されていないため、再起動できませんでした。 手動でJailkitを再起動して、それが役立つかどうかを確認してください。 手動でJailkitを再起動している間あなたが得るかもしれないエラーメッセージか他の表示もチェックしなさい。"
+
+msgid "amStatusOK"
+msgstr "Jailkit Logging Daemonは正常に動作しています。"
+
+#
+### Google Authenticator:
+#
+
+msgid "GoogleAuthentication"
+msgstr "[[base-ssh.GoogleAuthentication]]"
+
+msgid "GoogleAuthentication_help"
+msgstr "[[base-ssh.GoogleAuthentication_help]]"
+

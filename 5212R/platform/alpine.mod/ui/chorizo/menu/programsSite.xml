@@ -1,0 +1,10 @@
+<item 
+    id="base_programsSite" label="[[base-alpine.base-programs]]" 
+    description="[[base-alpine.base-programs_description]]" 
+    url="/gui"
+    icon="robot"
+    elmer_icon="fa fa-android"
+    requiresChildren="1"
+>
+    <parent id="base_sitemanage" order="70"/>
+</item>

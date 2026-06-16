@@ -1,0 +1,17 @@
+[Unit]
+Description=AdmServ PHP FastCGI Process Manager
+After=syslog.target network.target
+
+[Service]
+Type=notify
+PIDFile=/run/admserv-php-fpm/admserv-php-fpm.pid
+#EnvironmentFile=/etc/sysconfig/admserv-php-fpm
+ExecStartPre=/bin/bash -c 'mkdir -p /run/admserv-php-fpm'
+ExecStart=/home/solarspeed/admserv-php/sbin/php-fpm -c /etc/admserv/php.ini -y /etc/admserv/php-fpm/php-fpm.conf
+ExecReload=/bin/kill -USR2 $MAINPID
+#PrivateTmp=true
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+

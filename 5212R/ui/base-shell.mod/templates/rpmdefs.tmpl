@@ -1,0 +1,414 @@
+# configuration bits for mod_rpmize
+# syntax:
+# <begin [x]section>
+# <end [x]section>
+#
+# x an be $ for a string or % for a hash.
+# if a hash is being used, you can add sub-sections with
+# <begin sub-section>
+# <end sub-section>
+
+
+<begin $DESCRIPTION>
+%package [LABEL]
+Group: System Environment/BlueOnyx
+Summary: [LABEL] for [VENDOR]-[SERVICE].
+[AUTOFILL]
+[BUILDARCH]
+[PROVIDES]
+
+%description [LABEL]
+The [VENDOR]-[SERVICE]-[LABEL] package contains the [LABEL]
+information for [VENDOR]-[SERVICE].
+
+<end $DESCRIPTION>
+
+<begin %PREP>
+<end %PREP>
+
+<begin %SETUP>
+<end %SETUP>
+
+<begin %BUILD>
+<end %BUILD>
+
+<begin %INSTALL>
+<end %INSTALL>
+
+<begin %FILES>
+<begin HEADER>
+%files [LABEL]
+%defattr(-,root,root)
+<end HEADER>
+
+<begin locale>
+[AUTOFILL]
+
+<end locale>
+
+<begin glue>
+[AUTOFILL]
+%attr(0755,-,-) /usr/sausalito/sbin/jail_toggler.pl
+%attr(0755,-,-) /usr/sausalito/sbin/gauth_add.sh
+%attr(0755,-,-) /usr/sausalito/sbin/gauth_check.sh
+
+<end glue>
+
+<begin ui>
+[AUTOFILL]
+
+<end ui>
+
+<begin capstone>
+%{RootDir}/capstone/%{Vendor}-%{Service}.cap
+[AUTOFILL]
+
+<end capstone>
+<end %FILES>
+
+<begin %POST-INSTALL>
+<begin HEADER>
+%post [LABEL]
+<end HEADER>
+
+<begin glue>
+# glue post-install
+# Restart CCEd once YUM is done:
+if [ -d /usr/sausalito/yumcce ];then
+        touch /usr/sausalito/yumcce/restart
+fi
+
+
+<end glue>
+<begin ui>
+# ui post-install
+# this is somewhat nasty, but it always makes sure that there's a
+# default .html file in case the browser doesn't specify a locale
+if [ x"[DEFLOCALE]" != x ]; then
+	for dir in `find [CCEWEB] -type d`; do 
+		(cd $dir; 
+		if [ x"`ls *.htm[l].[DEFLOCALE] 2> /dev/null`" != x ]; then
+			for file in `ls *.htm[l].[DEFLOCALE]`; do
+				base=`basename $file .[DEFLOCALE]`
+				if [ ! -f $base ]; then
+					ln -s $file $base
+ 				fi
+			done
+		fi)
+	done
+fi
+
+<end ui>
+<begin locale>
+# locale post-install
+
+<end locale>
+<end %POST-INSTALL>
+
+<begin %POST-UNINSTALL>
+<begin HEADER>
+%postun [LABEL]
+<end HEADER>
+
+<begin glue>
+# glue post-uninstall
+
+<end glue>
+<begin ui>
+# ui post-uninstall
+
+<end ui>
+<begin locale>
+# locale post-uninstall
+
+<end locale>
+<end %POST-UNINSTALL>
+
+<begin $CHANGELOG>
+
+* Wed May 06 2026 Michael Stauber <mstauber@solarspeed.net> 1.4-14
+- Fixed vsite_shell.pl to detect and regenerate broken jk_socketd.ini files
+- Removed comment lines from build_jk_socketd_managed_block()
+  (Config::INI::Reader chokes on # comments)
+- Added is_broken flag to detect parse errors, comments, and duplicate sections
+- Now regenerates complete valid INI from scratch when corruption detected
+- Ensures all active jailed Vsites are properly included in jk_socketd.ini
+
+* Sat Mar 14 2026 Michael Stauber <mstauber@solarspeed.net> 1.4-13
+- Aligned SSH-side OTP handling with the new GUI 2FA workflow.
+- Modified glue/handlers/vsite_gauth.pl
+- Modified ui/chorizo/extensions/Shell.php.create.User
+- Modified ui/chorizo/extensions/Shell.php.defaults.User
+- Modified ui/chorizo/extensions/Shell.php.modify.User
+- Modified ui/chorizo/web/Controllers/PersonalSSH.php
+- Modified ui/chorizo/web/Controllers/VsiteShell.php
+- Reduced the old per-user SSH 2FA control surfaces in favour of the
+  new central GUI 2FA enrollment and policy handling.
+
+* Thu Feb 26 2026 Michael Stauber <mstauber@solarspeed.net> 1.4-12
+- Improve Jailkit integration and SFTP subsystem reliability.
+- Auto-manage /etc/jailkit/jk_lsh.ini and jk_socketd.ini
+  for all jailed Vsites.
+- Ensure [DEFAULT] and [group <site>] sections exist
+  for jk_lsh to prevent SFTP EOF failures.
+- Sync jk_socketd /dev/log entries with active jails.
+- Improve dual jailroot handling (siteAdmin vs regular users).
+
+* Tue Nov 25 2025 Michael Stauber <mstauber@solarspeed.net> 1.4-11
+- ACL fix in glue/schemas/shell.schema
+
+* Thu Nov 13 2025 Michael Stauber <mstauber@solarspeed.net> 1.4-10
+- Modified glue/handlers/user_shell.pl to detect if user to be
+  modified is siteAdmin who owns /web AND if the Vsite uses PHP-FPM.
+  If so: Stop that particular PHP-FPM, perform the modification
+  and then restart it. Otherwise the Pool running under that UID
+  would prevent Jailkit from changing the shell, as it would 
+  come to the conclusion that the User 'is logged in'.
+
+* Fri Oct 03 2025 Michael Stauber <mstauber@solarspeed.net> 1.4-9
+- Modified glue/handlers/vsite_shell.pl to set perms 'g-s' on the
+  /home/.sites/siteX as well as the /home/.sites/siteX/dev dirs.
+
+* Wed Jun 11 2025 Michael Stauber <mstauber@solarspeed.net> 1.4-8
+- Buxfix in ui/chorizo/web/Controllers/VsiteShell.php related to
+  deprecated feature 'AonFTP'.
+
+* Fri May 30 2025 Michael Stauber <mstauber@solarspeed.net> 1.4-7
+- Updated glue/schemas/shell.schema to set the default for 
+  'GoogleAuthentication' to '0'. Because unless it's turned on at
+  the server level this might cause inconsistent display of 
+  feature status if Vsite wasn't created by the GUI.
+
+* Sat Jul 27 2024 Michael Stauber <mstauber@solarspeed.net> 1.4-6
+- Fix in ui/chorizo/web/Controllers/PersonalSSH.php for AdminUsers
+  w/o shell access. They now get an info-text and not a 500 error.
+
+* Sat Jun 08 2024 Michael Stauber <mstauber@solarspeed.net> 1.4-5
+- Small bugfix in ui/chorizo/web/Controllers/PersonalSSH.php
+- Small bugfix in ui/chorizo/web/Controllers/Shellconfig.php
+
+* Thu May 16 2024 Michael Stauber <mstauber@solarspeed.net> 1.4-4
+- Small fix in Controllers/PersonalSSH.php
+
+* Sat Feb 24 2024 Michael Stauber <mstauber@solarspeed.net> 1.4-3
+- Modified ui/chorizo/menu/personalShell.xml to remove ACL
+  'shellAccessEnabled' as that would only grant users with shell
+  access the privilege to view their 2FA config.
+- Modified ui/chorizo/web/Controllers/PersonalSSH.php with a two
+  stage ACL check. If 'validUser' is set, user gets to see only
+  the 2FA details. If 'shellAccessEnabled' ACL is true, he gets
+  to see the SSH details as well. Added setHideOptions() to
+  MultiChoice that displays 2FA state to add show/hide button.
+- Modified ui/chorizo/extensions/Shell.php.modify.User to show
+  a full MultiChoice with setHideOptions(true) if 2FA is enabled
+  and 2FA details are present. Otherwise it shows a simple
+  getBoolean() instead to turn 2FA on.
+
+* Mon Feb 19 2024 Michael Stauber <mstauber@solarspeed.net> 1.4-2
+- Version number bump for Elmer release
+
+* Sat Dec 09 2023 Michael Stauber <mstauber@solarspeed.net> 1.4-1
+- Elmer'ized ui/chorizo/web/Controllers/PersonalSSH.php
+- Elmer'ized ui/chorizo/web/Controllers/Shellconfig.php
+- Elmer'ized ui/chorizo/web/Controllers/VsiteShell.php
+
+* Sat Aug 19 2023 Michael Stauber <mstauber@solarspeed.net> 1.3-6
+- Modified glue/handlers/vsite_shell.pl to restart jailer with 'nobg'
+  to avoid runtime issue.
+- Modified glue/handlers/user_shell.pl to add more debugging.
+
+* Sat Apr 22 2023 Michael Stauber <mstauber@solarspeed.net> 1.3-5
+- Small bugfix in ui/chorizo/extensions/60_Shell.php.defaults.Vsite
+
+* Thu Apr 20 2023 Michael Stauber <mstauber@solarspeed.net> 1.3-4
+- Added support for Google Authenticator 2FA for SSH
+- Modified glue/Makefile
+- Modified glue/conf/shell.conf
+- Modified glue/handlers/user_shell.pl
+- Modified glue/handlers/vsite_shell.pl
+- Modified glue/schemas/shell.schema
+- Modified templates/rpmdefs.tmpl
+- Modified ui/chorizo/extensions/60_Shell.php.create.Vsite
+- Modified ui/chorizo/extensions/60_Shell.php.defaults.Vsite
+- Modified ui/chorizo/extensions/Shell.php.create.User
+- Modified ui/chorizo/extensions/Shell.php.defaults.User
+- Modified ui/chorizo/extensions/Shell.php.modify.User
+- Modified ui/chorizo/web/Controllers/PersonalSSH.php
+- Modified ui/chorizo/web/Controllers/Shellconfig.php
+- Modified ui/chorizo/web/Controllers/VsiteShell.php
+- Added glue/handlers/vsite_gauth.pl
+- Added glue/sbin/gauth_add.sh
+- Added glue/sbin/gauth_check.sh
+- Added glue/ccewrap/google_auth.xml
+
+* Fri Dec 16 2022 Michael Stauber <mstauber@solarspeed.net> 1.3-3
+- Modified ui/chorizo/web/Controllers/PersonalSSH.php shell variable handling
+- Modified ui/chorizo/web/Controllers/Shellconfig.php shell variable handling
+
+* Tue Nov 22 2022 Michael Stauber <mstauber@solarspeed.net> 1.3-2
+- Bugfix in ui/chorizo/web/Controllers/Shellconfig.php
+
+* Fri Nov 19 2022 Michael Stauber <mstauber@solarspeed.net> 1.3-1
+- Release version for BlueOnyx 5211R
+
+* Fri Jun 18 2021 Michael Stauber <mstauber@solarspeed.net> 1.2-0BX14
+- Added /usr/sausalito/sbin/jail_toggler.pl
+
+* Tue Feb 25 2020 Michael Stauber <mstauber@solarspeed.net> 1.2-0BX13
+- Modified glue/handlers/user_shell.pl to fix another logic snafu.
+- Resellers don't have the systemAdministrator flag. We now check the
+  length of the 'site' variable instead of doing a compare.
+- Another final 'usermod' run on the systems passwd has been added 
+  to the end of all calls, because running jk_jailuser modifies
+  the homedir path in /etc/passwd to bend it to the shell path. The
+  final run of usermod bends it back to where it should really be.
+- So now it works for Resellers, systemAdministrators and Vsites.
+
+* Wed Feb 19 2020 Michael Stauber <mstauber@solarspeed.net> 1.2-0BX12
+- Modified glue/handlers/user_shell.pl to fix a logic snafu.
+
+* Mon Feb 10 2020 Michael Stauber <mstauber@solarspeed.net> 1.2-0BX11
+- Modified glue/handlers/user_shell.pl to fix a logic failure in 
+  condition that previously tried to enable jail shells for
+  'systemAdministrator' users. Which are explicitly excempt from
+  jails as they have no separate jails that encompass owned Vsites.
+
+* Sat Nov 02 2019 Michael Stauber <mstauber@solarspeed.net> 1.2-0BX10
+- Modified glue/handlers/vsite_shell.pl to use service 'jailer' to
+  setup the jails.
+- Added src/base-shell-jailer to provide service jailer.
+- See [Devel:01517] for reasoning and why we had to use Systemd to
+  work around a friggin Systemd issue.
+
+* Sun Oct 27 2019 Michael Stauber <mstauber@solarspeed.net> 1.2-0BX09
+- Modified glue/handlers/vsite_shell.pl to directly enforce strict and
+  correct ownerships of future jail directories before jk_init is run.
+  While Vsite creation by now does this correctly there might still be
+  cases where a server admin or a migration procedure had messed with
+  ownerships or permissions and then jk_init throws a fit. So we now
+  make sure UID, GID and perms are correct before we use jk_init.
+
+* Fri Oct 25 2019 Michael Stauber <mstauber@solarspeed.net> 1.2-0BX08
+- Fixes in base-shell.mod/glue/handlers/user_shell.pl as a condition
+  meant only for serverAdministrators was triggering on siteAdmins as
+  well.
+- Fixes in base-shell.mod/glue/handlers/vsite_shell.pl
+
+* Mon Oct 14 2019 Michael Stauber <mstauber@solarspeed.net> 1.2-0BX07
+- Turned off debugging.
+
+* Thu Sep 26 2019 Michael Stauber <mstauber@solarspeed.net> 1.2-0BX06
+- Bugfix in glue/handlers/user_shell.pl to make sure Extra-Admins 
+  do not get jailed. The previous provisions only dealt with
+  serverAdmin's, but they also must apply to siteless Users with
+  shell access.
+
+* Thu Sep 26 2019 Michael Stauber <mstauber@solarspeed.net> 1.2-0BX05
+- Bugfix in glue/handlers/user_shell.pl. We don't want to kill admin
+  or root owned processes at usermod.
+
+* Wed Jul 10 2019 Michael Stauber <mstauber@solarspeed.net> 1.2-0BX04
+- Finished Jailkit integration by adding an AM component and an
+  enabler script that enables the Jailkit service on an as needed
+  basis.
+- Added requirement for jailkit and base-shell-am
+- Modified glue/conf/shell.conf
+- Modified ui/chorizo/web/config/routes.php
+- Added glue/handlers/jailkit_enabler.pl
+- Added glue/schemas/jailkit-am.schema
+- Added glue/schemas/jailkit.schema
+- Added src
+- Added src/Makefile
+- Added src/base-shell-am
+- Added src/base-shell-am/Makefile
+- Added src/base-shell-am/am_jailkit.pl
+- Added src/base-shell-am/base-shell-am.spec
+- Added ui/chorizo/web/controllers/Jailkit_amdetails.php
+- Extended English locales
+
+* Thu Jul 04 2019 Michael Stauber <mstauber@solarspeed.net> 1.2-0BX03
+- Modified to handle Jailkit shells and SFTP.
+- Modified glue/conf/shell.conf
+- Modified glue/handlers/MyShell.pm
+- Modified glue/handlers/user_shell.pl
+- Modified glue/handlers/vsite_shell.pl
+- Modified glue/schemas/shell.schema
+- Modified locale/de_DE/shell.po
+- Modified locale/en_US/shell.po
+- Modified ui/chorizo/extensions/Shell.php.modify.User
+- Modified ui/chorizo/extensions/Shell.php.create.User
+- Modified ui/chorizo/extensions/Shell.php.defaults.User
+- Removed deprecated ui/chorizo/extensions/Shell.php.list.User
+- Modified ui/chorizo/menu/vsite_shell.xml
+- Modified ui/chorizo/web/controllers/VsiteShell.php
+- Modified ui/chorizo/extensions/60_Shell.php.create.Vsite
+- Modified ui/chorizo/extensions/60_Shell.php.defaults.Vsite
+
+* Thu Jul 04 2019 Michael Stauber <mstauber@solarspeed.net> 1.2-0BX02
+- Fixed ui/chorizo/web/controllers/VsiteShell.php
+
+* Thu Jun 06 2019 Michael Stauber <mstauber@solarspeed.net> 1.2-0BX01
+- Updated for 5210R
+
+* Thu Aug 31 2017 Michael Stauber <mstauber@solarspeed.net> 1.1-0BX07
+- Bugfix in ui/chorizo/web/controllers/shellconfig.php
+
+* Wed Feb 22 2017 Michael Stauber <mstauber@solarspeed.net> 1.1-0BX06
+- Adjusted Extensions and Controllers for base-alpine 2.0
+
+* Mon Mar 21 2016 Michael Stauber <mstauber@solarspeed.net> 1.1-0BX05
+- Updated Italian locales added as provided by Simone Capra.
+
+* Sat Jul 26 2014 Michael Stauber <mstauber@solarspeed.net> 1.1-0BX04
+- Small bugfix in ui/chorizo/web/controllers/vsiteShell.php. Hidden
+  formfields now must have a label or they won't show. Stupid.
+
+* Fri Jul 11 2014 Michael Stauber <mstauber@solarspeed.net> 1.1-0BX03
+- Chorizo GUI added, old GUI disabled.
+- Added improved French translation as provided my Meaulnes Legler.
+
+* Sat Dec 14 2013 Michael Stauber <mstauber@solarspeed.net> 1.1-0BX02
+- Merged in locales for the Netherlands ('nl_NL').
+
+* Fri Dec 06 2013 Michael Stauber <mstauber@solarspeed.net> 1.1-0BX01
+- Preparational build for 5207R/5208R. Doesn't include new GUI yet.
+- Merged in new locales from 5207R ("es_ES", "fr_FR", "it_IT", "pt_PT").
+- Dropped all two character locales.
+- Converted "ja_JP" from EUC-JP to UTF-8.
+- New Capabilities for admin.
+
+* Mon Dec 17 2012 Michael Stauber <mstauber@solarspeed.net> 1.0-19BX12
+- Changed various include() calls to include_once()
+
+* Tue Mar 20 2012 Michael Stauber <mstauber@solarspeed.net> 1.0-19BX11
+- Converted locale encoding from UTF-8 to ISO-8859-1.
+
+* Sun Jun 06 2010 Michael Stauber <mstauber@solarspeed.net> 1.0-19BX10
+- Fixed 'Assigning the return value of new by reference is deprecated' issue in ui/web/shellAccess.php and ui/web/vsiteShell.php
+- Remaining issue: Save button doesn't work.
+
+* Sat Jun 05 2010 Michael Stauber <mstauber@solarspeed.net> 1.0-19BX09
+- Copied 'en' locales to 'en_US'
+
+* Thu Jun 03 2010 Michael Stauber <mstauber@solarspeed.net> 1.0-19BX08
+- Version number bump for consistency
+
+* Wed Dec 03 2008 Michael Stauber <mstauber@solarspeed.net> 1.0-19BQ7
+- Rebuilt for BlueOnyx.
+
+* Sun Jan 27 2008 Michael Stauber <mstauber@solarspeed.net> 1.0-19BQ6
+- German locales added.
+
+* Tue Jan 22 2008 Michael Stauber <mstauber@solarspeed.net> 1.0-19BQ5
+- Danish locales added. Thanks to Jes Klittum!
+
+* Tue Nov 29 2005 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.0-19BQ4
+- rebuild with devel-tools 0.5.1-0BQ7.
+
+* Tue Oct 18 2005 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.0-19BQ3
+- rebuild with devel-tools 0.5.1
+
+* Fri Aug 12 2005 Hisao SHIBUYA <shibuya@alpha.or.jp> 1.0-19BQ2
+- clean up spec file.
+- fix security problem that can be accessed unauthorized function.
+<end $CHANGELOG>

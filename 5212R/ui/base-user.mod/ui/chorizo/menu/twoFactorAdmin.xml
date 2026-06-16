@@ -1,0 +1,11 @@
+<item
+  id="base_twoFactorAdmin"
+  label="[[base-user.twofactor_menu_label]]"
+  description="[[base-user.twofactor_menu_desc_site]]"
+  url="/user/twoFactorAdmin?group=[[VAR.group]]"
+  icon="lock"
+  module="user">
+    <parent id="base_usermgmt" order="20">
+        <access require="siteAdmin"/>
+    </parent>
+</item>

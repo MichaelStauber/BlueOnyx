@@ -1,0 +1,101 @@
+#!/usr/bin/perl -I/usr/sausalito/perl
+# $Id: ip_forwarding
+# ip_forwarding
+# enable/disable ip forwarding
+
+use Sauce::Util;
+use CCE;
+
+my $DEBUG = 0;
+
+my $cce = new CCE;
+$cce->connectfd();
+
+my $sysoid = $cce->event_oid();
+my ($ok, $sys) = $cce->get($sysoid, 'Network');
+
+if (!$ok) 
+{ 
+    $DEBUG && print STDERR "$0: could not get system object $sysoid\n";
+    $cce->bye('FAIL', '[[base-network.cantReadSystem]]');
+    exit(1);
+}
+
+my $enabled = $sys->{ipForwarding} || 0;
+
+# 1. update /etc/sysconfig/network: 
+sub edit_network_conf 
+{
+    my ($fin, $fout) = (shift, shift);
+
+    my $output_line = 'FORWARD_IPV4=' . ($enabled ? 'true' : 'false') 
+                        . '   # changed on ' . scalar(localtime()) . "\n";
+    while (<$fin>) 
+    {
+        if (m/^\s*FORWARD_IPV4\s*=/) 
+        {
+            print $fout $output_line;
+        }
+        else
+        {
+            print $fout $_;
+        }
+    }
+    return 1;
+}
+
+Sauce::Util::editfile('/etc/sysconfig/network', \&edit_network_conf);
+Sauce::Util::chmodfile(0644, '/etc/sysconfig/network');
+
+# 2. write the appropriate value into the right proc subsystem.
+Sauce::Util::addrollbackcommand('echo '.($enabled ? '0' : '1').'>/proc/sys/net/ipv4/ip_forward');
+use FileHandle;
+my $fh = new FileHandle('>/proc/sys/net/ipv4/ip_forward');
+if (defined($fh)) 
+{
+    print $fh ($enabled ? '1' : '0'), "\n";
+    $fh->close();
+} 
+else 
+{
+    $DEBUG && print STDERR "$0: unable to write to /proc/sys/net/ipv4/ip_forward: $!\n";
+}
+
+$cce->bye('SUCCESS');
+exit(0);
+
+# 
+# Copyright (c) 2008-2024 Michael Stauber, SOLARSPEED.NET
+# Copyright (c) 2008-2024 Team BlueOnyx, BLUEONYX.IT
+# Copyright (c) 2003 Sun Microsystems, Inc. 
+# All Rights Reserved.
+# 
+# 1. Redistributions of source code must retain the above copyright 
+#    notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+#    notice, this list of conditions and the following disclaimer in 
+#    the documentation and/or other materials provided with the 
+#    distribution.
+# 
+# 3. Neither the name of the copyright holder nor the names of its 
+#    contributors may be used to endorse or promote products derived 
+#    from this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
+# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+# POSSIBILITY OF SUCH DAMAGE.
+# 
+# You acknowledge that this software is not designed or intended for 
+# use in the design, construction, operation or maintenance of any 
+# nuclear facility.
+#

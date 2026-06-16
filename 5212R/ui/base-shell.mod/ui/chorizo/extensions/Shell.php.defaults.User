@@ -1,0 +1,121 @@
+<?php
+// $Id: Shell.php.defaults.User
+
+include_once('UIExtension.php');
+
+class ShellExtension extends UIExtension
+{
+    function display(&$ServerScriptHelper, &$container, $parameters) {
+        $factory = $ServerScriptHelper->getHtmlComponentFactory("base-shell");
+        $cce = $ServerScriptHelper->getCceClient();
+
+        $CI = get_instance();
+        $BX_SESSION = $CI->getBX_SESSION();
+        $i18n = new I18n("base-shell", $BX_SESSION['loginUser']['localePreference']);
+
+        $Shell_enabled_Map =
+            array(
+                "0" => "none",
+                "1" => "jailed_sftp_scp_rsync",
+                "2" => "jailed_shell",
+                "3" => "full_shell"
+            );
+
+        $access = '1';
+        if (isset($parameters["VSITE_OID"])) {
+            $feature = $cce->get($parameters["VSITE_OID"], "Shell");
+            if ($feature["enabled"] == '0') {
+                $access = '0';
+            }
+            elseif ($feature["enabled"] == '1') {
+                unset($Shell_enabled_Map["2"]);
+                unset($Shell_enabled_Map["3"]);
+            }
+            elseif ($feature["enabled"] == '2') {
+                unset($Shell_enabled_Map["3"]);
+            }
+        }
+
+        $defaults = $cce->get($parameters["CCE_SERVICES_OID"], "Shell");
+        $pageIds = $container->getPageIds();
+
+        if ($access) {
+            $shellEnable = $factory->getMultiChoice("Shell_enabled", array_values($Shell_enabled_Map));
+            $shellEnable->setSelected($Shell_enabled_Map[$defaults['enabled']], true);
+            $container->addFormField($shellEnable, $factory->getLabel("enableShell"), $pageIds[0]);
+        }
+        else {
+            $word = $Shell_enabled_Map[$defaults['enabled']];
+            $nokey_info = $i18n->getClean("[[base-shell.$word]]", false, array());
+            $xxx = $factory->getTextField("Shell_enabled_Dummy", $nokey_info, 'r');
+            $container->addFormField($xxx, $factory->getLabel("enableShell"), $pageIds[0]);
+
+            $xxx = $factory->getTextField("Shell_enabled", $defaults['enabled'], '');
+            $container->addFormField($xxx, $factory->getLabel("enableShell"), $pageIds[0]);
+        }
+    }
+
+    function handle(&$ServerScriptHelper, &$errors, &$cce_info, &$attributes) {
+
+        $this->attributes = $attributes;
+
+        if (($attributes['Shell_enabled'] != "0") && ($attributes['Shell_enabled'] != "1") && ($attributes['Shell_enabled'] != "2") && ($attributes['Shell_enabled'] != "3")) {
+            if (!isset($this->attributes['Shell_enabled'])) {
+                $this->attributes['Shell_enabled'] = "0";
+            }
+            else {
+                $Shell_enabled_Map_Reversed =
+                    array(
+                        "none" => "0",
+                        "jailed_sftp_scp_rsync" => "1",
+                        "jailed_shell" => "2",
+                        "full_shell" => "3"
+                    );
+
+                $attributes['Shell_enabled'] = $Shell_enabled_Map_Reversed[$attributes['Shell_enabled']];
+            }
+        }
+
+        $cce = $ServerScriptHelper->getCceClient();
+        $cce->set($cce_info["CCE_SERVICES_OID"], 'Shell', array('enabled' => $attributes['Shell_enabled']));
+
+        $errors = array_merge($errors, $cce->errors());
+    }
+}
+
+/*
+Copyright (c) 2008-2023 Michael Stauber, SOLARSPEED.NET
+Copyright (c) 2008-2023 Team BlueOnyx, BLUEONYX.IT
+All Rights Reserved.
+
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in
+   the documentation and/or other materials provided with the
+   distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived
+   from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+
+You acknowledge that this software is not designed or intended for
+use in the design, construction, operation or maintenance of any
+nuclear facility.
+
+*/
+?>

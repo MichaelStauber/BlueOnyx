@@ -1,0 +1,378 @@
+867a868,872
+> .ymark, ymark {
+>   padding: 3px;
+>   background-color: #f3d323;
+>   color: #212121; }
+> 
+889d893
+<   text-transform: capitalize;
+1495a1500,1507
+> 
+>   .btn.btn-xxs, .wizard > .actions a.btn-xxs, .wizard > .actions .dt-buttons a.dt-button, .dt-buttons .wizard > .actions a.dt-button, .wizard > .actions .owl-theme .owl-nav a[class*="owl-"]:hover, .owl-theme .owl-nav .wizard > .actions a[class*="owl-"]:hover, .wizard > .actions .owl-theme .owl-nav a[class*="owl-"]:active, .owl-theme .owl-nav .wizard > .actions a[class*="owl-"]:active, .dt-buttons .dt-button, .tablesaw-sortable th.tablesaw-sortable-head button.btn-xxs, .tablesaw-sortable th.tablesaw-sortable-head .dt-buttons button.dt-button, .dt-buttons .tablesaw-sortable th.tablesaw-sortable-head button.dt-button, .sweet-alert button.btn-xxs, .owl-theme .owl-nav [class*="owl-"], button.btn-xxs.fc-agendaDay-button.fc-state-default.fc-corner-right, .dt-buttons button.fc-agendaDay-button.fc-state-default.fc-corner-right.dt-button, .owl-theme .owl-nav button.fc-agendaDay-button.fc-state-default.fc-corner-right[class*="owl-"],
+>   button.btn-xxs.fc-month-button.fc-state-default.fc-corner-left,
+>   .dt-buttons button.fc-month-button.fc-state-default.fc-corner-left.dt-button,
+>   .owl-theme .owl-nav button.fc-month-button.fc-state-default.fc-corner-left[class*="owl-"],
+>   button.btn-xxs.fc-agendaWeek-button, .btn-xxs.fc-prev-button, .btn-xxs.fc-next-button, .btn-xxs.fc-today-button {
+>     padding: 4px 5px; }
+> 
+1895a1908,1926
+> 
+>   .btn.btn-square-mini, .wizard > .actions a.btn-square-mini, .dt-buttons .btn-square-mini.dt-button, .tablesaw-sortable th.tablesaw-sortable-head button.btn-square-mini, .sweet-alert button.btn-square-mini, .owl-theme .owl-nav .btn-square-mini[class*="owl-"], button.btn-square-mini.fc-agendaDay-button.fc-state-default.fc-corner-right,
+>   button.btn-square-mini.fc-month-button.fc-state-default.fc-corner-left,
+>   button.btn-square-mini.fc-agendaWeek-button, .btn-square-mini.fc-prev-button, .btn-square-mini.fc-next-button, .btn-square-mini.fc-today-button {
+>     height: 25px;
+>     width: 25px;
+>     padding: 0; }
+>     .btn.btn-square-mini.btn-lg, .wizard > .actions a.btn-square-mini.btn-lg, .dt-buttons .btn-square-mini.btn-lg.dt-button, .tablesaw-sortable th.tablesaw-sortable-head button.btn-square-mini.btn-lg, .sweet-alert button.btn-square-mini.btn-lg, .owl-theme .owl-nav .btn-square-mini.btn-lg[class*="owl-"], button.btn-square-mini.btn-lg.fc-agendaDay-button.fc-state-default.fc-corner-right,
+>     button.btn-square-mini.btn-lg.fc-month-button.fc-state-default.fc-corner-left,
+>     button.btn-square-mini.btn-lg.fc-agendaWeek-button, .btn-square-mini.btn-lg.fc-prev-button, .btn-square-mini.btn-lg.fc-next-button, .btn-square-mini.btn-lg.fc-today-button {
+>       height: 30px;
+>       width: 30px; }
+>     .btn.btn-square-mini.btn-sm, .wizard > .actions a.btn-square-mini.btn-sm, .dt-buttons .btn-square-mini.btn-sm.dt-button, .tablesaw-sortable th.tablesaw-sortable-head button.btn-square-mini.btn-sm, .sweet-alert button.btn-square-mini.btn-sm, .owl-theme .owl-nav .btn-square-mini.btn-sm[class*="owl-"], button.btn-square-mini.btn-sm.fc-agendaDay-button.fc-state-default.fc-corner-right,
+>     button.btn-square-mini.btn-sm.fc-month-button.fc-state-default.fc-corner-left,
+>     button.btn-square-mini.btn-sm.fc-agendaWeek-button, .btn-square-mini.btn-sm.fc-prev-button, .btn-square-mini.btn-sm.fc-next-button, .btn-square-mini.btn-sm.fc-today-button {
+>       height: 20px;
+>       width: 20px;
+>       padding: 0px !important; }
+> 
+4779c4810
+<     background: #fd7397; }
+---
+>     background: #667add; }
+4781c4812
+<     background: #f33923; }
+---
+>     background: #667add; }
+4812a4844,4907
+>   .alert.alert-style-2 {
+>     padding-left: 70px;
+>     background: #212121;
+>     position: relative;
+>     color: #ffff;
+>     border: 1px solid #dedede; }
+>     .alert.alert-style-2 i {
+>       height: 100%;
+>       left: 0;
+>       margin: 0;
+>       padding-top: 13px;
+>       position: absolute;
+>       text-align: center;
+>       top: 0;
+>       width: 50px;
+>       color: #212121; }
+>     .alert.alert-style-2.alert-success i {
+>       color: #4aa23c;
+>       background: #f7f7f7; }
+>     .alert.alert-style-2.alert-info i {
+>       color: #fd7397;
+>       background: #f7f7f7; }
+>     .alert.alert-style-2.alert-danger i {
+>       color: #f33923;
+>       background: #f7f7f7; }
+>     .alert.alert-style-2.alert-warning i {
+>       color: #f8b32d;
+>       background: #f7f7f7; }
+>     .alert.alert-style-2.alert-tag i {
+>       color: #ffff;
+>       background: #212121; }
+> 
+>   .alert.alert-style-3 {
+>     padding-left: 70px;
+>     background: #212121;
+>     position: relative;
+>     color: #ffff;
+>     border: 1px solid #dedede; }
+>     .alert.alert-style-3 i {
+>       height: 100%;
+>       left: 0;
+>       margin: 0;
+>       padding-top: 13px;
+>       position: absolute;
+>       text-align: center;
+>       top: 0;
+>       width: 50px;
+>       color: #667add; }
+>     .alert.alert-style-3.alert-success i {
+>       color: #4aa23c;
+>       background: #f7f7f7; }
+>     .alert.alert-style-3.alert-info i {
+>       color: #fd7397;
+>       background: #f7f7f7; }
+>     .alert.alert-style-3.alert-danger i {
+>       color: #f33923;
+>       background: #f7f7f7; }
+>     .alert.alert-style-3.alert-warning i {
+>       color: #f8b32d;
+>       background: #f7f7f7; }
+>     .alert.alert-style-3.alert-tag i {
+>       color: #ffff;
+>       background: #667add; }
+> 
+5479a5575,5577
+> .panel-black > .panel-heading {
+>   background-color: #212121; }
+> 
+7031a7130,7132
+>   #whoami {
+>     display: none;
+>   }
+7088a7190,7192
+>   #whoami {
+>     display: none;
+>   }
+7099a7204,7206
+>   #whoami {
+>     display: none;
+>   }
+7140c7247
+<       left: 1px;
+---
+>       left: 210px;
+7253a7361,7363
+>   #whoami {
+>     display: none;
+>   }
+7281a7392,7394
+>   #whoami {
+>     display: none;
+>   }
+7293a7407,7409
+>   #whoami {
+>     display: none;
+>   }
+7296a7413,7415
+>   #whoami {
+>     display: none;
+>   }
+7307a7427,7430
+>   #whoami {
+>     display: none;
+>   }
+> 
+7443a7567,7792
+> 
+> /*** From Adminica */
+> 
+> /* Buttons */
+> adminica-button,
+> .adminica-button {
+>   padding: 5px;
+>   margin-right: 5px;
+>   margin-bottom: 5px;
+>   float: left;
+>   line-height: 22px;
+>   position: relative;
+>   text-align: center;
+>   vertical-align: middle;
+>   z-index: 2;
+>   color: #212121;
+>   font-size: 12px;
+>   font-family: sans-serif;
+>   letter-spacing: 0;
+>   box-sizing: border-box;
+>   -moz-box-sizing: border-box;
+>   overflow: hidden;
+> }
+> adminica-button.full,
+> .adminica-button.full {
+>   width: 100%;
+> }
+> adminica-button.narrow,
+> .adminica-button.narrow,
+> .narrow_adminica-buttons adminica-button,
+> .narrow_adminica-buttons .adminica-button {
+>   width: 30px;
+> }
+> adminica-button.regular,
+> .adminica-button.regular,
+> .regular_adminica-buttons adminica-button,
+> .regular_adminica-buttons .adminica-button {
+>   width: 80px;
+> }
+> adminica-button.wide,
+> .adminica-button.wide,
+> .wide_adminica-buttons adminica-button,
+> .wide_adminica-buttons .adminica-button {
+>   width: 120px;
+> }
+> adminica-button.send_right,
+> .adminica-button.send_right,
+> .send_right > adminica-button,
+> .send_right > .adminica-button {
+>   float: right;
+>   margin-left: 5px;
+>   margin-right: 0;
+> }
+> adminica-button.adminica-button_down,
+> .adminica-button.adminica-button_down {
+>   top: 1px;
+> }
+> adminica-button:hover,
+> .adminica-button:hover {
+>   color: #212121;
+> }
+> p > adminica-button,
+> p > .adminica-button {
+>   margin-bottom: 5px;
+> }
+> adminica-button.full_width,
+> .adminica-button.full_width {
+>   width: 100%;
+>   text-align: center;
+>   float: none;
+> }
+> adminica-button.full_width.left,
+> .adminica-button.full_width.left {
+>   text-align: left;
+> }
+> adminica-button.full_width.has_icon span,
+> .adminica-button.full_width.has_icon span {
+>   margin-left: -10px;
+> }
+> adminica-button .ui-icon,
+> .adminica-button .ui-icon {
+>   margin: 3px;
+>   float: left;
+> }
+> adminica-button img,
+> .adminica-button img {
+>   display: block;
+>   float: left;
+>   margin: -1px;
+> }
+> adminica-button.div_icon span,
+> adminica-button.img_icon span,
+> .adminica-button.div_icon span,
+> .adminica-button.img_icon span {
+>   padding-left: 5px;
+>   padding-right: 5px;
+> }
+> adminica-button.text_only,
+> .adminica-button.text_only {
+>   padding-right: 5px;
+>   padding-left: 5px;
+> }
+> adminica-button.tiny,
+> .adminica-button.tiny {
+>   line-height: 9px;
+>   padding: 5px 3px 2px !important;
+>   font-size: 10px;
+> }
+> adminica-button.tiny.text_only,
+> .adminica-button.tiny.text_only {
+>   padding-right: 5px;
+>   padding-left: 5px;
+> }
+> adminica-button.tiny .ui-icon,
+> .adminica-button.tiny .ui-icon {
+>   margin: -5px -3px -1px;
+> }
+> adminica-button.tiny img,
+> .adminica-button.tiny img {
+>   display: block;
+>   margin: -7px -6px;
+> }
+> adminica-button.small,
+> .adminica-button.small {
+>   line-height: 18px;
+> }
+> adminica-button.small .ui-icon,
+> .adminica-button.small .ui-icon {
+>   margin: 1px;
+> }
+> adminica-button.small img,
+> .adminica-button.small img {
+>   display: block;
+>   margin: -3px;
+> }
+> adminica-button.large,
+> .adminica-button.large {
+>   line-height: 36px;
+> }
+> adminica-button.large .ui-icon,
+> .adminica-button.large .ui-icon {
+>   margin: 10px;
+> }
+> adminica-button.large img,
+> .adminica-button.large img {
+>   display: block;
+>   margin: 7px 7px 5px;
+> }
+> adminica-button.large span,
+> .adminica-button.large span {
+>   padding-right: 10px;
+> }
+> adminica-button.large.text_only span,
+> .adminica-button.large.text_only span {
+>   padding-right: 10px;
+>   padding-left: 10px;
+> }
+> adminica-button.large_icon,
+> .adminica-button.large_icon {
+>   line-height: 36px;
+> }
+> adminica-button.large_icon > img,
+> .adminica-button.large_icon > img {
+>   margin: 3px;
+> }
+> adminica-button.large_icon > .ui-icon,
+> .adminica-button.large_icon > .ui-icon {
+>   margin: 13px;
+> }
+> adminica-button.large_icon span,
+> .adminica-button.large_icon span {
+>   padding-left: 10px;
+> }
+> adminica-button.large_icon.icon_top .ui-icon,
+> .adminica-button.large_icon.icon_top .ui-icon {
+>   float: none;
+>   margin: 17px auto 5px;
+> }
+> adminica-button.large_icon.icon_top img,
+> .adminica-button.large_icon.icon_top img {
+>   display: block;
+>   float: none;
+>   margin: 7px auto -5px;
+>   text-align: center;
+> }
+> adminica-button.large_icon.icon_only .ui-icon,
+> .adminica-button.large_icon.icon_only .ui-icon {
+>   margin: 13px;
+> }
+> adminica-button.large_icon span,
+> .adminica-button.large_icon span {
+>   padding-right: 10px;
+>   line-height: 40px;
+> }
+> adminica-button.large_icon.icon_top span,
+> .adminica-button.large_icon.icon_top span {
+>   line-height: 10px;
+> }
+> .adminica-buttonset {
+>   border-radius: 3px;
+>   float: left;
+>   clear: both;
+> }
+> .adminica-buttonset adminica-button,
+> .adminica-buttonset .adminica-button {
+>   float: left;
+>   margin: 0 -1px 2px 0;
+>   border-radius: 0;
+> }
+> .adminica-buttonset adminica-button:first-child,
+> .adminica-buttonset .adminica-button:first-child {
+>   border-radius: 3px 0 0 3px;
+> }
+> .adminica-buttonset adminica-button:last-child,
+> .adminica-buttonset .adminica-button:last-child {
+>   border-radius: 0 3px 3px 0;
+> }
+> adminica-button.inflate,
+> .adminica-button.inflate {
+>   transition: transform 0.2s ease-in-out;
+> }
+> adminica-button.inflate:hover,
+> .adminica-button.inflate:hover {
+>   z-index: 99;
+>   transform: scale(1.2);
+> }

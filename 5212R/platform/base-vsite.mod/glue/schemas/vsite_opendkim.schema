@@ -1,0 +1,28 @@
+<!-- Author: Michael Stauber mstauber@solarspeed.net -->
+<!-- Copyright 2008-2023, Team BlueOnyx - www.blueonyx.it - All rights reserved. -->
+
+<class name="VsiteServices" namespace="OpenDKIM" version="1.0">
+    <property name="featureEnabled" type="boolean" default="1"/>
+
+    <property
+        name="i18nName" type="scalar" default="[[base-vsite.amOpenDKIMDetails]]"
+    />
+
+    <property
+        name="enabled" type="boolean" default="0" writeacl="ruleCapable(adminUser)"
+    />
+</class>
+
+<class name="Vsite" namespace="OpenDKIM" version="1.0" createacl="ruleCapable(adminUser)" destroyacl="ruleCapable(adminUser)">
+       <property name="enabled"
+            type="scalar"
+            default="0"
+            writeacl="ruleCapable(siteDNS)"
+        />
+       <property name="force_update"
+            type="scalar"
+            default=""
+            optional="true"
+            writeacl="ruleCapable(siteDNS)"
+        />
+</class>

@@ -1,0 +1,16 @@
+[Unit]
+Description = CCEd - The Cobalt Configuration Engine Daemon
+After=nss-lookup.target network.target plymouth-quit-wait.service
+Before=cced.construct.service swatch.service blueonyx.service
+
+[Service]
+Type = simple
+ExecStartPre=/usr/bin/install -d -o root -g root -m 0755 /usr/sausalito/conf
+ExecStartPre=/bin/sh -c 'secret=/usr/sausalito/conf/sessionmgr.secret; if [ ! -s "$$secret" ]; then tmp="$${secret}.$$$$"; umask 077; dd if=/dev/urandom bs=32 count=1 2>/dev/null | od -An -tx1 -v | tr -d " \n" > "$$tmp" && printf "\n" >> "$$tmp" && chown root:root "$$tmp" && chmod 0600 "$$tmp" && mv -f "$$tmp" "$$secret"; rm -f "$$tmp"; fi; chown root:root "$$secret"; chmod 0600 "$$secret"'
+ExecStartPre=-/usr/sausalito/bin/pam_abl_flush.sh
+ExecStart = /usr/sausalito/sbin/cced -nd
+Restart = on-failure
+
+[Install]
+WantedBy = multi-user.target
+Alias=cced

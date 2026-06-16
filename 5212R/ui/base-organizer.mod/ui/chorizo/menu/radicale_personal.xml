@@ -1,0 +1,10 @@
+<item 
+    id="radicale_personal" 
+    label="[[base-organizer.radicale_server]]" 
+    description="[[base-organizer.radicale_server_help]]" 
+    url="/organizer/personalOrganizer"
+    icon="address_book"
+    module="user"
+>
+    <parent id="base_personalProfile" order="21"/>
+</item>

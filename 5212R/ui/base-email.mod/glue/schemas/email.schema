@@ -1,0 +1,263 @@
+<typedef 
+    name="emailQueueTime" 
+    type="re" 
+    data="^(immediate|quarter-hourly|half-hourly|hourly|quarter-daily|daily)$"/>
+
+<typedef 
+    name="relay_security" 
+    type="re" 
+    data="^(enforced|optional|insecure)$"/>
+
+
+<typedef name="mail_alias" type="re" data="^[a-z0-9_\-][a-z0-9_\.\-]*$" />
+
+<typedef 
+  name="fq_email_address" 
+  type="re" 
+  data="^[a-zA-Z0-9\\._-]+\@[a-zA-Z0-9\\._-]+$"
+  errmsg = "[[base-email.bad_blockUserField]]"
+/>
+
+<typedef 
+    name="OpenDKIM_Mode" 
+    type="re" 
+    data="(^s$|^v$|^sv$)"/>
+
+<class 
+    name="User" namespace="Email" version="1.2"
+    createacl="ruleAll" destroyacl="ruleAll"
+>
+    <property 
+        name="aliases" type="mail_alias" array="yes"
+        readacl="ruleAll"
+        writeacl="ruleSelf OR ruleModifyUser"
+        />
+
+    <property 
+        name="forwardEnable" 
+        type="boolean" 
+        readacl="ruleSelf OR ruleModifyUser"
+        writeacl="ruleSelf OR ruleModifyUser"
+        default="0"
+    />
+    <property
+        name="forwardSave"
+        type="boolean"
+        readacl="ruleSelf OR ruleModifyUser"
+        writeacl="ruleSelf OR ruleModifyUser"
+        default="0"
+    />
+    <property 
+        name="forwardEmail" 
+        type="scalar" 
+        readacl="ruleSelf OR ruleModifyUser"
+        writeacl="ruleSelf OR ruleModifyUser"
+        default=""
+        array="yes"
+        />
+    <property 
+        name="do_not_reply" 
+        type="scalar" 
+        readacl="ruleAll"
+        writeacl="ruleSelf OR ruleModifyUser"
+        default=""
+        array="yes"
+        />
+    <property 
+        name="do_not_reply_from" 
+        type="scalar" 
+        readacl="ruleAll"
+        writeacl="ruleSelf OR ruleModifyUser"
+        default=""
+        array="yes"
+        />
+    <property 
+        name="vacationOn" 
+        type="boolean" 
+        readacl="ruleSelf OR ruleModifyUser"
+        writeacl="ruleSelf OR ruleModifyUser"
+        default="0"/>
+    <property 
+        name="vacationMsg" 
+        type="scalar" 
+        readacl="ruleSelf OR ruleModifyUser"
+        writeacl="ruleSelf OR ruleModifyUser"
+        default=""/>
+    <property 
+        name="vacationMsgStart" 
+        type="int" 
+        readacl="ruleAll"
+        writeacl="ruleSelf OR ruleModifyUser"
+        default=""/>
+    <property 
+        name="vacationMsgStop" 
+        type="int" 
+        readacl="ruleAll"
+        writeacl="ruleSelf OR ruleModifyUser"
+        default=""/>
+    <property 
+        name="allow_sender_spoof" 
+        type="boolean" 
+        optional="true" 
+        readacl="ruleSelf OR ruleModifyUser"
+        writeacl="ruleSelf OR ruleModifyUser"
+        default="0"
+    />
+</class>
+
+<class name="System" namespace="Email" version="1.2"
+    createacl="ruleCapable(serverEmail)" destroyacl="ruleCapable(serverEmail)">
+
+    <property 
+        name="enableSMTP" type="boolean" default="1"
+        writeacl="ruleCapable(serverEmail)"
+    />
+        <property
+        name="enableSMTPS" type="boolean" default="0"
+        writeacl="ruleCapable(serverEmail)"
+    />
+        <property
+        name="enableSMTPAuth" type="boolean" default="0"
+        writeacl="ruleCapable(serverEmail)"
+    />
+        <property
+        name="enablepopRelay" type="boolean" default="0"
+        writeacl="ruleCapable(serverEmail)"
+    />
+        <property
+        name="enableSubmissionPort" type="boolean" default="0"
+        writeacl="ruleCapable(serverEmail)"
+    />
+    <property 
+        name="enableImap" type="boolean" default="1"
+        writeacl="ruleCapable(serverEmail)"
+    />
+        <property
+        name="enableImaps" type="boolean" default="0"
+        writeacl="ruleCapable(serverEmail)"
+    />
+    <property 
+        name="enablePop" type="boolean" default="1"
+        writeacl="ruleCapable(serverEmail)"
+    />
+        <property
+        name="enablePops" type="boolean" default="0"
+        writeacl="ruleCapable(serverEmail)"
+    />
+        <property
+        name="enableZpush" type="boolean" default="0"
+        writeacl="ruleCapable(serverEmail)"
+    />
+    <property 
+        name="popRelay" type="boolean" default="0"
+        writeacl="ruleCapable(serverEmail)"
+    />
+    <property
+    name="delayChecks" type="boolean" default="0"
+    writeacl="ruleCapable(serverEmail)"
+    />
+    <property 
+        name="relayFor" type="hostname" array="yes" 
+        writeacl="ruleCapable(serverEmail)"
+    />
+    <property 
+        name="acceptForDomain" type="boolean" default="0"
+        writeacl="ruleCapable(serverEmail)"
+    />
+    <property 
+        name="acceptFor" type="hostname" array="yes"
+        writeacl="ruleCapable(serverEmail)"
+    />
+    <property 
+        name="deniedHosts" type="hostname" array="yes" 
+        writeacl="ruleCapable(serverEmail)"
+    />
+    <property 
+        name="deniedUsers" type="fq_email_address" array="yes" 
+        writeacl="ruleCapable(serverEmail)"
+    />
+    <property 
+        name="routes" type="hostname" array="yes" 
+        writeacl="ruleCapable(serverEmail)"
+    />
+
+    <property 
+        name="queueTime" type="emailQueueTime" 
+        default="immediate" optional="true"
+        writeacl="ruleCapable(serverEmail)"
+    />
+    <property 
+        name="masqAddress" type="hostname" optional="true"
+        writeacl="ruleCapable(serverEmail)"
+    />
+
+    <!-- Start: Smart Relay Settings -->
+    <property 
+        name="enable_relay" type="boolean" default="0" 
+        writeacl="ruleCapable(serverEmail)"
+    />
+    <property 
+        name="smartRelay" type="hostname" optional="true"
+        writeacl="ruleCapable(serverEmail)"
+    />
+    <property 
+        name="relay_port" type="int" default="587"
+        writeacl="ruleCapable(serverEmail)"
+    />
+    <property 
+        name="relay_user" type="scalar" default="" optional="true" 
+        writeacl="ruleCapable(serverEmail)"
+    />
+    <property 
+        name="relay_pass" type="scalar" default="" optional="true" 
+        writeacl="ruleCapable(serverEmail)"
+    />
+    <property 
+        name="relay_security" type="relay_security" default="enforced" 
+        writeacl="ruleCapable(serverEmail)"
+    />
+    <!-- End: Smart Relay Settings -->
+
+    <property 
+        name="privacy" type="boolean" default="1"
+        writeacl="ruleCapable(serverEmail)"
+    />
+    <property 
+        name="maxMessageSize" type="int" optional="true"
+        writeacl="ruleCapable(serverEmail)"
+    />
+    <property 
+    name="maxRecipientsPerMessage" type="int" optional="true"
+    default="0"
+    writeacl="ruleCapable(serverEmail)"
+    />
+
+    <property 
+    name="hideHeaders" type="int" optional="true"
+    default="0"
+    writeacl="ruleCapable(serverEmail)"
+    />
+
+    <!--- New Dovecot resource limits -->
+    <property name="default_process_limit" type="int" optional="true" default="100" writeacl="ruleCapable(serverEmail)" />
+    <property name="default_client_limit" type="int" optional="true" default="1000" writeacl="ruleCapable(serverEmail)" />
+    <property name="default_vsz_limit" type="int" optional="true" default="256" writeacl="ruleCapable(serverEmail)" />
+    <property name="process_limit" type="int" optional="true" default="1000" writeacl="ruleCapable(serverEmail)" />
+
+    <!--- Postfix/Sendmail advanced options -->
+    <property name="accept_unresolv" type="boolean" optional="true" default="0" writeacl="ruleCapable(serverEmail)" />
+
+    <!--- OpenDKIM basic options -->
+    <property name="enableOpenDKIM" type="boolean" optional="true" default="0" writeacl="ruleCapable(serverEmail)" />
+    <property name="OpenDKIM_Mode" type="OpenDKIM_Mode" array="no" default= "sv" writeacl="ruleCapable(serverEmail)" />
+    <property name="OpenDKIM_SendReports" type="boolean" optional="true" default="1" writeacl="ruleCapable(serverEmail)" />
+    <property name="force_mc_rebuild" type="scalar" optional="true" default="" writeacl="ruleCapable(serverEmail)" />
+
+    <!--- Email Security: Prevent Sender Identity Spoofing -->
+    <property 
+        name="authsend_protect" type="boolean" default="0"
+        writeacl="ruleCapable(serverEmail)"
+    />
+
+</class>
+

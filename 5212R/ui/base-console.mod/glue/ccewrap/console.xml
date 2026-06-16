@@ -1,0 +1,8 @@
+<!--
+	$Id: console.xml
+	Copyright 2024 BlueOnyx.it.  All rights reserved.
+-->
+
+<program name="/usr/bin/ps">
+	<capability requires="adminUser" user="root"/>
+</program>

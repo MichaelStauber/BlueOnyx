@@ -1,0 +1,15 @@
+<!--
+    $Id: external_cce.xml
+-->
+
+<program name="/usr/sausalito/sbin/external_cce_get.pl">
+    <capability requires="adminUser" user="root"/>
+    <capability requires="siteAdmin" user="root"/>
+    <capability requires="manageSite" user="root"/>
+</program>
+<program name="/usr/sausalito/sbin/get_vacationMsg.pl">
+    <capability requires="adminUser" user="root"/>
+    <capability requires="siteAdmin" user="root"/>
+    <capability requires="manageSite" user="root"/>
+    <capability requires="modifyUser"/>
+</program>

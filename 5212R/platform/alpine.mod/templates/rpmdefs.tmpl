@@ -1,0 +1,1733 @@
+# configuration bits for mod_rpmize
+# syntax:
+# <begin [x]section>
+# <end [x]section>
+#
+# x an be $ for a string or % for a hash.
+# if a hash is being used, you can add sub-sections with
+# <begin sub-section>
+# <end sub-section>
+
+
+<begin $DESCRIPTION>
+%package [LABEL]
+Group: System Environment/BlueOnyx
+Summary: [LABEL] for [VENDOR]-[SERVICE].
+[AUTOFILL]
+[BUILDARCH]
+
+%description [LABEL]
+The [VENDOR]-[SERVICE]-[LABEL] package contains the [LABEL]
+information for [VENDOR]-[SERVICE].
+
+<end $DESCRIPTION>
+
+<begin %PREP>
+<end %PREP>
+
+<begin %SETUP>
+<end %SETUP>
+
+<begin %BUILD>
+<end %BUILD>
+
+<begin %INSTALL>
+<end %INSTALL>
+
+<begin %FILES>
+<begin HEADER>
+%files [LABEL]
+%defattr(-,root,root)
+<end HEADER>
+
+<begin locale>
+[AUTOFILL]
+
+<end locale>
+
+<begin glue>
+[AUTOFILL]
+
+<end glue>
+
+<begin ui>
+[AUTOFILL]
+%{RootDir}/ui/web/robots.txt
+%{RootDir}/ui/web/libImage/*
+%{RootDir}/ui/web/.elm/*
+%{RootDir}/ui/web/.xterm/*
+%{RootDir}/ui/web/.wftp/*
+%{RootDir}/ui/web/.elm/.bowerrc
+%{RootDir}/ui/web/.elm/.jshintrc
+%{RootDir}/ui/web/.htaccess
+%{RootDir}/ui/web/index.php
+%{RootDir}/ui/web/fqdn.php
+%{RootDir}/ui/web/favicon.ico
+%{RootDir}/ui/chorizo/ci4/*
+/usr/share/doc/blueonyx-release-520XR/CHORIZO-readme.txt
+%{RootDir}/ui/chorizo/ci4/CHORIZO-readme.txt
+%attr(0700,admserv,admserv) %{RootDir}/license
+%attr(0700,admserv,admserv) %{RootDir}/capcache
+#%attr(0700,admserv,admserv) %{RootDir}/sessions
+%attr(0755,admserv,admserv) %{RootDir}/ui/chorizo/ci4/writable
+%attr(0644,root,root) %{RootDir}/ui/chorizo/ci4/.env
+%attr(0644,root,root) %{RootDir}/ui/chorizo/ci4/.env.bx
+%attr(0644,root,root) %{RootDir}/ui/chorizo/ci4/.gitignore
+%attr(0755,root,root) %{RootDir}/ui/chorizo/ci4/bx_ci4_fixer.sh
+%attr(0755,root,root) %{RootDir}/ui/chorizo/ci4/spark
+%attr(0755,root,root) %{RootDir}/bin/bx-zap-gui-cache.php
+
+<end ui>
+
+<begin capstone>
+%{RootDir}/capstone/%{Vendor}-%{Service}.cap
+/etc/sysconfig/firstboot
+%attr(0755,root,root)/etc/cron.hourly/bxalpine.cron
+[AUTOFILL]
+
+<end capstone>
+<end %FILES>
+
+<begin %POST-INSTALL>
+<begin HEADER>
+%post [LABEL]
+<end HEADER>
+
+<begin capstone>
+# capstone post-install
+<end capstone>
+
+<begin glue>
+# glue post-install 
+<end glue>
+<begin ui>
+# ui post-install
+
+# Set Hostname:
+BXHN=`/usr/bin/uname -n`
+if [ "$BXHN" != '' ];then
+  /bin/sed -i -e "s/5211R/$BXHN/" /usr/sausalito/ui/chorizo/ci4/.env
+else
+  echo "Auto-Insertion of server-name for CodeIgniter produced and empty string. Skipping server-name replacement in .env."
+fi
+
+# Set random number for $config['encryption_key'] in the CodeIgniter config:
+RANDNUM=`date | sha256sum | base64 | head -c 32; echo`;
+if [ "$RANDNUM" != '' ];then
+  /bin/sed -i -e "s/b95397a593fed523c20caa10ca12018d/$RANDNUM/" /usr/sausalito/ui/chorizo/ci4/.env
+else
+  echo "Auto-Generation of encryption key for CodeIgniter produced and empty key. Skipping key replacement in .env."
+fi
+
+# Yeah, this shouldn't be here. Nothing to see. Move along. Thanks.
+if [ -f /usr/sausalito/constructor/virtbiz/branding/initial_site.pl ]; then
+  /usr/sausalito/constructor/virtbiz/branding/initial_site.pl
+fi
+
+if [ ! -d /usr/sausalito/license ];then 
+  /bin/mkdir /usr/sausalito/license 
+  /bin/chmod 700 /usr/sausalito/license/ 
+  /bin/chown admserv:admserv /usr/sausalito/license
+fi
+
+if [ ! -d /usr/sausalito/capcache ];then 
+    /bin/mkdir /usr/sausalito/capcache 
+    /bin/chmod 700 /usr/sausalito/capcache/ 
+    /bin/chown admserv:admserv /usr/sausalito/capcache
+fi
+
+if [ ! -d /usr/sausalito/sessions ];then 
+    /bin/mkdir /usr/sausalito/sessions 
+fi
+
+if [ -d /usr/sausalito/sessions ];then
+    /bin/chmod 700 /usr/sausalito/sessions/ 
+    /bin/chown admserv:admserv /usr/sausalito/sessions
+fi
+
+if [ -d /usr/sausalito/ui/chorizo/ci4/writable ];then
+  /bin/chown -R admserv:admserv /usr/sausalito/ui/chorizo/ci4/writable
+fi
+
+
+# This is a horrible script that old versions of the blueonyx-cd-installer might have
+# brought aboard. We need to remove it:
+if [ -f /usr/sausalito/constructor/base/blueonyx/51_set_default_services.pl ];then
+  /bin/rm -f /usr/sausalito/constructor/base/blueonyx/51_set_default_services.pl
+fi
+
+if [ ! -f /var/log/gui-debug.log ];then
+  touch /var/log/gui-debug.log
+  chown admserv:admserv /var/log/gui-debug.log
+fi
+
+# Restart CCEd once YUM is done:
+if [ -d /usr/sausalito/yumcce ];then 
+  touch /usr/sausalito/yumcce/restart
+fi
+
+<end ui>
+<begin locale>
+# locale post-install
+
+<end locale>
+<end %POST-INSTALL>
+
+<begin %POST-UNINSTALL>
+<begin HEADER>
+%postun [LABEL]
+<end HEADER>
+
+<begin glue>
+# glue post-uninstall
+
+<end glue>
+<begin ui>
+# ui post-uninstall
+
+<end ui>
+<begin locale>
+# locale post-uninstall
+
+<end locale>
+<end %POST-UNINSTALL>
+
+<begin $CHANGELOG>
+
+* Sat May 16 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-31
+- Modified ci4/app/Libraries/uifc2/FormFieldBuilder.php so that Password
+  element now shows proper helptext - also below the input field.
+
+* Fri May 08 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-30
+- Added shell_array() as the safe alternative for new code: takes an
+  array of arguments, wraps each with escapeshellarg(), and delegates
+  to shell().
+- Added safe_deserialize() helper to uifc_ng_helper.php — tries JSON first,
+  falls back to PHP unserialize with allowed_classes=false.
+- Switched toHandlerHtml() from serialize() to json_encode() to prevent
+  PHP Object Injection via _serialized_errors hidden form field.
+- Switched getErrors() and all module-level consumers to safe_deserialize().
+- Added Secure, HttpOnly and SameSite=Lax flags to loginName and sessionId
+  cookies in BaseController.php.
+- Switched BaseController rset() from serialize() to json_encode() to
+  prevent PHP Object Injection via Redis cache poisoning.
+- Switched rget() to try json_decode() first, fall back to safe
+  unserialize with allowed_classes=false.
+
+* Sun Apr 26 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-29
+- app/Libraries/CceClient.php: Kept findx() regex-capable while falling 
+  back to find() for exact-match-only queries in the cce.so path; 
+  made findSorted()/findNSorted() best-effort and return matches even 
+  when native sorted FIND support is unreliable.
+
+* Sun Apr 26 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-28
+- Modified ci4/app/Libraries/CceClient.php to re-add cced.so support
+  if it is available. If not: 1st fallback CCEd-API, 2nd fallback
+  Unix Socket to CCEd. GetAll() function isn't present in cced.so,
+  so for that we use the fallbacks and typically serve it via the
+  CCEd-API instead.
+
+* Sat Apr 25 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-27
+- Now that i18n-Support is back directly in admser-php as i18n.so
+  the base-alpine i18n support deterministically checks if native
+  i18n support via PHP works and if so, it uses it. If not, then
+  it falls back to use the emulated i18n support via PHP Class 
+  instead.
+- Modified ci4/app/Libraries/I18n.php
+- Modified ci4/app/Libraries/I18nExtension.php
+- Modified ci4/app/Libraries/I18nNative.php
+- Addressed deprecation warnings in the following classes:
+- Modified ci4/app/Controllers/BaseController.php
+- Modified ci4/app/Libraries/BxPage.php
+- Modified ci4/app/Libraries/Capabilities.php
+- Modified ci4/app/Libraries/CceClient.php
+- Modified ci4/app/Libraries/I18n.php
+- Modified ci4/app/Libraries/ServerScriptHelper.php
+- Modified ci4/app/Libraries/uifc2/BXDivider.php
+- Modified ci4/app/Libraries/uifc2/ButtonContainer.php
+- Modified ci4/app/Libraries/uifc2/FormField.php
+- Modified ci4/app/Libraries/uifc2/FormFieldBuilder.php
+- Modified ci4/app/Libraries/uifc2/FullName.php
+- Modified ci4/app/Libraries/uifc2/HtmlComponentFactory.php
+- Modified ci4/app/Libraries/uifc2/MultiChoice.php
+- Modified ci4/app/Libraries/uifc2/Option.php
+- Modified ci4/app/Libraries/uifc2/PagedBlock.php
+- Modified ci4/app/Libraries/uifc2/Password.php
+- Modified ci4/app/Libraries/uifc2/RawHTML.php
+- Modified ci4/app/Libraries/uifc2/ScrollList.php
+
+* Mon Mar 30 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-26
+- Modified ci4/app/Libraries/uifc2/Table.php to add the function 
+  makeHeaderLabelCell() to allow us to construct headers with proper
+  Lables and helptexts.
+
+* Wed Mar 18 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-25
+- Added web/.elm/gauth for authenticator app download QR code
+
+* Sun Mar 15 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-24
+- Phase one of Adminica theme removal:
+- Added SPF related JS and CSS to platform/alpine.mod/web/.elm/spf
+- Removed UIFC1 libraries ci4/app/Libraries/uifc1
+- Removed /web/.adm/scripts so that outdated CVE riddled Adminica
+  jQuery no longer triggers security scanners.
+- Moved web/.adm/images to web/.elm/images
+- Removed web/.adm/ entirely
+- Modified etc/cron.hourly/bxalpine.cron
+- Modified ci4/app/Helpers/blueonyx_helper.php
+- Modified ci4/app/Helpers/uifc_ng_helper.php 
+- Modified ci4/app/Libraries/BxPage.php
+- Modified ci4/app/Libraries/ReportHelper.php
+- Modified ci4/app/Libraries/ServerScriptHelper.php
+
+* Sat Mar 14 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-23
+- Extended the CI4 GUI framework for the 2FA overhaul.
+- Modified ci4/app/Controllers/BaseController.php
+- Modified ci4/app/Libraries/BxPage.php
+- Added ci4/app/Libraries/uifc2/Table.php
+- Modified ci4/app/Libraries/uifc2/HtmlComponentFactory.php
+- Modified ci4/app/Libraries/uifc2/Button.php
+- Added request-level forced-setup enforcement and menu handling for
+  mandatory 2FA enrollment.
+
+* Thu Mar 12 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-22
+- Improved 2FA support
+- Added ci4/app/Libraries/ModernTOTPProvider.php
+- Added ci4/app/Libraries/TwoFactorBackupCodes.php
+- Added ci4/app/Libraries/TwoFactorEncryption.php
+- Added ci4/app/Libraries/TwoFactorRateLimiter.php
+
+* Tue Mar 10 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-21
+- Modified ci4/app/Helpers/uifc_ng_helper.php
+
+* Sun Mar 08 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-20
+- Security/compatibility refresh of GUI JS stack: updated .elm
+  jQuery to 3.5.1 and jQuery UI to 1.13.1, added jQuery Migrate 3.4.0,
+  and wired compatibility shims in CI4 GUI/login/wizard templates and
+  vsite error templates.
+- Upgraded bundled Select2 from 4.0.3 to 4.0.13 (including i18n
+  payloads) to restore compatibility under jQuery 3.x.
+- Reworked UIFC2 DatePicker to native HTML date/time controls
+  (datetime-local/date/time), removing runtime dependency on legacy
+  bootstrap-datetimepicker; kept existing field semantics and improved
+  calendar icon trigger behavior.
+- Fixed iframe auto-height regression by guarding optional
+  iframeAutoHeight plugin usage and adding native same-origin iframe
+  resize fallback.
+- Fixed iframe resize JS error (scrollHeight null dereference) with
+  defensive null checks, safer height calculation, and self-clearing
+  interval logic.
+
+* Thu Jan 22 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-19
+- Modified ci4/app/Libraries/uifc2/SetSelector.php:
+- Fix fatal PHP 8+ ValueError in SetSelector caused by inconsistent array sizes
+- Replace fragile array_multisort() logic with stable ID→label mapping
+- Prevent GUI error when CODB namespaces contain malformed or empty entries
+- Harden SetSelector against invalid scalar data and future PHP namespace changes
+
+* Tue Jan 20 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-18
+- Modified ci4/app/Controllers/BaseController.php to add missing 
+  modified Redis functions.
+
+* Sun Jan 18 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-17
+- Extended Redis cache functionality:
+- Modified ci4/app/Controllers/BaseController.php
+- Modified ci4/app/Helpers/blueonyx_helper.php to cache sitemap
+- Modified ci4/app/Libraries/BxPage.php to cache sitemap
+- Added /usr/sausalito/bin/bx-zap-gui-cache.php
+- Modified constructor/11_configureSystem.pl to zap Redis cache
+
+* Sun Jan 18 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-16
+- Modified ci4/app/Controllers/BaseController.php with rudimentary
+  Redis support functions and usage.
+
+* Fri Jan 02 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-15
+- Added spinner that gets shown when 'Save' is in progress.
+- Modified ci4/app/Libraries/BxPage.php
+- Modified ci4/app/Libraries/uifc2/Button.php
+- Locales extended
+
+* Thu Dec 18 2025 Michael Stauber <mstauber@solarspeed.net> 5.2-14
+- Modified constructor/11_configureSystem.pl to clean CapCache
+
+* Sun Dec 14 2025 Michael Stauber <mstauber@solarspeed.net> 5.2-13
+- Reactivated ACL cache, but added reset_cache() function.
+- Modified ci4/app/Libraries/Capabilities.php
+- Modified ci4/app/Libraries/ServerScriptHelper.php
+
+* Sun Nov 09 2025 Michael Stauber <mstauber@solarspeed.net> 5.2-12
+- Allow logins by IP address via the GUI without enforcing hostname.
+- Modified ci4/app/Config/App.php to dynamically construct baseURL
+- Added ci4/app/Config/App.php.dist which is the unmodified copy.
+- Modified ci4/Modules/Base/Gui/Controllers/ErrorPages.php to log to
+  which full URL it redirects if debug is enabled.
+- Modified ci4/app/Libraries/BxPage.php to streamline the whole process
+  that deals with 'GUIredirects'.
+
+* Tue Oct 18 2025 Michael Stauber <mstauber@solarspeed.net> 5.2-11
+- Small fix in ScrollList.php to only use setExtraHeaders() if we do have
+  Variable tableExtraWidthHeader defined. It is undefined if we have not
+  used setColumnWidths() when setting up getScrollList(). 
+- Modified /ci4/app/Libraries/uifc1/ScrollList.php
+- Modified /ci4/app/Libraries/uifc2/ScrollList.php
+
+* Tue Sep 16 2025 Michael Stauber <mstauber@solarspeed.net> 5.2-10
+- Modified ci4/app/Libraries/I18n.php so that get() uses en_US locales
+  for '_swupdate' entries with 'name' or 'nameTag'.
+- Modified ci4/app/Libraries/uifc2/SetSelector.php to sort the output
+  of the selected and not selected colums.
+
+* Sun Aug 10 2025 Michael Stauber <mstauber@solarspeed.net> 5.2-9
+- Modified Helpers/blueonyx_helper.php to reject passwords with 
+  double-quote characters in them.
+- Modified Modules/Base/Gui/Controllers/Check_password.php to perform
+  illegal character check on raw POST data.
+
+* Sat Jul 19 2025 Michael Stauber <mstauber@solarspeed.net> 5.2-8
+- Modified ci4/app/Helpers/blueonyx_helper.php to add new function
+  renderSingleFlotChartDeltas() for better rendering of network
+  traffic with deltas instead of totals.
+- Modified ci4/app/Helpers/uifc_ng_helper.php to edit function
+  StartPageStats() to use renderSingleFlotChartDeltas() for the
+  block with the network traffic Flot.
+
+* Mon Jul 14 2025 Michael Stauber <mstauber@solarspeed.net> 5.2-7
+- Added web/fqdn.php which we need for determining the GUI
+  hostname from within /var/www/html/error/suspended.html
+
+* Fri Jul 11 2025 Michael Stauber <mstauber@solarspeed.net> 5.2-6
+- Fix in ci4/app/Libraries/I18n.php to return early on empty tag.
+
+* Thu Jul 03 2025 Michael Stauber <mstauber@solarspeed.net> 5.2-5
+- Modified debugging in ci4/app/Libraries/AutoFeatures.php
+- Made ci4/app/Libraries/CCE.php more resilient
+
+* Sat Jun 21 2025 Michael Stauber <mstauber@solarspeed.net> 5.2-4
+- Modified ci4/app/Helpers/blueonyx_helper.php to modify function
+  find_eth_ifaces() to properly detect 'enp5s0' style interfaces
+  as well.
+- Modified ci4/app/Helpers/uifc_ng_helper.php StartPageStats() to
+  use generic interface name localization if we're not using eth0
+- Modified ci4/Modules/Base/Gui/Controllers/Metrics.php to detect
+  and use primary interface in aggnet metrics.
+
+* Thu Jun 19 2025 Michael Stauber <mstauber@solarspeed.net> 5.2-3
+- Added missing locale processing in BaseController.php
+
+* Thu Jun 19 2025 Michael Stauber <mstauber@solarspeed.net> 5.2-2
+- Modified ci4/app/Controllers/BaseController.php so that the 
+  internal SQL functions properly trap underlying CI code exceptions
+  on SQL usage and instead set a proper BX_MySQL_Error for usage
+  in standard BlueOnyx error reporting via the GUI.
+
+* Sun Jun 15 2025 Michael Stauber <mstauber@solarspeed.net> 5.2-1
+- First draft of base-alpine for 5211R
+- Removed Prometheus and node_exporter dependencies and modules.
+- Imported all missing code changes of 5211R base-alpine from 
+  5.1-10 to 5.1-19
+
+* Mon May 12 2025 Michael Stauber <mstauber@solarspeed.net> 5.1-9
+- BxPage function sanitizeInput() was too aggressive. We can't
+  filter '&' without opening a massive can of worms. Edited
+  ci4/app/Libraries/BxPage.php to make function sanitizeInput()
+  a little more accomodating and leave '&' unfiltered, but we
+  still filter anything else.
+- Modified ci4/app/Libraries/CceClient.php to remove '&amp'
+  handling from scalar_to_array()
+- Modified ci4/app/Helpers/blueonyx_helper.php to remove '&amp'
+  handling from scalar_to_array()
+
+* Sun May 11 2025 Michael Stauber <mstauber@solarspeed.net> 5.1-8
+- Fixed a reflected/stored XSS vulnerability triggered via the
+  file name when rendering the uploaded file preview in
+  Dropify.prototype.setPreview() - as reported by Alec Romano
+- Modified web/.elm/vendors/bower_components/dropify/dist/js/dropify.js
+- Modified web/.elm/vendors/bower_components/dropify/dist/js/dropify.min.js
+
+* Sat May 10 2025 Michael Stauber <mstauber@solarspeed.net> 5.1-7
+- The recent introduction of function sanitizeInput($input) in
+  BxPage.php broke our scalar_to_array() functions, as '&' got
+  converted into the HTML-Entity '&amp;'.
+- Fixed scalar_to_array() in ci4/app/Helpers/blueonyx_helper.php
+- Fixed scalar_to_array() in ci4/app/Libraries/CceClient.php
+
+* Tue May 06 2025 Michael Stauber <mstauber@solarspeed.net> 5.1-6
+- Modified ci4/app/Libraries/BxPage.php function setGETPOST() and
+  added function sanitizeInput() to sanitize FORM_GET and  FORM_POST
+  data via sanitizeInput() to protect against XSS attacks performed
+  against logged in users. The issue was reported by Alec Romano.
+
+* Sat Jan 18 2025 Michael Stauber <mstauber@solarspeed.net> 5.1-5
+- Modified ci4/app/Controllers/BaseController.php to make sure SQL
+  port is now always an integer.
+- Updated ci4/app/Views/errors/html/production.php
+- Updated ci4/app/Views/errors/html/production.php.bak
+
+* Fri Dec 13 2024 Michael Stauber <mstauber@solarspeed.net> 5.1-4
+- Modified getAllCapabilityGroups() to disable ACL caching for now
+- Modified ci4/app/Libraries/Capabilities.php
+- Modified ci4/app/Libraries/ServerScriptHelper.php
+
+* Thu Dec 12 2024 Michael Stauber <mstauber@solarspeed.net> 5.1-3
+- Modified ci4/app/Libraries/BxPage.php 'spinner' now shows YUM
+  and DNF updates as well.
+
+* Wed Dec 04 2024 Michael Stauber <mstauber@solarspeed.net> 5.1-2
+- Downgrade of CI vendor YAML module to make it work with PHP-8.1
+
+* Sat Nov 30 2024 Michael Stauber <mstauber@solarspeed.net> 5.1-1
+- CodeIgniter updated to v4.5.5
+
+* Sat Nov 02 2024 Michael Stauber <mstauber@solarspeed.net> 5.0-23
+- Added /web/.wftp for updated base-ftp
+
+* Wed Jul 31 2024 Michael Stauber <mstauber@solarspeed.net> 5.0-22
+- Bugfix in ci4/app/Libraries/uifc2/MultiChoice.php
+
+* Mon Jul 22 2024 Michael Stauber <mstauber@solarspeed.net> 5.0-21
+- Modified ci4/app/Helpers/blueonyx_helper.php PoorMansBabelFish()
+  to wire locale 'browser' to 'en_US'.
+
+* Mon Jul 22 2024 Michael Stauber <mstauber@solarspeed.net> 5.0-20
+- Added Xterm.js to web/.xterm
+- Modified ci4/app/Helpers/blueonyx_helper.php find_eth_ifaces() to
+  removed veth from list of auto-detected interfaces. This was way
+  too problematic in Incus context as it may detect a veth as
+  primary interface.
+
+* Sat Jul 19 2024 Michael Stauber <mstauber@solarspeed.net> 5.0-19
+- The upcomming solarspeed-aventurine module needs some extra menu
+  handling provisions for Incus instance management.
+- Modified ci4/app/Helpers/blueonyx_helper.php to handle get_form_data
+  key 'instance' in addition to the already existing 'group'.
+- Also modified ci4/app/Libraries/BxPage.php to handle get_form_data
+  'instance' in addition to 'group'. And added menu assembly exceptions
+  for menu items 'solarspeed_ave_menu_SINGLE' and 'solarspeed_ave_menu'
+  to show only one of the layered menus. Like we do for Vsite mgmt.
+
+* Sat Jul 06 2024 Michael Stauber <mstauber@solarspeed.net> 5.0-18
+- Modified ci4/composer.json to add symfony/yaml
+- Modified ci4/composer.lock to add symfony/yaml
+
+* Wed Jul 03 2024 Michael Stauber <mstauber@solarspeed.net> 5.0-17
+- Modified perl/HomeDir.pm to add is_home_separate fix as suggested
+  by Juerg Sommer.
+
+* Mon Jul 01 2024 Michael Stauber <mstauber@solarspeed.net> 5.0-16
+- Modified ci4/app/Controllers/BaseController.php to no longer log
+  /gui/metrics and /gui/services calls to /var/log/gui-debug.log
+- Modified ci4/app/Controllers/BaseController.php to ignore URIs
+  /gui/metrics and /gui/services from being valid targets after
+  logging in again after a timeout. Redirect to /gui instead.
+
+* Sun Jun 30 2024 Michael Stauber <mstauber@solarspeed.net> 5.0-15
+- Modified ci4/Modules/Base/Gui/Controllers/DaemonServices.php to
+  fix incorrect ACL.
+- Modified ci4/app/Libraries/BxPage.php to remove stray Vsite
+  management capabilities from Users with cap 'ManageVPS' who are
+  lacking the cap 'ManageIncus'. This is done to hide the site
+  management menu entry from plain Incus users.
+
+* Tue Jun 11 2024 Michael Stauber <mstauber@solarspeed.net> 5.0-14
+- Fix in ci4/app/Libraries/BxPage.php function setErrors() to more
+  reliably remove empty error messages as well as filter out double
+  entries.
+
+* Sun Jun 09 2024 Michael Stauber <mstauber@solarspeed.net> 5.0-13
+- Fixed get_primary_ipv6_ip in ci4/app/Helpers/blueonyx_helper.php
+
+* Sat Jun 08 2024 Michael Stauber <mstauber@solarspeed.net> 5.0-12
+- Added spinning icon to top right of Elmer GUI to display pending
+  service restarts:
+- Added ci4/Modules/Base/Gui/Controllers/DaemonServices.php
+- Modied ci4/Modules/Base/Gui/Config/Routes.php
+- Modified ci4/Modules/Base/Gui/Views/elmer_full_view.php
+- Modified ci4/app/Libraries/BxPage.php for the icon logic.
+- Modified ci4/app/Helpers/blueonyx_helper.php with network related
+  functions similar to those in Network.pm
+- Bugfix in ci4/app/Libraries/I18nNative.php
+- Locales updated
+
+* Sun Mar 17 2024 Michael Stauber <mstauber@solarspeed.net> 5.0-11
+- Modified ci4/app/Views/errors/html/production.php
+- Modified ci4/app/Views/errors/html/production.php.bx
+
+* Thu Mar 14 2024 Michael Stauber <mstauber@solarspeed.net> 5.0-10
+- Renamed Modules/Blueapp to Modules/Bluapp
+
+* Sat Mar 09 2024 Michael Stauber <mstauber@solarspeed.net> 5.0-9
+- Added 5210R provisions to constructor/setup_capabilities.pl
+
+* Sun Mar 03 2024 Michael Stauber <mstauber@solarspeed.net> 5.0-8
+- Overhauled jQuery scripts for password validation yet AGAIN in
+  ci4/app/Libraries/uifc2/FormFieldBuilder.php to make them work
+  with and without password repeat field.
+
+* Wed Feb 28 2024 Michael Stauber <mstauber@solarspeed.net> 5.0-7
+- Bugfix in GetFormAttributes() related to radios
+
+* Wed Feb 28 2024 Michael Stauber <mstauber@solarspeed.net> 5.0-6
+- Small fix in DatePicker ci4/app/Libraries/uifc2/DatePicker.php
+  initialization script to handle AM/PM display correctly.
+
+* Sat Feb 23 2024 Michael Stauber <mstauber@solarspeed.net> 5.0-5
+- Modified getMultiChoice() to add option setHideOptions()
+- Modified ci4/app/Libraries/uifc1/MultiChoice.php
+- Modified ci4/app/Libraries/uifc2/MultiChoice.php
+
+* Thu Feb 22 2024 Michael Stauber <mstauber@solarspeed.net> 5.0-4
+- Bugfix to ci4/app/Libraries/uifc2/MultiChoice.php related to 
+  hidden fields of Radios and Checkboxes. Hidden field got added
+  twice. Once with 'checkbox-' prefixed and once without.
+
+* Tue Feb 20 2024 Michael Stauber <mstauber@solarspeed.net> 5.0-3
+- Added provisions to allow the GUI on a different port
+- Modified ci4/Modules/Base/Gui/Controllers/WorkFrame.php
+- Modified ci4/app/Controllers/BaseController.php
+- Modified ci4/app/Helpers/uifc_ng_helper.php
+- Modified ci4/app/Libraries/BxPage.php
+
+* Fri Feb 16 2024 Michael Stauber <mstauber@solarspeed.net> 5.0-2
+- Finalized Elmer integration and overhaul of Adminica. Too many
+  changes to list them in detail. See SVN/Trac.
+
+* Thu Nov 09 2023 Michael Stauber <mstauber@solarspeed.net> 5.0-1
+- Integration of Elmer theme.
+- Added/changed some alpine locales
+- Added web/.elm/ for theme CSS and scripts
+- Modified ci4/app/Libraries/BxPage.php provisionally to support
+  both the old Adminica and the new Elmer theme.
+- Added ci4/Modules/Base/Gui/Views/elmer_full_view.php for basic
+  GUI appearance.
+- Modified ci4/app/Helpers/blueonyx_helper.php to parse menus for
+  'elmer_icon'
+- Added 'elmer_icon' to ui/chorizo/menu/programs.xml
+- Added 'elmer_icon' to ui/chorizo/menu/programsPersonal.xml
+- Added 'elmer_icon' to ui/chorizo/menu/programsSite.xml
+- Moved ci4/app/Libraries/uifc to ci4/app/Libraries/uifc1 for
+  retaining Adminica compat
+- Added ci4/app/Libraries/uifc2 for Elmer Theme compat
+- Modified BxPage.php, ReportHelper.php and ServerScriptHelper.php
+  to detect which theme to use and included the correct uifc dir.
+- Streamlined app/Libraries/I18n.php and added experimental cache.
+- Massively streamlined app/Libraries/I18nNative.php
+- Added experimental app/Libraries/I18nExtension.php
+- Modified ci4/app/Helpers/uifc_ng_helper.php
+- Modified ci4/app/Libraries/uifc2/PagedBlock.php
+- Added ci4/Modules/Base/Gui/Controllers/Metrics.php for gathering
+  of metrics via Prometheus and node_exporter. Returns JSON.
+- Added route for metrics to ci4/Modules/Base/Gui/Config/Routes.php
+- Modified ci4/app/Helpers/blueonyx_helper.php with metrics handling
+  and plotting functions.
+- Extended ci4/Modules/Base/Gui/Controllers/Metrics.php with Theme
+  switching provisions.
+- Rewrote ci4/app/Libraries/uifc2/Button.php from scratch.
+- Added ci4/app/Libraries/uifc2/FeatureButton.php
+- Added ci4/Modules/Base/Gui/Views/elmer_simplified_view.php and
+  provisions in BxPage for it.
+- Added requirements for: golang-github-prometheus 
+  golang-github-prometheus-alertmanager 
+  golang-github-prometheus-node-exporter 
+  python3-prometheus_client 
+- Added src/base-alpine-prometheus
+- Modified ci4/Modules/Base/Gui/Views/pluginsmin.php - see: [BlueOnyx:26663]
+
+* Sun Aug 27 2023 Michael Stauber <mstauber@solarspeed.net> 4.0-23
+- Small ACL fix
+- Modified ci4/app/Libraries/Capabilities.php
+- Modified ci4/app/Libraries/ServerScriptHelper.php
+
+* Sun Aug 27 2023 Michael Stauber <mstauber@solarspeed.net> 4.0-22
+- Modified ui/chorizo/menu/maintenance.xml to change icon
+
+* Sat Aug 26 2023 Michael Stauber <mstauber@solarspeed.net> 4.0-21
+- Modified ci4/app/Libraries/BxPage.php. To avoid clutter in the
+  horizontal menu for regular user accounts all Solarspeed added
+  menu entries are no longer shown. They only show in the vertical
+  menu instead.
+
+* Thu Aug 24 2023 Michael Stauber <mstauber@solarspeed.net> 4.0-20
+- Modified ci4/app/Libraries/BXEncoding.php to fix code where 
+  performing a floating-point division and then trying to perform 
+  a bitwise OR operation with a string value was a suboptimal idea.
+
+* Tue Jul 18 2023 Michael Stauber <mstauber@solarspeed.net> 4.0-19
+- Modified ci4/app/Controllers/BaseController.php to externalize
+  the MySQL statustrigger call for ACL reasons.
+
+* Sun Jul 02 2023 Michael Stauber <mstauber@solarspeed.net> 4.0-18
+- Modified ci4/app/Controllers/BaseController.php to not rely on
+  CodeIgniter's internal Encrypt/Decrypt routine. It throws nasty
+  exceptions if it is fed garbage instead of soft failing. Replaced
+  the newly added functions with direct calls to openssl_encrypt()
+  and openssl_decrypt() for better own error checks and handling.
+
+* Sun Jul 02 2023 Michael Stauber <mstauber@solarspeed.net> 4.0-17
+- Modified ci4/app/Controllers/BaseController.php to add two functions
+  that allow us remote logins into subsidiary GUI apps.
+
+* Tue Jun 20 2023 Michael Stauber <mstauber@solarspeed.net> 4.0-16
+- getBoolean() FormFields didn't use their Description as helptext,
+  but instead re-used the Label. This has now been fixed.
+- Modified ci4/app/Libraries/uifc/Boolean.php
+- Modified ci4/app/Libraries/uifc/FormFieldBuilder.php to double check
+  that we use the Description as Helptext. If no localization for the 
+  Description is found, then we fall back to use the Label as helptext.
+- Modified ci4/app/Libraries/uifc/HtmlComponentFactory.php to call
+  Boolean with a getLabel() call set to true. Commented out forceful
+  setting of formfield ID in BxPage. This doesn't seem to be needed
+  anymore.
+
+* Tue Apr 25 2023 Michael Stauber <mstauber@solarspeed.net> 4.0-15
+- Modified ci4/app/Controllers/BaseController.php to fix one half of
+  the loop back to the /login page on successful auth.
+
+* Thu Apr 20 2023 Michael Stauber <mstauber@solarspeed.net> 4.0-14
+- Added web/.adm/gauth image directory
+- Added requirement for google-authenticator, qrencode, qrencode-libs
+- Bugfix in ci4/app/Libraries/BxPage.php as nonSiteAdmin-Users weren't
+  given any 'Logout' button. Managed to at least add it back to the
+  vertical menu without too much effort. No joy on the horizontal menu,
+  though.
+
+* Wed Apr 12 2023 Michael Stauber <mstauber@solarspeed.net> 4.0-13
+- Modified ci4/app/Controllers/BaseController.php as function
+  getSSH() was returning NULL on expired sessions. This was supposed
+  to force users back to the login screen, but resulted in an error
+  instead because most GUI pages eventually call
+  $CI->serverScriptHelper->getHtmlComponentFactory() before
+  $CI->getAllowed(), which then results in calling a function of
+  a NULL object. To sort this out we now force instanciation of
+  $this->serverScriptHelper if it's not already present. This
+  allows the code to circle all the way to the point where finally
+  $CI->getAllowed() can trigger safely to bump the visitor with
+  expired session back to the login screen.
+
+* Sun Feb 19 2023 Michael Stauber <mstauber@solarspeed.net> 4.0-12
+- Modified ci4/app/Controllers/BaseController.php and added function
+  BX_MySQL_Select() to be able to perform MySQL SELECT statements that
+  actually RETURN the info we want. The already present function
+  BX_MySQL_Query() just performs queries and reports success or 
+  failure, which isn't good enough for some usage cases like the
+  AV-SPAM, where we actually need to poll data from MySQL.
+
+* Sat Jan 14 2023 Michael Stauber <mstauber@solarspeed.net> 4.0-11
+- Modified ci4/app/Controllers/BaseController.php to not inherit
+  wrong locale from cookie if we log out as one user and log in as
+  another with a different language configured.
+
+* Wed Jan 04 2023 Michael Stauber <mstauber@solarspeed.net> 4.0-10
+- Modified ci4/app/Libraries/uifc/FormFieldBuilder.php
+- Modified ci4/app/Libraries/uifc/ScrollList.php
+- Read-Only text in getTextField() or ScrollList table now wraps
+  due to added inline CSS.
+
+* Wed Jan 04 2023 Michael Stauber <mstauber@solarspeed.net> 4.0-9
+- Small fix in ci4/app/Libraries/uifc/TextList.php to add missing
+  setLabelType() and getLabelType()
+
+* Fri Dec 30 2022 Michael Stauber <mstauber@solarspeed.net> 4.0-8
+- ACL fix in function getAllowed() in BaseController.php
+
+* Tue Dec 06 2022 Michael Stauber <mstauber@solarspeed.net> 4.0-7
+- Fixes in ci4/app/Libraries/CceClient.php to replace read_file
+  with file_get_contents and to fix circular reference to cceClient
+
+* Sun Dec 04 2022 Michael Stauber <mstauber@solarspeed.net> 4.0-6
+- Modified MySQL routine in ci4/app/Controllers/BaseController.php
+
+* Mon Nov 21 2022 Michael Stauber <mstauber@solarspeed.net> 4.0-5
+- Modified ci4/app/Controllers/BaseController.php to create
+  login_logfile if it's not already present.
+- Turned GUI-logging down a notch and reduced verbosity and improved
+  clarity about who is accessing what.
+- Modified logging in ci4/app/Libraries/CceClient.php as well
+
+* Mon Nov 21 2022 Michael Stauber <mstauber@solarspeed.net> 4.0-4
+- Modified ci4/Modules/Base/Gui/Controllers/ErrorPages.php with
+  redirect exception if 'isLicenseAccepted' isn't set yet.
+- Modified ci4/app/Controllers/BaseController.php improved logging
+  in BC.getSystem() to tell us the URI of un-authed calls.
+- Modified ci4/app/Libraries/CceClient.php to extend getObject()
+  with the provision to use the vars 'cce_nocache' to bypass the
+  CCE-Cache for cached objects. 
+
+* Mon Nov 21 2022 Michael Stauber <mstauber@solarspeed.net> 4.0-3
+- Moved ci4/vendor to src/base-alpine-ci4-vendor/base-alpine-ci4-vendor/vendor
+  This was necessary as sausalito-devel-tools prevents us from
+  packaging 'src' directories and some modules such as 'kint' have
+  these 'src' directories in their paths.
+- Added requirement for base-alpine-ci4-vendor in order to install
+  this new separate RPM
+
+* Mon Nov 21 2022 Michael Stauber <mstauber@solarspeed.net> 4.0-2
+- Removed /usr/sausalito/sessions dir from RPM as cce already has it
+
+* Wed Nov 16 2022 Michael Stauber <mstauber@solarspeed.net> 4.0-1
+- [4.0-1] CodeIgniter 4 based BlueOnyx 5211R GUI.
+- Too many changes to list. Check SVN.
+
+* Thu Aug 18 2022 Michael Stauber <mstauber@solarspeed.net> 3.1-1BX04
+- Modified ci/application/libraries/BxPage.php to use gethostname()
+  if vsite fqdn cannot be determined.
+
+* Mon Jan 03 2022 Michael Stauber <mstauber@solarspeed.net> 3.1-1BX03
+- Modified ci/application/helpers/blueonyx_helper.php to globally add
+  'ci_csrf_token' as ignore attribute for form keys.
+
+* Sun Dec 19 2021 Michael Stauber <mstauber@solarspeed.net> 3.1-1BX02
+- Small compat fixes in ci/application/libraries/CCE.php
+
+* Wed Nov 10 2021 Michael Stauber <mstauber@solarspeed.net> 3.1-1BX01
+- Initial build for BlueOnyx 5211R on EL9
+
+* Sun Sep 12 2021 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX46
+- Modified ci/application/config/config.php to fix DDNS API URL line
+
+* Sun Sep 12 2021 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX45
+- Modified ci/application/config/config.php to allow DDNS API URL
+
+* Fri Sep 10 2021 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX44
+- Modified ci/application/libraries/CCE.php as the function 'unescape'
+  which parses data from CODB into a presentable format had issues
+  with converting octals into UTF-8. The problem especially materialized
+  if a sequence of octals had unexpected plain text numbers in them,
+  which were then also made subject to conversion. As there usually 
+  weren't enough numbers around to form a complete octal triplet, these
+  errant numbers were then subsequently stripped out of the text that
+  was supposed to be shown. As a solution the whole 'unescape' routine
+  got overhauled to deal with this in a more adequate fashion. As an
+  unexpected side effect this is also leaps and bounds faster, as we
+  now directly return any text that doesn't have octals without further
+  character-by-character processing.
+
+* Thu Sep 09 2021 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX43
+- Modified ci/application/libraries/uifc/FormFieldBuilder.php to fix
+  Japanese text issue detailed in [BlueOnyx:25088]. In essence usage
+  of htmlspecialchars() on EUC-JP strings is a bad idea if you don't
+  force the charset to UTF-8. Fixed all usages of htmlspecialchars()
+  in FormFieldBuilder.
+- Modified uifc/Button.php to address htmlspecialchars()
+- Modified uifc/FormFieldBuilder.php to address htmlspecialchars()
+- Modified uifc/Label.php to address htmlspecialchars()
+- Modified uifc/MultiButton.php to address htmlspecialchars()
+- Modified uifc/Url.php to address htmlspecialchars()
+
+* Wed Jul 21 2021 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX42
+- Modified ci/application/libraries/ServerScriptHelper.php to fix a 
+  timeZone issue reported by Andreas Ebertus. See [BlueOnyx:25012] 
+  Many thanks!
+
+* Tue Jul 20 2021 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX41
+- Code cleanup to fix routines that use methods that are close to 
+  deprecation in PHP.
+- PHP compat fix in ci/application/libraries/BXEncoding.php
+- PHP compat fix in ci/application/third_party/MX/Router.php
+
+* Sun Jul 04 2021 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX40
+- Added fontawesome-free-5.15.3 to /web/.adm/fa/
+- Excluded dir /gui from CSRF checks in ci/application/config/config.php
+- CSS Style for '.required_tag' reduced from 40x40 to 30x30 pixels
+- Modified web/.adm/styles/adminica/combined-common-mini.css
+- Modified web/.adm/styles/adminica/combined-common.css
+- Modified ci/application/libraries/uifc/FormFieldBuilder.php to clean
+  up and extend makePasswordField() and makeTextField(). 
+- Extended makePasswordField() to show reveal password icon on password
+  and repeat password fields. Uses fontawesome-free for the icon and
+  the CSS.
+- Small code cleanup in modules/base/login/controllers/Login.php
+- Modified modules/base/login/views/login_view_solo.php to show icon
+  for show password on login form. Icon had to be on the left, which
+  is suboptimal, as in all other password forms its on the right.
+  But the login form is not wide enough for it to work consistently
+  otherwise. If credentials are auto-filled in by the browser, the
+  clickable area of the icon is moved to the right, outside of the
+  mouse pointer reach, which is even worse. Locating the icon on the
+  left solves that issue.
+
+* Wed Apr 28 2021 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX39
+- Modified ci/application/config/config.php to switch CSRF regenerate off
+
+* Wed Apr 28 2021 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX38
+- Modified ci/application/config/config.php to add apilogin page to
+  csrf_exclude_uris.
+
+* Wed Apr 07 2021 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX37
+- Modified ci/application/helpers/bxapi_helper.php to handle SSL and
+  Chrooted Shells. Plus other odds and sods specific to 5210R.
+
+* Wed Apr 07 2021 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX36
+- Access via API triggered loss of authentication for API process.
+- Fixed ci/application/libraries/CCE.php
+- Fixed ci/application/third_party/MX/Base.php
+- Fixed ci/application/libraries/CceClient.php
+- Fixed ci/application/libraries/ServerScriptHelper.php
+- Extended ci/application/helpers/bxapi_helper.php
+
+* Tue Apr 06 2021 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX35
+- Modified ci/application/helpers/blueonyx_helper.php to globally add
+  'BlueOnyx_CSRF_token' to the 'ignore_attributes' in the function
+  'GetFormAttributes' in order to prevent CCE SET transactions under
+  that name in GUI pages that try to SET all form keys.
+- Modified ci/application/helpers/bxapi_helper.php to make it compatible
+  with the latest WHMCS module iteration. In particular this now allows
+  to set the PHP version if suPHP or FPM is used.
+- Modified ci/application/libraries/BxPage.php
+- Modified ci/system/core/Security.php
+- Added CSRF exceptions based on ['REMOTE_ADDR'] and ['HTTP_REFERER']
+  for IPs whitelisted under 'Maintenance' / 'API' under 'API Host(s)'.
+
+* Thu Feb 25 2021 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX34
+- Small fix in ci/application/libraries/uifc/FormFieldBuilder.php
+
+* Thu Feb 25 2021 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX33
+- Modified ci/application/modules/base/login/controllers/Login.php to
+  handle incorrect URL access scheme. When someone tries to connect
+  to the GUI's HTTPS port via HTTP URL scheme, we redirect to the
+  correct GUI page location instead of throwing errors.
+
+* Thu Dec 03 2020 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX32
+- Added CSRF provisions to ci/application/helpers/uifc_ng_helper.php
+
+* Wed Dec 02 2020 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX31
+- Modified ci/application/libraries/ServerScriptHelper.php to extend
+  function toHandlerHtml() with CSRF token provisions.
+
+* Wed Dec 02 2020 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX30
+- Fixed Error handling in ci/application/libraries/uifc/PagedBlock.php
+
+* Thu Nov 26 2020 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX29
+- Modified ci/application/config/config.php to add BluApp module dir.
+- Added ci/application/modules/Bluapp to allow BluApp module dir.
+
+* Wed Nov 25 2020 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX28
+- Added web/.adm/mailman/icons to handle the Mailman icons.
+
+* Tue Nov 24 2020 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX27
+- Modified ci/application/libraries/CCE.php with fixed ccephp_findx()
+  that again allows sorting of results - as provided by Rickard Osser.
+
+* Sun Nov 15 2020 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX26
+- Turns out the CodeIgniter CSRF protection is pretty garbage, as it
+  doesn't take any difference between browser timezone and server
+  timezone into account. When calculating short cookie expiry times
+  this can be fatal, as the cookie set based on server timezone might
+  already be expired according to the browsers timezone. To work around
+  this issue a full heap of fixes had to be applied all over the place.
+- Modified ci/application/modules/base/login/views/login_view_solo.php
+  to have a new JavaScript calculate the difference between server and
+  browser timezone and store that in a new cookie called 'tzoff'.
+- Modified ci/application/modules/base/login/views/login_view.php
+- Modified ci/application/modules/base/login/controllers/login.php to
+  handle cookie 'tzoff' on successful login and to write a temporary
+  file into Sausalito's capcache with the timezone offset. If that file
+  cannot be written, we retain the cookie instead.
+- Modified ci/system/core/Security.php to handle either the capcache
+  tzoff file or in its absence the cookie to calculate a proper CSRF
+  cookie expiry. With some exceptions and bells and whistles.
+- Added etc/cron.hourly/bxalpine.cron to clean up capcache as needed.
+
+* Thu Nov 12 2020 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX25
+- Modified ci/application/libraries/BxPage.php to honor URI exclusions.
+  Also added function $BxPage->setCSRF_ignore(TRUE) to disable CSRF in
+  selected GUI pages for GET requests.
+
+* Tue Nov 10 2020 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX24
+- Modified ci/application/third_party/MX/Base.php to include CSFR info
+  in BX_SESSION object.
+- Modified ci/application/libraries/BxPage.php to poll BX_SESSION for
+  state of CSFR protection. If CSFR protection is enabled and any
+  request (not just POST) is made with missing or incorrect CSFR token,
+  then we end the session and bump the user back to the login page.
+
+* Sun Nov 08 2020 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX23
+- Modified ci/application/config/config.php for CSRF
+- Modified ci/application/libraries/uifc/PagedBlock.php for CSRF
+- Modified ci/application/modules/base/login/controllers/Login.php for CSRF
+- Modified ci/application/modules/base/login/views/login_view.php for CSRF
+- Modified ci/application/modules/base/login/views/login_view_solo.php for CSRF
+- Modified error message in ci/system/core/Security.php to tell that the error
+  is actually CSRF related in order to provide some clarity as of why this
+  popped up in first place.
+
+* Sat Nov 07 2020 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX22
+- Added requirements for cracklib and cracklib-dicts
+
+* Fri Aug 07 2020 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX21
+- ShellAccess fixes in ci/application/libraries/BxPage.php
+- ShellAccess fixes in ci/application/libraries/Capabilities.php
+
+* Sun Jun 28 2020 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX20
+- Relaxed password checks in ci/application/modules/base/gui/controllers/Check_password.php
+- Relaxed password checks in ci/application/modules/base/login/controllers/Login.php
+
+* Sun Jun 28 2020 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX19
+- Modified ci/application/libraries/CCE.php
+- Modified ci/application/libraries/CceClient.php
+- Modified ci/application/libraries/uifc/FormFieldBuilder.php
+- Modified ci/application/libraries/uifc/Password.php
+- Relaxed password checks in ci/application/modules/base/gui/controllers/Check_password.php
+- Relaxed password checks in ci/application/modules/base/login/controllers/Login.php
+
+* Wed May 27 2020 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX18
+- [BlueOnyx:23903] Japanese locales updated by Tomohiro Hosaka
+
+* Mon May 25 2020 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX17
+- [BlueOnyx:23894] Added Japanese word_wrap function as contributed by
+  Tomohiro Hosaka. Many thanks.
+- Modified ci/application/helpers/blueonyx_helper.php
+- Modified ci/application/libraries/I18n.php
+
+* Mon Nov 18 2019 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX16
+- For an unknown reason CCEd on 5210R no longer accepts usernames with
+  a minus in them. Unless the whole username is in quotes. This used to
+  work on every CCEd prior to the one on CentOS 8 and the one on C8 is
+  really just a recompiled C7 version. So perhaps the compiler did
+  something funky. This required several code changes in CCE classes
+  to properly escape wherever needed.
+- Modified ci/application/libraries/CCE.php
+- Modified ci/application/libraries/CceClient.php
+- Modified ci/application/modules/base/login/controllers/Login.php
+- Modified ci/application/third_party/MX/Base.php
+
+* Sat Nov 16 2019 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX15
+- Small bugfix in ci/application/libraries/CCE.php
+
+* Thu Oct 10 2019 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX14
+- Modified post-install to make sure that the dummy encryption key in
+  CI's config.php is NOT replaced with an empty string in case the
+  calculation of a new key fails. Added requirement for 'coreutils',
+  but it would be weird if they were missing when base-alpine is
+  being installed.
+
+* Wed Oct 09 2019 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX13
+- Small improvement in ci/application/helpers/uifc_ng_helper.php
+
+* Tue Oct 08 2019 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX12
+- Removed constructor/12_handle_sl_repos.pl
+
+* Thu Sep 26 2019 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX11
+- Small bugfix in ci/application/libraries/CCE.php
+
+* Thu Sep 26 2019 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX10
+- Disabled debug logging in login page.
+
+* Tue Sep 03 2019 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX09
+- Modified ci/application/helpers/blueonyx_helper.php to add BST TimeZone.
+
+* Thu Jul 25 2019 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX08
+- Modified /ci/application/helpers/blueonyx_helper.php get_data()
+- Added require for easy-migrate.
+
+* Tue Jul 09 2019 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX07
+- Modified perl/HomeDir.pm
+
+* Sun Jul 07 2019 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX06
+- Introduced 5210R Vsite/User path changes.
+- Modified perl/HomeDir.pm
+
+* Sat Jul 06 2019 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX05
+- Modified constructor/setup_capabilities.pl to drop JSP and AnonFTP from
+  Reseller capabilities.
+
+* Thu Jul 04 2019 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX04
+- Bugfixes in ci/application/modules/base/gui/controllers/ProcessFrame.php
+- Fixes in ci/application/libraries/uifc/EmailAliasList.php
+- Fixes in ci/application/libraries/uifc/TextBlock.php
+- Small fix in ci/application/libraries/CCE.php
+
+* Fri Jun 21 2019 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX03
+- Modified ci/application/libraries/uifc/FormFieldBuilder.php to switch URL 
+  FormFields over to HTML5 validation using input type url instead of  
+  input type text. Drawback: We do not have CSS for that formfield yet. 
+
+* Tue Jun 18 2019 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX02
+- Small fix in ci/application/modules/base/gui/controllers/WorkFrame.php
+- Small fix in ci/application/libraries/ArrayPacker.php
+- Added requirements for all glibc-langpack-<lang> we use in the GUI.
+
+* Mon Feb 25 2019 Michael Stauber <mstauber@solarspeed.net> 3.0-1BX01
+- First version for 5210R.
+- Updated CodeIgniter to v3.1.10
+- Adapted the majority of PHP classes and libraries to PHP-7.1
+- Removed Google API for Auto Translation (deprecated)
+- Clarified Copyright initial date where applicable. The BlueOnyx project
+  started in 2008, so code that can be attributed to the BlueOnyx project
+  now has (c) 2008-2019.
+
+* Thu Sep 06 2018 Michael Stauber <mstauber@solarspeed.net> 2.0-1BX091
+- Added SearchButton, which is a clone of SaveButton with different label.
+
+* Fri Jul 27 2018 Michael Stauber <mstauber@solarspeed.net> 2.0-1BX090
+- Modified login.php as var https_url was not set properly. 
+
+* Mon Jun 18 2018 Michael Stauber <mstauber@solarspeed.net> 2.0-1BX089
+- Better Itallian translation as provided by Simone Capra
+
+* Sat Jun 02 2018 Michael Stauber <mstauber@solarspeed.net> 2.0-1BX088
+- Updated CodeIgniter to v2.2.6.
+
+* Tue May 29 2018 Michael Stauber <mstauber@solarspeed.net> 2.0-1BX087
+- Modified ci/application/modules/base/gui/controllers/workFrame.php
+  to address redirects on CODB-Replay.
+
+* Wed May 02 2018 Michael Stauber <mstauber@solarspeed.net> 2.0-1BX086
+- Modified ci/application/modules/base/login/controllers/login.php with
+  new Cookie.
+
+* Tue Mar 20 2018 Michael Stauber <mstauber@solarspeed.net> 2.0-1BX085
+- Modified ci/application/modules/base/login/controllers/login.php to
+  address XSS vulnerability on GUI login page. Many thanks to Paul Marsh
+  from https://secquest.co.uk for reporting this issue.
+
+* Wed Mar 07 2018 Michael Stauber <mstauber@solarspeed.net> 2.0-1BX084
+- Small improvement in ci/application/helpers/blueonyx_helper.php
+
+* Sat Feb 17 2018 Michael Stauber <mstauber@solarspeed.net> 2.0-1BX083
+- Modified ci/application/libraries/uifc/ScrollList.php to get Cookie
+  for ScrollList display length if cookie is present.
+- Modified ci/application/views/pluginsmin.php to set Cookie for 
+  ScrollList display length.
+- Added umnimified ci/application/views/pluginsmin_unminified.php for
+  easier future edits.
+
+* Mon Nov 05 2017 Michael Stauber <mstauber@solarspeed.net> 2.0-1BX082
+- Modified constructors to use cce->update() insteadt of cce->set().
+
+* Tue Oct 31 2017 Michael Stauber <mstauber@solarspeed.net> 2.0-1BX081
+- Enhanced ci/application/libraries/CceClient.php with dedicated functions
+  to handle the CCE Replay-Transactions idea initially introduced in
+  6108R. Natively handling them in CceClient.php offers more flexibility.
+- Extended ci/application/modules/base/gui/config/routes.php
+- Added ci/application/modules/base/gui/controllers/working.php
+- Added ci/application/modules/base/gui/controllers/workFrame.php
+
+* Mon Oct 30 2017 Michael Stauber <mstauber@solarspeed.net> 2.0-1BX080
+- Added conditional creation of /usr/sausalito/license to post-install. 
+- In order to support IPv6 the IP related UIFC classes now understand 
+  IPv4, IPv6 as well as IPv4+IPv6 and can be configured accordingly to 
+  to do the required validation as per 'basetypes.schema'. Defaults 
+  to IPv4 validation to remain downwards compatible. 
+- Modified ci/application/libraries/uifc/IpAddress.php 
+- Modified ci/application/libraries/uifc/IpAddressList.php 
+- Modified ci/application/modules/base/login/controllers/login.php 
+  because IPv6 IPs need special provisions if used in an URL. 
+- Modified ci/application/libraries/BxPage.php for the same reason 
+  and to simplify obtaining of the hostname.
+
+* Mon Mar 06 2017 Michael Stauber <mstauber@solarspeed.net> 2.0-1BX070
+- Fixed libraries/ServerScriptHelper.php as AUTHKEY must not rely on cookies.
+
+* Thu Mar 02 2017 Michael Stauber <mstauber@solarspeed.net> 2.0-1BX069
+- Modified helpers/blueonyx_helper.php to add timeout param to get_data()
+- Modified helpers/uifc_ng_helper.php to overhaul simplify_numbers() yet
+  again. The last iteration of this function was faster, but occasionally
+  it returned NAN because the base of the exponent was -INF. Go figure.
+- Modified libraries/uifc/Integer.php to add showBounds(diskquota).
+- More fixes to simplify_number()
+
+* Sat Feb 18 2017 Michael Stauber <mstauber@solarspeed.net> 2.0-1BX068
+- Another milestone in the 'Need for Speed'-Initiative. This warrants
+  a major version bump to v2.0. By using CI itself as a storage for
+  essential Class bridging information such as loginName, sessionID,
+  serverScriptHelper, cceClient and other things we managed massively
+  cut down on CODB transations for simple page loads. Further CCE usage
+  of certain simple pages was eliminated entirely. For a full speed
+  increase all Controllers need to be modified. The ones included in
+  base-alpine are already modified accordingly. Yet we still retain
+  full compatability to older Controllers. 
+- Modified ci/application/third_party/MX/Base.php for CI storage.
+- Modified ci/application/libraries/ServerScriptHelper.php to use CI
+- Modified ci/application/libraries/CceClient.php to use CI
+- Modified ci/application/libraries/BxPage.php to use CI
+- Modified ci/application/libraries/CCE.php with small fixes
+- Modified ci/application/libraries/Capabilities.php with small fixes
+- Modified ci/application/helpers/blueonyx_helper.php with small fixes
+- Integrated controllers fixed for CI usage or eleminated CCE usage:
+- ci/application/modules/base/gui/controllers/check_password.php
+- ci/application/modules/base/gui/controllers/datepicker.php
+- ci/application/modules/base/gui/controllers/fullcalendar.php
+- ci/application/modules/base/gui/controllers/pluginsmin.php
+- ci/application/modules/base/gui/controllers/processFrame.php
+- ci/application/modules/base/gui/controllers/processing.php
+- ci/application/modules/base/login/controllers/login.php
+- ci/application/views/pluginsmin.php
+- Added web/.adm/scripts/elfinder for a future feature update
+
+* Mon Jan 09 2017 Michael Stauber <mstauber@solarspeed.net> 1.2-1BX067
+- Modified ci/application/helpers/bxapi_helper.php for 5209R API usage.
+
+* Thu Dec 15 2016 Michael Stauber <mstauber@solarspeed.net> 1.2-1BX066
+- Another small fix in uifc_ng_helper.php
+
+* Wed Nov 30 2016 Michael Stauber <mstauber@solarspeed.net> 1.2-1BX065
+- Small fix in uifc_ng_helper.php in function simplify_number to make
+  sure that the log() function gets an integer.
+
+* Thu Oct 27 2016 Michael Stauber <mstauber@solarspeed.net> 1.2-1BX064
+- Small fix in uifc_ng_helper.php in function simplify_number.
+
+* Mon Oct 24 2016 Michael Stauber <mstauber@solarspeed.net> 1.2-1BX063
+- Shortened minified ci/application/views/pluginsmin.php by removing
+  unneeded ballast.
+- Added original ci/application/views/pluginsmin.php.orig
+- Modified ci/application/helpers/uifc_ng_helper.php to optimize
+  functions simplify_number und unsimplify_number a bit.
+- Bugfix in ci/application/libraries/CceClient.php
+
+* Tue Jul 19 2016 Michael Stauber <mstauber@solarspeed.net> 1.2-1BX062
+- Modified ci/application/modules/base/login/controllers/login.php to
+  redirect to HTTPS if we're calling the GUI via HTTP on the HTTPS port.
+
+* Tue Jun 21 2016 Michael Stauber <mstauber@solarspeed.net> 1.2-1BX061
+- Modified perl/HomeDir.pm to not only be able to set /home as homedir,
+  but to also handle /vz on Aventurine.
+
+* Mon May 02 2016 Michael Stauber <mstauber@solarspeed.net> 1.2-1BX060
+- Modified /ci/application/modules/base/gui/controllers/check_password.php
+  to check if the password contains illegal characters. Also extended
+  locales with a warning message about passwords with illegal chars.
+
+* Mon Mar 21 2016 Michael Stauber <mstauber@solarspeed.net> 1.2-1BX059
+- Updated Italian locales added as provided by Simone Capra.
+- Added MIME types 'csr', 'cert' and 'crt' to ci/application/config/mimes.php
+
+* Fri Mar 18 2016 Michael Stauber <mstauber@solarspeed.net> 1.2-1BX058
+- As the BlueOnyx Wiki now has an SSL certificate I modified the Wiki
+  button at the GUI page bottom to use HTTPS instead of HTTP if someone
+  is using the GUI via HTTPS.
+
+* Thu Jan 14 2016 Michael Stauber <mstauber@solarspeed.net> 1.2-1BX057
+- Memcache rollback.
+
+* Tue Jan 12 2016 Michael Stauber <mstauber@solarspeed.net> 1.2-1BX056
+- Need for speed initiative.
+- Makefile edited to add capcache
+- Modified templates/rpmdefs.tmpl to add capcache
+- Bugfixes in ci/application/modules/base/gui/controllers/*.php
+- Extended ci/application/libraries/CceClient.php with Debug logging to log all CCEd transactions.
+- Extended ci/application/libraries/ServerScriptHelper.php with Debug logging.
+- Modified ci/application/libraries/ServerScriptHelper.php to use a cache for Capabilities.
+- Modified ci/application/modules/base/login/controllers/login.php to clean up capcache.
+- Lots of streamlining in ci/application/libraries/BxPage.php
+
+* Tue Jan 12 2016 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX055
+- Modified ci/application/libraries/BxPage.php for smarter/faster AM checks.
+
+* Thu Dec 24 2015 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX054
+- Added requirement for perl-LWP-Protocol-https
+
+* Thu Dec 24 2015 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX053
+- Added requirement for base-memcache-capstone.
+
+* Tue Dec 15 2015 Hisao SHIBUYA <hisao@smack.jp> 1.1-1BX052 
+- Add memcache capability.
+
+* Thu Dec 03 2015 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX051
+- Finally. Finally I found a way to suppress the progress bar overlay 
+  when the form validation failed and instead show a constructive error
+  message instead. What a birth. 
+- Modified ci/application/libraries/BxPage.php to show unminimized styles
+  if /etc/DEBUG is present. 
+- Modified ci/application/libraries/uifc/PagedBlock.php to always show a
+  hidden ('display_none') error message related to form validation failure.
+- Modified ci/application/views/validation_view.php 'form: function()' to
+  show or hide the progress overlay or form validation error message
+  dependent on the success or failure of the form validation. Yay.
+- Modifed ci/application/views/neutral_footer_view.php and
+  ci/application/views/footer_view.php to remove the jQuery code that was
+  used to show the loading overlay. As now validation_view.php does that
+  job we no longer need it there.
+- Modified ci/application/views/header_view.php and neutral_header_view.php
+  to show the CSS based on what BxPage.php tells it to show.
+- Extended locales with the new error message.
+
+* Thu Nov 05 2015 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX050
+- Modified ci/application/libraries/uifc/FormFieldBuilder.php to change
+  function makeBxDivider() to override the CSS property line-height to
+  18 px. That way we can use BxDivider in getMultiChoice().
+
+* Tue Oct 27 2015 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX049
+- Added support for forcing protocols for GUI access to HTTPS (and HTTP).
+- Modified ci/application/modules/base/login/controllers/login.php
+- Modified ci/application/libraries/BxPage.php
+- Modified ci/application/modules/base/login/views/login_view.php
+- Added ci/application/modules/base/login/views/login_view_solo.php
+
+* Fri Oct 23 2015 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX048
+- Added configurable timeout to function areWeOnline(). Default = 10 secs.
+
+* Thu May 28 2015 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX047
+- Modified ci/application/libraries/BxPage.php for better error handling
+  by suppressing duplicate errors.
+- Small fix to ci/application/libraries/CCE.php
+- Changed almost all line indentations from tabs to spaces.
+
+* Tue May 26 2015 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX046
+- Added UIFC class GeoIP.
+
+* Thu May 21 2015 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX045
+- Modified ci/application/modules/base/login/controllers/login.php to
+  set auto-detected locale immediately to cookie. This is the only way
+  how we can get i18n behave correctly for Japanese users on the login
+  page prior to authentication.
+
+* Sat Mar 28 2015 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX044
+- Modified ci/application/libraries/BxPage.php to manually tack on the Logout
+  menu entry to the end of 'Personal Profile' for regular users.
+
+* Sat Mar 14 2015 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX043
+- Small fix in ci/application/modules/base/gui/controllers/processFrame.php
+  If we have an empty $message, we rather should show a generic error message.
+
+* Mon Mar 09 2015 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX042
+- Modified ci/application/libraries/uifc/ScrollList.php again to dynamically
+  create inline CSS for DataTables if the columns have a width defined.
+
+* Mon Mar 09 2015 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX041
+- Small fix in ci/application/libraries/I18nNative.php's i18n_interpolate()
+  function. It wasn't handling substitutions of more than one VAR correctly.
+- Merged in Michael Aronoff's CSS improvements:
+- Modified ci/application/libraries/uifc/CompositeFormField.php
+- Modified ci/application/libraries/uifc/FormFieldBuilder.php
+- Modified ci/application/libraries/uifc/ScrollList.php
+- Added web/.adm/styles/adminica/maronoff.css
+- Fixed a small improperly escaped comment at the end of maronoff.css
+- Added web/.adm/styles/adminica/maronoff-mini.css
+- Merged maronoff.css into web/.adm/styles/adminica/combined-common.css
+- Merged maronoff-mini.css into web/.adm/styles/adminica/combined-common-mini.css
+- Partial rollback of the ci/application/libraries/uifc/ScrollList.php changes.
+  When setWidth is used, we set the style manually. When it is not used, we use
+  td class instead of td style.
+
+* Fri Feb 20 2015 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX040
+- It is time to merge the alpine.mod from 5209R/5208R/5207R into a single
+  module that works on all the Chorizo platforms.
+- Modified constructor/setup_capabilities.pl to add a platform check before
+  setting the reseller caps. 5209R has two extra caps to deal with the new
+  PHP implementation. So we set them only on 5209R.
+
+* Fri Feb 20 2015 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX039
+- Small fix in ci/application/libraries/CCE.php
+- Updated the CSS files to remove the 10 pixel spacing below .alert
+  elements:
+- Modified web/.adm/styles/adminica/combined-common-mini.css
+- Modified web/.adm/styles/adminica/combined-common.cs
+
+* Thu Feb 12 2015 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX038
+- Modified ci/application/libraries/CCE.php to fix ccephp_get() to make
+  sure that $oid is not empty, not an array and really is a string.
+  Otherwise return -1 to indicate a failure.
+- Modified ci/application/libraries/I18nNative.php as it wasn't properly
+  replacing [[VAR.hostname]] and other substitutions in some places.
+
+* Thu Feb 05 2015 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX037
+- Another fix to ci/application/libraries/CCE.php in regards to escaping
+  of values that we submit to CODB. This should make sure that passwords
+  (and other data) can contain the full range of special characters found
+  on the en_US keyboard. This doesn't include umlauts, accents Pound or
+  Euro-sign, as CODB won't accept them without transposition anyway.
+
+* Tue Feb 03 2015 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX036
+- One more fix for ci/application/libraries/CCE.php. A sucky regular
+  expression in _parse_response() was responsible for numeric values
+  in responses to trigger the set ['info'] field with an array that
+  has no key, but the partial value from the CODB database field.
+  Fixes this by preventing the set of the ['info'] array if we have
+  no valid key. And the bug only triggered because the timestamp of
+  this moment actually matches the regular expression we're looking
+  for. That's what we call a timebomb. 'Bomb defused, counter-terrorists
+  win.'
+
+* Tue Feb 03 2015 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX035
+- More fixes in ci/application/libraries/CCE.php. Two issues here:
+- ['info'] sometimes contains garbage after a successful transaction.
+  That raises an Error object. Added change that a successful 
+  transaction wipes out the ['info'] field now.
+- Sometimes we have weird GET transaction without OID. Probably the
+  result of getObject() calls to Objects to which we're not privileged.
+  Modified ccephp_get() to ignore requests without OID and to return
+  a "-1" instead.
+
+* Tue Feb 03 2015 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX034
+- Added /home check into platform/alpine.mod/perl/HomeDir.pm to get
+  better support for situations where we don't have a /home partition.
+
+* Mon Feb 02 2015 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX033
+- Modified ci/application/libraries/ServerScriptHelper.php to hardwire
+  timeZone if we don't get one from CODB.
+
+* Sat Jan 31 2015 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX032
+- Bugfix in ci/application/libraries/uifc/TimeStamp.php. AM told me that
+  a service had been running fine since January 32. That kinda stuck out.
+
+* Sat Jan 31 2015 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX031
+- Modified platform/alpine.mod/ci/application/libraries/BxPage.php. Newer
+  Firefox versions sometimes don't show the icons. Added a fixed width
+  and height of 24 pixels to the HTML IMG tag of all icons.
+
+* Fri Jan 30 2015 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX030
+- Added platform/alpine.mod/web/.adm/index.html
+
+* Thu Jan 29 2015 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX029
+- Modified ci/application/libraries/CCE.php as it wasn't properly handling
+  '305 WARN' messages from CCEd.
+- Modified ci/application/libraries/I18nNative.php as it had issues to 
+  interpolate domains without a dot. But worse: If a magicstring had
+  dots in it (like an IP) the regular expression for it wouldn't fire.
+  Instead of fixing the complicated regular expression I did something
+  that will probably bite us in the ass again later. But it seems to work
+  for now.
+
+* Thu Jan 29 2015 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX028
+- Modified constructor/setup_capabilities.pl to add the Reseller
+  Capabilities for the new 5209R PHP options.
+
+* Sun Jan 25 2015 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX027
+- Modified ci/application/libraries/CCE.php as authkey wouldn't return
+  the sessionId during first ccephp_authkey() call. Additionally 
+  ccephp_whoami() might encounter an empty array and therefore get
+  indexing problems. Fixed as well.
+
+* Thu Jan 22 2015 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX026
+- Modified ci/application/libraries/uifc/PagedBlock.php to move error
+  message display aray further up so that errors are visible even if
+  they are on an inactive tab.
+
+* Mon Dec 22 2014 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX025
+- Fun and games. Various cookie related fixes regarding cookie path and
+  expiration dates.
+- Modified ci/application/libraries/CCE.php
+- Modified ci/application/modules/base/login/controllers/login.php
+
+* Mon Dec 22 2014 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX024
+- Bugfix in CCE.php: ccephp_get() sometimes gets an $oid that is an array
+  instead of a string. Added is_array() check. If it is an array, then we 
+  only process the first element of the get request.
+
+* Mon Dec 08 2014 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX023
+- Another fix in post-install.
+
+* Thu Dec 04 2014 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX022
+- Several bugfixes regarding the native CCE Class. It return the expected
+  result when CCEd was down. Fixed ci/application/libraries/CCE.php
+- Small fix in ci/application/libraries/ServerScriptHelper.php
+- Modified ci/application/modules/base/login/controllers/login.php to
+  restart CCEd in case it's down. Due to the nature of how we call
+  CceClient.php in the login script ServerScriptHelper.php wasn't doing
+  that for us.
+- Removed call to Stylist in ci/application/libraries/ReportHelper.php
+  as we're no longer really needing that. And it was the source of the
+  'undefined index' errors on first UI access to the statistics.
+
+* Tue Dec 02 2014 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX021
+- Product string in locales replaced with placeholder.
+- Updated ci/application/views/header_view.php to overhaul profile box.
+  Now shows Hostname above login name. Removed logout link, as we already
+  have that elsewhere.
+- Updated glue post-install to run branding constructor.
+
+* Sun Nov 23 2014 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX020
+- Small fixes in ci/application/libraries/I18n.php
+- Mighty overhaul of ci/application/libraries/I18nNative.php
+- Removed debugging print_rp() in ci/application/libraries/uifc/Number.php
+
+* Sat Nov 22 2014 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX019
+- BlueOnyx web/favicon.ico added
+
+* Fri Nov 21 2014 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX018
+- Bugfix in ci/application/libraries/I18nNative.php
+
+* Fri Nov 21 2014 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX017
+- Bugfix in ci/application/libraries/I18nNative.php
+
+* Fri Nov 21 2014 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX016
+- Preparational build for 5209R with CCEd/i18n/cracklib related changes.
+- ci/application/helpers/blueonyx_helper.php: Support for cracklib/StupidPass
+- ci/application/helpers/uifc_ng_helper.php: Locale fixes for getBar()
+- ci/application/libraries/CCE.php: Fixed password escaping.
+- ci/application/libraries/I18n.php: Various fixes.
+- ci/application/libraries/I18nNative.php: Added and interpolate fixed.
+- ci/application/libraries/uifc/Bar.php: Locale fixes.
+- ci/application/libraries/uifc/PagedBlock.php: Object pre-declaration added.
+- ci/application/modules/base/gui/controllers/check_password.php: Modified to
+  use either cracklib or fallback to StupidPass if no cracklib is available.
+  As is the settings for StupidPass are pretty anal-retentive. This will sure
+  cause an uproar unless toned down a little.
+- Added ci/application/libraries/StupidPass.php
+- Added ci/application/libraries/stupid-pass/LICENSE.txt
+- Added ci/application/libraries/stupid-pass/README.md
+- Added ci/application/libraries/stupid-pass/StupidPass.class.php
+- Added ci/application/libraries/stupid-pass/StupidPass.default.dict
+- Added ci/application/libraries/stupid-pass/test.php
+- Notes: This build makes Chorizo independent of the underlying PHP version,
+  as cracklib.so, cce.so and i18n.so are now complemented/replaced by native
+  PHP classes that are used if AdmServ's PHP doesn't have said modules loaded.
+  However: We still heavily discourage usage of PHP versions that Chorizo wasn't
+  specifically built for or tested against. If you do and find bugs, you can
+  keep them.
+
+* Wed Nov 19 2014 Michael Stauber <mstauber@solarspeed.net> 1.1-1BX015
+- Bump from 1.0 to 1.1 for general (but transparent) API changes.
+- Release number continues and will do so through the Chorizo life-cycle.
+- In preparation for 5209R I modified ci/application/libraries/CceClient.php
+  to check for the presence of a loaded cce.so PHP module for AdmServ. If
+  that module is loaded, we will use it to let CceClient communicate with
+  CCEd. If the module is not present, then the new Class CCE.php will be
+  used instead.
+- Added ci/application/libraries/CCE.php to use PHP methods to natively
+  talk with CCEd via the Unix socket. Please see the description in the
+  header of said Class for more information about the How and Why.
+
+* Wed Nov 19 2014 Michael Stauber <mstauber@solarspeed.net> 1.0-1BX014
+- Modified ci/application/libraries/uifc/PagedBlock.php for better 
+  variable handling in error messages.
+
+* Tue Nov 11 2014 Michael Stauber <mstauber@solarspeed.net> 1.0-1BX013
+- Modified ci/application/helpers/blueonyx_helper.php to add the cURL
+  option 'CURLOPT_TIMEOUT' to catch if an URL is unresponsive.
+
+* Sun Oct 12 2014 Michael Stauber <mstauber@solarspeed.net> 1.0-1BX012
+- Modified ci/application/helpers/bxapi_helper.php to implement the new
+  handling of creating/destroying MySQL users and databases. Also added
+  a lot more debugging.
+
+* Mon Oct 06 2014 Michael Stauber <mstauber@solarspeed.net> 1.0-1BX011
+- Updated ci/application/helpers/amdetail_helper.php. It still had a split()
+  in it, which naturally is deprecated. Incredible.
+
+* Thu Aug 28 2014 Michael Stauber <mstauber@solarspeed.net> 1.0-1BX010
+- The API was a trainwreck and got derailed somewhere along the lines due
+  to later code changes. Should be working now.
+- Massive fixes in ci/application/helpers/bxapi_helper.php
+
+* Sat Aug 09 2014 Michael Stauber <mstauber@solarspeed.net> 1.0-1BX09
+- UIFC function getBoolean() didn't support the 'nolabel' parameter.
+- Fixed in ci/application/libraries/uifc/FormFieldBuilder.php
+- Fixed in ci/application/libraries/uifc/Boolean.php
+
+* Thu Jul 31 2014 Michael Stauber <mstauber@solarspeed.net> 1.0-1BX08
+- Today my grandmother would have had her 87th birthday. Sadly she passed
+  away earlier this year. Rest in peace, Anneliese Stauber. You're gone,
+  but not forgotten.
+- More PHP related timeZone madness: date_default_timezone_set() does not
+  recognize 'UTC' as valid timezone and throws an E_WARNING. Crazy. 
+- Fixed ci/application/libraries/ServerScriptHelper.php
+- Fixed ci/application/libraries/uifc/TimeStamp.php
+- Both fixes involve silencing the warnings by running the commands with
+  the @-prefix. That'll work unltil they change it from E_WARNING to E_ERROR.
+
+* Wed Jul 23 2014 Michael Stauber <mstauber@solarspeed.net> 1.0-1BX07
+- Modified ci/application/libraries/Capabilities.php as our fast check
+  on systemAdministrator capabilities was excluding the possibility
+  that we might ask for the Caps of another OID than ourselves.
+
+* Mon Jul 21 2014 Michael Stauber <mstauber@solarspeed.net> 1.0-1BX06
+- Renamed 'compass' module directory to 'Compass' for compatability 
+  reasons.
+
+* Wed Jul 16 2014 Michael Stauber <mstauber@solarspeed.net> 1.0-1BX05
+- Added /userguide/ to Wiki-basepath.
+
+* Sun Jul 13 2014 Michael Stauber <mstauber@solarspeed.net> 1.0-1BX04
+- Added requirement for php-mcrypt
+
+* Sun Jul 13 2014 Michael Stauber <mstauber@solarspeed.net> 1.0-1BX03
+- Chorizo-fied base-alpine: This module now contains enough changes to
+  warrant a complete name change. I resisted that urge. It now contains
+  the CodeIgniter base-install and configuration, various modifications
+  to CodeIgniter, the UIFC classes, helpers and libraries of Chorizo and
+  some base modules such as the ones for /gui and /login.
+- Added CHORIZO-readme.txt
+- Added randomized encryption_key for ci/application/config/config.php
+
+* Tue Apr 29 2014 Michael Stauber <mstauber@solarspeed.net> 1.0-1BX02
+- Modified constructor/setup_capabilities.pl to add 'CapabilityGroup' 
+  'reseller' for an extended reseller management.
+
+* Sat Apr 26 2014 Michael Stauber <mstauber@solarspeed.net> 1.0-1BX01
+- Major version number bump for 520XR.
+
+* Fri Apr 04 2014 Michael Stauber <mstauber@solarspeed.net> 0.3-1BX05
+- Modified web/login.php to use libPhp/BXBrowserLocale.php to properly
+  detect the browser locale.
+
+* Thu Apr 03 2014 Michael Stauber <mstauber@solarspeed.net> 0.3-1BX04
+- Added improved Japanese translation as provided by Hiroyuki Sasahide.
+- Modified web/login.php to hard wire charset to UTF-8.
+
+* Sat Mar 22 2014 Michael Stauber <mstauber@solarspeed.net> 0.3-1BX03
+- Modified constructor/setup_capabilities.pl to add ACL 'serverConfig'
+  to 'menuServerSecurity'.
+- Added improved French translation as provided by Meaulnes Legler.
+
+* Wed Mar 12 2014 Michael Stauber <mstauber@solarspeed.net> 0.3-1BX02
+- Modified constructor/setup_capabilities.pl to add ACL 'siteDNS' to admin.
+
+* Tue Feb 25 2014 Michael Stauber <mstauber@solarspeed.net> 0.3-1BX01
+- Major version number bump to tell this apart from the 510XR tree.
+
+* Wed Feb 05 2014 Michael Stauber <mstauber@solarspeed.net> 0.2-1BX06
+- Added cleaned up French translation as provided by Meaulnes Legler.
+
+* Sat Dec 21 2013 Michael Stauber <mstauber@solarspeed.net> 0.2-1BX05
+- Modified constructor/setup_capabilities.pl as our Capabilities for 
+  'admin' have been shot six ways 'til Sunday. Added Capability group 
+  'admin' that contains all the missing extra Capabilities that 'admin' 
+  has. The whole Capabilities management for 5207R/5208R needed a full 
+  overhaul anyway, as we can't haggle with Globals and assumptions. 
+  Better to do it the right way and load 'admin' with really all 
+  Capabilities that he should have instead of just waving him through.
+
+* Sat Dec 15 2013 Michael Stauber <mstauber@solarspeed.net> 0.2-1BX04
+- Merged in locales for the Netherlands ('nl_NL').
+- Other non-English locales had the PO-headers missing. Fixed.
+
+* Thu Dec 12 2013 Michael Stauber <mstauber@solarspeed.net> 0.2-1BX03
+- Small fix to constructor/setup_capabilities.pl
+
+* Sun Dec 08 2013 Michael Stauber <mstauber@solarspeed.net> 0.2-1BX02
+- Various charset fixes.
+
+* Tue Dec 03 2013 Michael Stauber <mstauber@solarspeed.net> 0.2-1BX01
+- Preparational build for 5207R/5208R. Doesn't include new GUI yet.
+- Platform strings still set to 5107R/5108R at this time.
+- Cleaned out 'REQUIRED' list in Makefile.
+- Merged in new locales from 5207R ("es_ES", "fr_FR", "it_IT", "pt_PT").
+- Dropped all two character locales.
+- Converted "ja_JP" from EUC-JP to UTF-8.
+- Merged in new capabilities from Hisao Shibuya's 5200R code branch.
+- Modified web/intro.html.ja from EUC-JP to UTF-8.
+
+* Tue Aug 14 2012 Michael Stauber <mstauber@solarspeed.net> 0.1-85BX43
+- Updated locale/de_DE/alpine.po as the German locales were claiming this to be 5106R.
+
+* Mon Aug 13 2012 Michael Stauber <mstauber@solarspeed.net> 0.1-85BX42
+- Added 12_handle_sl_repos.pl to switch sl-release YUM repository files from hard
+  coded versions to 6x, which is the actual release. This is for more seamless 
+  automated updates to the latest versions.
+
+* Sat Mar 31 2012 Michael Stauber <mstauber@solarspeed.net> 0.1-85BX41
+- Added dependencies for RPMs from YUM Group 'Japanese Support' to Makefile
+
+* Tue Mar 20 2012 Michael Stauber <mstauber@solarspeed.net> 0.1-85BX40
+- Converted locale encoding from UTF-8 to ISO-8859-1.
+
+* Thu Aug 11 2011 Michael Stauber <mstauber@solarspeed.net> 0.1-85BX39
+- Updated web/login.php to remove the doctype from first line. Must not be set here or we cannot redirect from inside the PHP script.
+
+* Thu Aug 11 2011 Michael Stauber <mstauber@solarspeed.net> 0.1-85BX38
+- Replaced web/login.php with Stephanie's fully xhtml transitional 1.0 compliant version.
+- That should also fix the login problems on mobile devices, as we removed the Netscape onresize stuff.
+
+* Thu Jul 28 2011 Michael Stauber <mstauber@solarspeed.net> 0.1-85BX37
+- Added manuals/manual-en_US.pdf
+- Updated locales for that purpose
+
+* Fri Jun 04 2010 Michael Stauber <mstauber@solarspeed.net> 0.1-85BX36
+- Copied 'en' locales to 'en_US'
+
+* Fri Jun 04 2010 Michael Stauber <mstauber@solarspeed.net> 0.1-85BX35
+- PHP 5.3 issue: web/redirector.php line 11 - Assigning the return value of new by reference is deprecated
+
+* Fri Jun 04 2010 Michael Stauber <mstauber@solarspeed.net> 0.1-85BX34
+- Fixed typo in web/login.php
+
+* Wed Jun 02 2010 Michael Stauber <mstauber@solarspeed.net> 0.1-85BX33
+- web/login.php was using deprecated ereg()
+- web/login.php was using printPage, which doesn't work. Didn't even work on 5106R!
+
+* Wed Jun 02 2010 Michael Stauber <mstauber@solarspeed.net> 0.1-85BX32
+- Locales: Product changed from '5106R' to '5107R/5108R'
+
+* Mon Apr 05 2009 Michael Stauber <mstauber@solarspeed.net> 0.1-85BQ31
+- English License text in locale/en/product.po was still too rough and gramatically incorrect. 
+
+* Sun Mar 08 2009 Michael Stauber <mstauber@solarspeed.net> 0.1-85BQ30
+- The static error message pages in web/error/ exist in multiple languages.
+  However, whatever mechanism is supposed to copy or link them to the default 
+  ones: It's not working. Ultimately we would need a constructor that checks
+  which locale the server is set to and then copies the static pages over. Or
+  re-creates the correct symbolic links. Which would still be undesireable, as 
+  the user using the GUI may have a different locale. Why show a Danish user the 
+  German error messages? Or the English ones? I think in the long run we need
+  dynamically created error pages. 
+- Copied English error pages over to defaults for now.
+
+* Mon Mar 02 2009 Michael Stauber <mstauber@solarspeed.net> 0.1-85BQ29
+- Found an old instance of 5102R naming in locale/de_DE/alpine.po
+- Changed that string to 5106R as it should be.
+
+* Wed Dec 03 2008 Michael Stauber <mstauber@solarspeed.net> 0.1-85BQ27
+- Renamed to BlueOnyx.
+- New default admin password 'blueonyx' needed to be added to the intro.html pages.
+
+* Wed Nov 19 2008 Michael Stauber <mstauber@solarspeed.net> 0.1-85BQ26
+- Added images for BlueOnyx skin
+- Modified images for BlueOnyx product type
+
+* Wed Nov 19 2008 Michael Stauber <mstauber@solarspeed.net> 0.1-85BQ25
+- Further modification of web/login.php to clear $target on CSS instead of exiting.
+
+* Wed Nov 19 2008 Michael Stauber <mstauber@solarspeed.net> 0.1-85BQ24
+- Modified web/login.php to prevent cross site scripting attacks.
+
+* Wed Nov 19 2008 Michael Stauber <mstauber@solarspeed.net> 0.1-85BQ23
+- Added web/robots.txt to prevent search engines from indexing AdmServ pages.
+
+* Thu May 28 2008 Michael Stauber <mstauber@solarspeed.net> 0.1-85BQ22
+- New default admin password 'bluequartz' needed to be added to the intro.html pages.
+
+* Sun Jan 27 2008 Michael Stauber <mstauber@solarspeed.net> 0.1-85BQ21
+- German locales added.
+
+* Tue Jan 22 2008 Michael Stauber <mstauber@solarspeed.net> 0.1-85BQ20
+- Danish locales added. Thanks to Jes Klittum!
+
+* Mon Jun 25 2007 Hisao SHIBUYA <shibuya@bluequartz.org> 0.1-85BQ19
+- Fixed duplicate include issue.
+
+* Sun Oct 29 2006 Hisao SHIBUYA <shibuya@alpha.or.jp> 0.1-85BQ18
+- reimport libImage/* and manuals/* to fix curruption issues.
+
+* Thu Oct 12 2006 Hisao SHIBUYA <shibuya@alpha.or.jp> 0.1-85BQ17
+- modify setup_capabilities.pl, re-setup capability group.
+
+* Tue Aug 14 2006 Brian Smith <brian@nuonce.net> 0.1-85BQ16
+- Missing comma added to "setup_capabilities.pl" script
+
+* Sat Aug 12 2006 Brian Smith <brian@nuonce.net> 0.1-85BQ15
+- modify setup_capabilities.pl, added dnsAdmin
+
+* Fri Apr 07 2006 Hisao SHIBUYA <shibuya@alpha.or.jp> 0.1-85BQ14
+- modify login.php to be enabled secure login by default.
+
+* Sun Dec 25 2005 Hisao SHIBUYA <shibuya@alpha.or.jp> 0.1-85BQ13
+- modified intro.html for BlueQuartz by Anders.
+
+* Sat Dec 24 2005 Hisao SHIBUYA <shibuya@alpha.or.jp> 0.1-85BQ12
+- login.php checks to accept license.
+
+* Fri Dec 23 2005 Hisao SHIBUYA <shibuya@alpha.or.jp> 0.1-85BQ11
+- change splash_G_top_left.gif for BlueQuartz by Anders.
+
+* Sun Nov 27 2005 Hisao SHIBUYA <shibuya@alpha.or.jp> 0.1-85BQ10
+- rebuild with devel-tools 0.5.1-0BQ7.
+
+* Mon Oct 18 2005 Hisao SHIBUYA <shibuya@alpha.or.jp> 0.1-85BQ9
+- rebuild with devel-tools 0.5.1
+
+* Sun Oct 02 2005 Hisao SHIBUYA <shibuya@alpha.or.jp> 0.1-85BQ8
+- fixed typo message.
+
+* Thu Aug 18 2005 Hisao SHIBUYA <shibuya@alpha.or.jp> 0.1-85BQ7
+- modified locale file to provide BlueQuartz and BlueQuartz for the other locale.
+
+* Fri Aug 12 2005 Hisao SHIBUYA <shibuya@alpha.or.jp> 0.1-85BQ6
+- modified Group tag in rpmdefs.tmpl.
+
+* Fri Aug 12 2005 Hisao SHIBUYA <shibuya@alpha.or.jp> 0.1-85BQ5
+- add serial number.
+
+* Thu Aug 11 2005 Hisao SHIBUYA <shibuya@alpha.or.jp> 0.1-85BQ4
+- clean up spec file.
+<end $CHANGELOG>

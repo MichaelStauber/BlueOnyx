@@ -1,0 +1,197 @@
+<!--
+    $Id: system.schema
+    Copyright 2001 Sun Microsystems, Inc.  All rights reserved.
+    
+    This is the schema for the system object.  Moved here
+    from sauce-basic.
+-->
+
+<typedef name="HTTP_Access_Type"  type="re"
+  data = "^(BOTH|HTTP|HTTPS)$"
+/>
+
+<typedef name="IP_Protocol_Type"  type="re"
+  data = "^(IPv4|IPv6|BOTH|VZv4|VZv6|VZBOTH)$"
+/>
+
+<typedef name="MTA_Type"  type="re"
+  data = "^(SENDMAIL|POSTFIX)$"
+/>
+
+<typedef name="Mailbox_Type"  type="re"
+  data = "^(MBOX|MAILDIR)$"
+/>
+
+<typedef name="theme_choices"  type="re"
+  data = "^(adminica|elmer)$"
+/>
+
+<typedef name="allowed_theme_choices"  type="re"
+  data = "^(adminica|elmer|both)$"
+/>
+
+<typedef name="GUI_2FA_TYPES"  type="re"
+  data = "^(ALL|ADMINS|PRIVILEGED)$"
+/>
+
+<!-------------------------------------------------------------------------
+  SYSTEM 
+    Stores all system-wide configuration settings.  There should be
+    exactly one System object at all times.
+-------------------------------------------------------------------------->
+
+<class name="System" namespace="" version="1.3">
+    <!-- name of the product --> 
+    <property 
+        name="productName" type="scalar" 
+        writeacl="ruleCapable(adminUser)" readacl="ruleAll"
+    />
+    
+    <!-- useful system identification properties -->
+    <property 
+        name="productIdentity" type="scalar" 
+        writeacl="ruleCapable(adminUser)" readacl="ruleAll"
+    />
+    <property 
+        name="productBuild" type="scalar" 
+        writeacl="ruleCapable(adminUser)" readacl="ruleAll"
+    />
+    <property 
+        name="productLanguage" type="scalar" 
+        writeacl="ruleCapable(adminUser)" readacl="ruleAll"
+    />
+    <property 
+        name="productVendor" type="scalar" 
+        writeacl="ruleCapable(adminUser)" readacl="ruleAll" 
+    />
+    <property 
+        name="productBuildString" type="scalar" 
+        writeacl="ruleCapable(adminUser)" readacl="ruleAll" 
+    />
+
+    <!-- hardware serial number of the product -->
+    <property name="serialNumber" type="scalar" 
+        writeacl="ruleCapable(adminUser)" readacl="ruleAll" 
+    />
+
+    <!-- serial number of the product (as seen on the sticker on the box) -->
+    <property name="productSerialNumber" type="scalar" />
+  
+    <!-- has the user sent in a electronic registration -->
+    <property 
+        name="isRegistered" type="boolean" default="0"
+        writeacl="ruleCapable(adminUser)" 
+    />
+    
+    <!-- has the user accepted the license agreement -->
+    <property 
+        name="isLicenseAccepted" type="boolean" default="0"
+        writeacl="ruleCapable(adminUser)" readacl="ruleAll"
+    />
+    
+    <!-- hostname: first half of FQDN -->
+    <property 
+        name="hostname" type="hostname" default="localhost"
+        writeacl="ruleCapable(adminUser)" readacl="ruleAll"
+    />
+
+    <!-- domainname: second half of FQDN -->
+    <property 
+        name="domainname" type="domainname"
+        writeacl="ruleCapable(adminUser)" readacl="ruleAll"
+    />
+    
+    <!-- IPv4 ip address of the default gateway -->
+    <property 
+        name="gateway" type="ipaddr" optional="true"
+        writeacl="ruleCapable(adminUser)"
+    />
+
+    <!-- IPv6 ip address of the default gateway -->
+    <property 
+        name="gateway_IPv6" type="ipaddrIPv6" optional="true"
+        writeacl="ruleCapable(adminUser)"
+    />
+
+    <!-- Trigger for handler base/system/modsystem.pl -->
+    <property 
+        name="nw_update" type="scalar" optional="true" default="0" 
+        writeacl="ruleCapable(adminUser)"
+    />
+
+    <!-- an array of DNS server IP addresses -->
+    <property 
+        name="dns" type="scalar" array="yes"
+        writeacl="ruleCapable(adminUser)"
+    />
+
+    <!-- enable or disable the system console -->
+    <property name="console" type="boolean" default="0"/>
+
+    <!-- an array of locale strings the system supports -->
+    <property 
+        name="locales" type="scalar" default="&amp;en&amp;" array="yes"
+        writeacl="ruleCapable(adminUser)"
+    />
+
+    <!-- Defines if IPv4, IPv6 or both are enabled and configured. Defaults to IPv4: -->
+    <property name="IPType" type="IP_Protocol_Type" default="IPv4" writeacl="ruleCapable(adminUser)" readacl="ruleAll" />
+
+    <!-- an array of additional IPv4 IP addresses -->
+    <property 
+        name="extra_ipaddr" type="ipaddr" array="yes"
+        writeacl="ruleCapable(adminUser)"
+    />
+
+    <!-- an array of additional IPv6 IP addresses -->
+    <property 
+        name="extra_ipaddr_IPv6" type="ipaddrIPv6" array="yes"
+        writeacl="ruleCapable(adminUser)"
+    />
+
+    <!-- Define which protocols the GUI is available on and if we redirect to FQDN of server on access: -->
+    <property name="GUIaccessType" type="HTTP_Access_Type" default="HTTPS" writeacl="ruleCapable(adminUser)" readacl="ruleAll" />
+    <property name="GUIredirects" type="boolean" default="0" writeacl="ruleCapable(adminUser)" readacl="ruleAll" />
+
+    <!-- Defines which MTA is being used: -->
+    <property name="MTA" type="MTA_Type" default="POSTFIX" writeacl="ruleCapable(adminUser)" readacl="ruleAll" />
+    <property name="MTA_update" type="scalar" default="0" writeacl="ruleCapable(adminUser)" readacl="ruleAll" />
+
+    <!-- Defines which Mailbox format is being used: -->
+    <property name="Mailbox" type="Mailbox_Type" default="MBOX" writeacl="ruleCapable(adminUser)" readacl="ruleAll" />
+    <property name="Mailbox_update" type="scalar" default="0" writeacl="ruleCapable(adminUser)" readacl="ruleAll" />
+    <property name="Mailbox_convert" type="scalar" default="0" writeacl="ruleCapable(adminUser)" readacl="ruleAll" />
+
+    <!-- CSRF related configs: -->
+    <property name="csrf_protection" type="boolean" default="1" writeacl="ruleCapable(adminUser)" readacl="ruleAll" />
+    <property name="csrf_expire" type="int" default="7200" writeacl="ruleCapable(adminUser)" readacl="ruleAll" />
+    <property name="csrf_regenerate" type="boolean" default="1" writeacl="ruleCapable(adminUser)" readacl="ruleAll" />
+
+    <!-- GUI DDOS related configs: -->
+    <property name="ddos_protection" type="boolean" default="1" writeacl="ruleCapable(adminUser)" readacl="ruleAll" />
+    <property name="ddos_attempts" type="int" default="30" writeacl="ruleCapable(adminUser)" readacl="ruleAll" />
+    <property name="ddos_window" type="int" default="1800" writeacl="ruleCapable(adminUser)" readacl="ruleAll" />
+    <property name="ddos_expire" type="int" default="1800" writeacl="ruleCapable(adminUser)" readacl="ruleAll" />
+
+    <!-- GUI Theme related configs: -->
+    <property name="default_gui_theme" type="theme_choices" default="elmer" writeacl="ruleCapable(adminUser)" readacl="ruleAll" />
+    <property name="default_theme_timer" type="int" optional="false" default="0" writeacl="ruleCapable(adminUser)" readacl="ruleAll" />
+    <property name="allowed_themes" type="allowed_theme_choices" default="both" writeacl="ruleCapable(adminUser)" readacl="ruleAll" />
+
+    <!-- 2FA GUI access related configs: -->
+    <property name="gui_2fa" type="boolean" default="0" writeacl="ruleCapable(adminUser)" readacl="ruleAll" />
+    <property name="gui_2fa_users" type="GUI_2FA_TYPES" default="ALL" writeacl="ruleCapable(adminUser)" readacl="ruleAll" />
+
+    <!-- AdmServ GUI port: -->
+    <property name="GUI_PORT" type="int" default="81" writeacl="ruleCapable(adminUser)" readacl="ruleAll" />
+
+    <!-- AdmServ GUI redirects: (Defaults set by constructor if empty: &login&admin&siteadmin&personal& -->
+    <property name="GUI_URLs" type="alphanum" default="" array="yes" writeacl="ruleCapable(adminUser)" readacl="ruleAll" />
+
+    <!-- Do we use a Network Bridge? -->
+    <property 
+        name="bridged_network" type="boolean" default="0"
+        writeacl="ruleCapable(adminUser)" 
+    />
+
+</class>

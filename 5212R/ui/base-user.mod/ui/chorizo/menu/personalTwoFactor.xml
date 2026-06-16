@@ -1,0 +1,10 @@
+<item 
+  id="base_personalTwoFactor" 
+  label="[[base-user.personalTwoFactor_menu]]" 
+  description="[[base-user.personalTwoFactor_help]]" 
+  url="/user/personalTwoFactor" 
+  icon="lock"
+  elmer_icon="fa fa-shield"
+  module="user">
+  <parent id="base_personalProfile" order="12"/>
+</item>

@@ -1,0 +1,4 @@
+RewriteEngine On
+RewriteBase /
+RewriteCond %{HTTP_COOKIE} !BXGoAccess
+RewriteRule ^index.html$ /expired/true/target/base/sitestats/ [R,L]

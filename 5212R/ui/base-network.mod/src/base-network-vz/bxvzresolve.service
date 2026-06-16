@@ -1,0 +1,20 @@
+[Unit]
+Description=BlueOnyx - OpenVZ 7 Resolver Helper
+After=network-pre.target dbus.service
+Before=network.target network.service
+
+[Service]
+Type=oneshot
+
+ExecStart=/usr/sausalito/sbin/bxvzresolve.sh
+ExecReload=/usr/sausalito/sbin/bxvzresolve.sh
+ExecStop=/usr/sausalito/sbin/bxvzresolve.sh
+RemainAfterExit=yes
+
+# We send a SIGTERM signal right after the ExecStop, which will kill CCEd for sure. 
+KillSignal=SIGTERM
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+Alias=bxvzresolve

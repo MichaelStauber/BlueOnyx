@@ -1,0 +1,219 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "radicale_server_long"
+msgstr "Radicale CalDAV/CardDAV"
+
+msgid "radicale_server"
+msgstr "CalDAV/CardDAV"
+
+msgid "radicale_server_help"
+msgstr "Radicale is een kleine maar krachtige CalDAV (agenda's, takenlijsten) en CardDAV (contactpersonen) server. Hij werkt met veel CalDAV- en CardDAV-clients. Indien ingeschakeld, kunnen alle gebruikers op deze server hun eigen kalenders en contactpersonen maken en deze gebruiken met clients van derden die de CalDAV- en/of CardDAV-protocollen ondersteunen. Bijvoorbeeld: Thunderbird ondersteunt dit via de CardBook add-on."
+
+msgid "enabled"
+msgstr "Radicale inschakelen"
+
+msgid "enabled_help"
+msgstr "Dit schakelt de Radicale CalDAV/CardDAV-server in."
+
+msgid "max_connections"
+msgstr "Maximum aantal verbindingen"
+
+msgid "max_connections_help"
+msgstr "Het maximum aantal parallelle verbindingen met de Radicale CalDAV/CardDAV-server. Stel in op 0 om de limiet uit te schakelen."
+
+msgid "max_content_length"
+msgstr "Maximale lengte van de verzoektekst"
+
+msgid "max_content_length_help"
+msgstr "De maximale grootte van de verzoektekst. (bytes)"
+
+msgid "timeout"
+msgstr "Time-out socket"
+
+msgid "timeout_help"
+msgstr "Socket timeout in seconden. Bepaalt hoe lang Radicale wacht tot een verbinding klaar is, voordat het zelf de verbinding sluit."
+
+msgid "delay"
+msgstr "Vertraging"
+
+msgid "delay_help"
+msgstr "Gemiddelde vertraging die Radicale hanteert na een mislukte aanmeldpoging voordat een nieuwe aanmelding vanaf hetzelfde IP-adres wordt toegestaan. Deze waarde is in seconden."
+
+msgid "radicale_off_desc"
+msgstr "De Radicale CalDAV/CardDAV services zijn momenteel uitgeschakeld op deze server."
+
+##### --- Active monitor
+
+msgid "amRadicaleNameTag"
+msgstr "Radicale CalDAV/CardDAV-server"
+
+msgid "amDetailsTitle"
+msgstr "Radicale CalDAV/CardDAV server details"
+
+msgid "amStatusOK"
+msgstr "De Radicale CalDAV/CardDAV-server werkt normaal."
+
+msgid "amNotAccepting"
+msgstr "De Radicale CalDAV/CardDAV server werkt niet en kon niet opnieuw worden opgestart. Probeer de Radicale CalDAV/CardDAV-server uit en weer aan te zetten om te zien of dit het probleem verhelpt."
+
+##### --- Error messages:
+
+msgid "ErrorCreatingCollection"
+msgstr "Er is een fout opgetreden bij het proberen aanmaken van deze CalDAV/CardDAV collectie."
+
+msgid "ErrorDecodingCollection"
+msgstr "Er is een fout opgetreden bij het proberen te bepalen welke CalDAV/CardDAV verzamelingen er bestaan voor deze gebruiker."
+
+msgid "ErrorUpdatingCollection"
+msgstr "Er is een fout opgetreden bij het proberen wijzigen van een bestaande CalDAV/CardDAV collectie."
+
+msgid "ErrorFileNotPresent"
+msgstr "Fout: De gespecificeerde CalDAV/CardDAV collectie bestaat niet."
+
+msgid "ErrorDeletingCollection"
+msgstr "Er is een fout opgetreden bij het proberen verwijderen van deze CalDAV/CardDAV collectie."
+
+msgid "ErrorRestoringBackup"
+msgstr "Er is een fout opgetreden bij het proberen terugzetten van de back-up voor deze CalDAV/CardDAV collectie(s)."
+
+msgid "ErrorCreatingBackup"
+msgstr "Er is een fout opgetreden tijdens het maken van de back-up voor deze CalDAV/CardDAV-verzameling(en)."
+
+##### --- 2nd batch of locales:
+
+msgid "BackupAll"
+msgstr "Back-up alle"
+
+msgid "BackupAll_help"
+msgstr "Back-up maken van alle Radicale CalDAV/CardDAV verzamelingen."
+
+msgid "RestoreAll"
+msgstr "Alles herstellen"
+
+msgid "RestoreAll_help"
+msgstr "Herstel alle Radicale CalDAV/CardDAV collecties van hun backups. Als er een collectie bestaat die geen back-upbestand heeft, dan wordt deze collectie ongemoeid gelaten."
+
+msgid "FullGUI"
+msgstr "Radicale GUI"
+
+msgid "FullGUI_help"
+msgstr "Hiermee opent u een pagina waarmee u toegang krijgt tot de ingebouwde GUI-interface van Radicale."
+
+msgid "addressbooks"
+msgstr "Adresboeken"
+
+msgid "calendars"
+msgstr "Kalenders"
+
+msgid "name"
+msgstr "Naam"
+
+msgid "backup_date"
+msgstr "Datum back-up"
+
+msgid "action"
+msgstr "Actie"
+
+msgid "click_to_copy_to_clipboard"
+msgstr "Kopieer de URL van deze collectie."
+
+msgid "url_copied_to_clipboard"
+msgstr "De URL van deze collectie is gekopieerd naar het klembord: "
+
+msgid "click_to_edit_entry"
+msgstr "Bewerk deze collectie."
+
+msgid "click_to_delete_entry"
+msgstr "Verwijder deze collectie."
+
+msgid "baLoad"
+msgstr "Herstel deze collectie vanuit back-up."
+
+msgid "baBackup"
+msgstr "Back-up maken van deze collectie."
+
+msgid "baDownload"
+msgstr "Download de back-up van deze collectie."
+
+msgid "edit_addressbook"
+msgstr "Adresboek bewerken"
+
+msgid "edit_calendar"
+msgstr "Kalender bewerken"
+
+msgid "col_name"
+msgstr "Naam"
+
+msgid "col_name_help"
+msgstr "Naam van deze verzameling."
+
+msgid "col_desc"
+msgstr "Beschrijving"
+
+msgid "col_desc_help"
+msgstr "Beschrijving van deze collectie."
+
+msgid "col_type"
+msgstr "Type"
+
+msgid "col_type_help"
+msgstr "Type van deze collectie."
+
+msgid "col_colour"
+msgstr "Kleur"
+
+msgid "col_colour_help"
+msgstr "Kleur van deze collectie."
+
+msgid "col_subtype"
+msgstr "Kenmerken"
+
+msgid "col_subtype_help"
+msgstr "Specificeert welke eigenschappen deze kalender heeft."
+
+msgid "create_collection"
+msgstr "Radicale CalDAV/KaartDAV collectie aanmaken"
+
+msgid "ADDRESSBOOK"
+msgstr "Adresboek"
+
+msgid "CALENDAR_JOURNAL_TASKS"
+msgstr "Kalender, Dagboek en Taken"
+
+msgid "CALENDAR_JOURNAL"
+msgstr "Kalender en Dagboek"
+
+msgid "CALENDAR_TASKS"
+msgstr "Kalender en Taken"
+
+msgid "JOURNAL_TASKS"
+msgstr "Dagboek en Taken"
+
+msgid "CALENDAR"
+msgstr "Kalender"
+
+msgid "JOURNAL"
+msgstr "Tijdschrift"
+
+msgid "TASKS"
+msgstr "Taken"
+
+###
+
+msgid "restore_OK"
+msgstr "De collectie is succesvol hersteld vanuit de back-up."
+
+msgid "backup_OK"
+msgstr "De collectie is succesvol geback-upt."
+
+msgid "delete_OK"
+msgstr "De verzameling is succesvol verwijderd."
+

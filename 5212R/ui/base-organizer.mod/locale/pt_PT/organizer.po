@@ -1,0 +1,218 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "radicale_server_long"
+msgstr "Radicale CalDAV/CardDAV"
+
+msgid "radicale_server"
+msgstr "CalDAV/CardDAV"
+
+msgid "radicale_server_help"
+msgstr "Radicale é um pequeno mas poderoso servidor CalDAV (calendários, listas de tarefas) e CardDAV (contactos). Funciona com muitos clientes CalDAV e CardDAV. Se estiver ativado, todos os utilizadores neste servidor podem criar os seus próprios Calendários e Contactos e podem usá-los com clientes de terceiros que suportem os protocolos CalDAV e/ou CardDAV. Por exemplo: O Thunderbird suporta isto através do add-on CardBook."
+
+msgid "enabled"
+msgstr "Ativar Radicale"
+
+msgid "enabled_help"
+msgstr "Esta opção ativa o servidor Radicale CalDAV/CardDAV."
+
+msgid "max_connections"
+msgstr "Número máximo de ligações"
+
+msgid "max_connections_help"
+msgstr "O número máximo de conexões paralelas para o servidor Radicale CalDAV/CardDAV. Defina como 0 para desativar o limite."
+
+msgid "max_content_length"
+msgstr "Comprimento máximo da solicitação"
+
+msgid "max_content_length_help"
+msgstr "O tamanho máximo do corpo da solicitação. (bytes)"
+
+msgid "timeout"
+msgstr "Tempo limite do soquete"
+
+msgid "timeout_help"
+msgstr "Tempo limite do soquete em segundos. Define quanto tempo a Radicale irá esperar que uma conexão termine, antes de fechar a própria conexão."
+
+msgid "delay"
+msgstr "Atraso"
+
+msgid "delay_help"
+msgstr "Atraso médio que a Radicale impõe após uma tentativa fracassada de login antes de permitir um novo login do mesmo endereço IP de origem. Este valor é em segundos."
+
+msgid "radicale_off_desc"
+msgstr "Os serviços Radicale CalDAV/CardDAV estão atualmente desactivados neste servidor."
+
+##### --- Active monitor
+
+msgid "amRadicaleNameTag"
+msgstr "Servidor Radicale CalDAV/CardDAV"
+
+msgid "amDetailsTitle"
+msgstr "Detalhes do servidor Radicale CalDAV/CardDAV"
+
+msgid "amStatusOK"
+msgstr "O servidor Radicale CalDAV/CardDAV está a funcionar normalmente."
+
+msgid "amNotAccepting"
+msgstr "O servidor Radicale CalDAV/CardDAV não está a funcionar e não pôde ser reiniciado. Tente desligar o servidor Radicale CalDAV/CardDAV e ligá-lo novamente para ver se isso corrige o problema."
+
+##### --- Error messages:
+
+msgid "ErrorCreatingCollection"
+msgstr "Ocorreu um erro ao tentar criar esta coleção CalDAV/CardDAV."
+
+msgid "ErrorDecodingCollection"
+msgstr "Ocorreu um erro ao tentar determinar quais as colecções CalDAV/CardDAV existentes para este utilizador."
+
+msgid "ErrorUpdatingCollection"
+msgstr "Ocorreu um erro ao tentar modificar uma coleção CalDAV/CardDAV existente."
+
+msgid "ErrorFileNotPresent"
+msgstr "Erro: A coleção CalDAV/CardDAV especificada não existe."
+
+msgid "ErrorDeletingCollection"
+msgstr "Ocorreu um erro ao tentar eliminar esta coleção CalDAV/CardDAV."
+
+msgid "ErrorRestoringBackup"
+msgstr "Ocorreu um erro ao tentar restaurar a cópia de segurança desta(s) coleção(ões) CalDAV/CardDAV."
+
+msgid "ErrorCreatingBackup"
+msgstr "Ocorreu um erro ao tentar criar a cópia de segurança para esta coleção CalDAV/CardDAV."
+
+##### --- 2nd batch of locales:
+
+msgid "BackupAll"
+msgstr "Segurança de todos"
+
+msgid "BackupAll_help"
+msgstr "Cópia de segurança de todas as colecções CalDAV/CardDAV da Radicale."
+
+msgid "RestoreAll"
+msgstr "Restaurar tudo"
+
+msgid "RestoreAll_help"
+msgstr "Restaura todas as coleções Radicale CalDAV/CardDAV a partir de seus backups. Se existir uma coleção que não tenha um ficheiro de cópia de segurança, então esta coleção será deixada intacta."
+
+msgid "FullGUI"
+msgstr "GUI do Radicale"
+
+msgid "FullGUI_help"
+msgstr "Isso abre uma página que permite acessar a interface GUI do Radicale."
+
+msgid "addressbooks"
+msgstr "Catálogos de endereços"
+
+msgid "calendars"
+msgstr "Calendários"
+
+msgid "name"
+msgstr "Nome"
+
+msgid "backup_date"
+msgstr "Data de backup"
+
+msgid "action"
+msgstr "Ação"
+
+msgid "click_to_copy_to_clipboard"
+msgstr "Copiar o URL desta coleção."
+
+msgid "url_copied_to_clipboard"
+msgstr "O URL desta coleção foi copiado para a área de transferência: "
+
+msgid "click_to_edit_entry"
+msgstr "Editar esta coleção."
+
+msgid "click_to_delete_entry"
+msgstr "Eliminar esta coleção."
+
+msgid "baLoad"
+msgstr "Restaurar esta coleção a partir da cópia de segurança."
+
+msgid "baBackup"
+msgstr "Fazer uma cópia de segurança desta coleção."
+
+msgid "baDownload"
+msgstr "Transferir a cópia de segurança desta coleção."
+
+msgid "edit_addressbook"
+msgstr "Editar o livro de endereços"
+
+msgid "edit_calendar"
+msgstr "Editar calendário"
+
+msgid "col_name"
+msgstr "Nome da coleção"
+
+msgid "col_name_help"
+msgstr "Nome desta coleção."
+
+msgid "col_desc"
+msgstr "Descrição da coleção"
+
+msgid "col_desc_help"
+msgstr "Descrição desta coleção."
+
+msgid "col_type"
+msgstr "Tipo da coleção"
+
+msgid "col_type_help"
+msgstr "Tipo desta coleção."
+
+msgid "col_colour"
+msgstr "Cor"
+
+msgid "col_colour_help"
+msgstr "Cor desta coleção."
+
+msgid "col_subtype"
+msgstr "Características"
+
+msgid "col_subtype_help"
+msgstr "Especifica as características deste calendário."
+
+msgid "create_collection"
+msgstr "Criar coleção Radicale CalDAV/CardDAV"
+
+msgid "ADDRESSBOOK"
+msgstr "Livro de endereços"
+
+msgid "CALENDAR_JOURNAL_TASKS"
+msgstr "Calendário, Diário e Tarefas"
+
+msgid "CALENDAR_JOURNAL"
+msgstr "Calendário e Diário"
+
+msgid "CALENDAR_TASKS"
+msgstr "Calendário e Tarefas"
+
+msgid "JOURNAL_TASKS"
+msgstr "Diário e Tarefas"
+
+msgid "CALENDAR"
+msgstr "Calendário"
+
+msgid "JOURNAL"
+msgstr "Diário"
+
+msgid "TASKS"
+msgstr "Tarefas"
+
+###
+
+msgid "restore_OK"
+msgstr "A coleção foi restaurada com sucesso a partir do backup."
+
+msgid "backup_OK"
+msgstr "A coleção foi copiada com sucesso."
+
+msgid "delete_OK"
+msgstr "A coleção foi eliminada com sucesso."

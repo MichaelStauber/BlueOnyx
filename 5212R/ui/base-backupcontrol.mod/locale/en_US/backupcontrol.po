@@ -1,0 +1,136 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2025-01-01 00:00+0000\n"
+"PO-Revision-Date: 2025-01-01 00:00+0000\n"
+"Last-Translator: Michael Stauber <mstauber@blueonyx.it>\n"
+"Language-Team: Team blueonyx\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "desktop_control"
+msgstr "Server Desktop"
+
+msgid "description"
+msgstr "Click here to control the Server Desktop operating mode. "
+
+# UI menu
+
+msgid "desktop_control_settings"
+msgstr "[[base-backupcontrol.desktop_control]] Control"
+
+msgid "lock_desktop"
+msgstr "Lock Server Desktop"
+
+msgid "lock_desktop_help"
+msgstr "This option gives the ability to make the administrative user interface (Server Desktop) read-only."
+
+msgid "lock_desktop_failed"
+msgstr "Failed to change the state of the [[base-backupcontrol.desktop_control]]"
+
+msgid "lock_failed"
+msgstr "Locking the [[base-backupcontrol.desktop_control]] failed."
+
+msgid "unlock_failed"
+msgstr "Unlocking the [[base-backupcontrol.desktop_control]] failed."
+
+msgid "locked"
+msgstr "The Server Desktop was locked by a server administrator."
+
+msgid "cap_serverServerDesktop"
+msgstr "Server Desktop Settings"
+
+####
+
+msgid "GUIaccessType"
+msgstr "GUI access protocols"
+
+msgid "GUIaccessType_help"
+msgstr "This defines which protocols are allowed to access the GUI. If you want to allow both HTTP and HTTPS access, then set it to '[[base-backupcontrol.BOTH]]'. To allow only HTTPS access, set it to '[[base-backupcontrol.HTTPS]]'. Or you can configure it to '[[base-backupcontrol.HTTP]]' as only allowed protocol, which is a bad idea. Recommended: '[[base-backupcontrol.HTTPS]]'. Default: '[[base-backupcontrol.BOTH]]'"
+
+msgid "GUIredirects"
+msgstr "Redirect to Server-Name"
+
+msgid "GUIredirects_help"
+msgstr "The Apache Webserver that the GUI runs on (AdmServ) has a separate SSL certificate. If someone accesses the GUI by HTTPS via the domain name of a virtual site (example: https://www.site.com:81/login), then the browser will show a warning that the SSL certificate of the server doesn't match the domain name. To prevent this you can check this box and all HTTPS accesses to the GUI will be redirected to the fully qualified domain name of the server. PLEASE NOTE: Only use this if the servers fully qualified domain name has a valid DNS record, or the GUI might become unreachable."
+
+msgid "BOTH"
+msgstr "HTTP and HTTPS"
+
+msgid "HTTP"
+msgstr "HTTP only"
+
+msgid "HTTPS"
+msgstr "HTTPS only"
+
+## CSRF:
+
+msgid "csrf_protection"
+msgstr "CSRF Protection"
+
+msgid "csrf_protection_help"
+msgstr "Cross-Site Request Forgery (CSRF) is an attack that forces an end user to execute unwanted actions on a web application in which they’re currently authenticated. With a little help of social engineering (such as sending a link via email or chat), an attacker may trick the users of a web application into executing actions of the attacker’s choosing. If the victim is a normal user, a successful CSRF attack can force the user to perform state changing requests like modifying settings, performing transactions within the authenticated session, and so forth. If the victim is an administrative account, CSRF can potentially compromise the entire web application. When CSRF protection is enabled in the GUI, additional protective measures are enabled which are designed to prevent or limit the scope of such attacks. This is done by inserting a hidden CSRF field into all GUI pages that contains an additional token with fixed expiry time. Upon all transactions this hidden CSRF token is checked for validity. If a transaction with an invalid CSRF token is attempted, then the transaction will not be performed and an error message is shown instead."
+
+msgid "csrf_expire"
+msgstr "CSRF Token Expiry"
+
+msgid "csrf_expire_help"
+msgstr "This is the maximum time in seconds that a CSRF token is valid. Default: 7200 (120 Minutes). A shorter validity period is more secure."
+
+msgid "csrf_regenerate"
+msgstr "Single Use CSRF"
+
+msgid "csrf_regenerate_help"
+msgstr "If you enable this feature, then the CSRF token changes every time you open a new GUI page. While this is the most secure method, it also has downsides: Having different GUI pages open in multiple tabs or browser windows is no longer recommended. Because each GUI page visit in one tab or browser automatically invalidates the CSRF token in all other browser tabs or windows. For maximum security you should enable this feature."
+
+#
+### DDOS protection:
+#
+
+msgid "ddos_protection"
+msgstr "GUI Brute Force Protection"
+
+msgid "ddos_protection_help"
+msgstr "If this option is enabled, the GUI login form is protected against brute force login attempts. Invalid login attempts are recorded according to the user's IP address. If an IP address repeatedly fails to authenticate correctly, it is prevented from using the login form until the lockout expires."
+
+msgid "ddos_attempts"
+msgstr "Failed Attempts"
+
+msgid "ddos_attempts_help"
+msgstr "Failed attempts defines how many failed attempts are allowed within a certain number of seconds until the IP in question is blocked from using the GUI login form."
+
+msgid "ddos_window"
+msgstr "Time Frame"
+
+msgid "ddos_window_help"
+msgstr "The time frame determines how many seconds the GUI tracks login attempts from individual IP addresses. In case of repeated failed login attempts within the specified time frame from the same IP address, the IP address in question is blocked."
+
+msgid "ddos_expire"
+msgstr "Ban Time"
+
+msgid "ddos_expire_help"
+msgstr "Ban Time specifies how many seconds must pass without further failed login attempts before a previously blocked IP address is allowed to use the GUI login form again."
+
+#
+### GUI port and URIs:
+#
+
+msgid "GUI_PORT"
+msgstr "GUI HTTPS Port"
+
+msgid "GUI_PORT_help"
+msgstr "Specify the HTTPS port for accessing the GUI. The default port is 81."
+
+msgid "GUI_URLs"
+msgstr "GUI Aliases"
+
+msgid "GUI_URLs_help"
+msgstr "Specify Apache aliases that redirect to the GUI login page. This field cannot be empty."
+
+msgid "GUI_PORT_in_use"
+msgstr "The specified GUI port is already in use by another service. Please select a different port."
+
+msgid "GUI_URLs_minimum_fail"
+msgstr "At least one Apache alias that redirects to the GUI interface is required."
+

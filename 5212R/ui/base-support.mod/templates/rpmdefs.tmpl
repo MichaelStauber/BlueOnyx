@@ -1,0 +1,232 @@
+# COnfiguration bits for mod_rpmize
+# syntax:
+# <begin [x]section>
+# <end [x]section>
+#
+# x an be $ for a string or % for a hash.
+# if a hash is being used, you can add sub-sections with
+# <begin sub-section>
+# <end sub-section>
+
+
+<begin $DESCRIPTION>
+%package [LABEL]
+Group: System Environment/BlueOnyx
+Summary: [LABEL] for [VENDOR]-[SERVICE].
+[AUTOFILL]
+[BUILDARCH]
+
+%description [LABEL]
+The [VENDOR]-[SERVICE]-[LABEL] package contains the [LABEL]
+information for [VENDOR]-[SERVICE].
+
+<end $DESCRIPTION>
+
+<begin %PREP>
+<end %PREP>
+
+<begin %SETUP>
+<end %SETUP>
+
+<begin %BUILD>
+<end %BUILD>
+
+<begin %INSTALL>
+<end %INSTALL>
+
+<begin %FILES>
+<begin HEADER>
+%files [LABEL]
+%defattr(-,root,root)
+<end HEADER>
+
+<begin locale>
+[AUTOFILL]
+
+<end locale>
+
+<begin glue>
+%attr(0755,root,root)%{RootDir}/swatch/bin/am_support.pl
+[AUTOFILL]
+
+<end glue>
+
+<begin ui>
+[AUTOFILL]
+
+<end ui>
+
+<begin capstone>
+%{RootDir}/capstone/%{Vendor}-%{Service}.cap
+[AUTOFILL]
+
+<end capstone>
+<end %FILES>
+
+<begin %POST-INSTALL>
+<begin HEADER>
+%post [LABEL]
+<end HEADER>
+
+<begin glue>
+# glue post-install
+
+<end glue>
+<begin ui>
+# ui post-install
+
+<end ui>
+<begin locale>
+# locale post-install
+
+<end locale>
+<end %POST-INSTALL>
+
+<begin %POST-UNINSTALL>
+<begin HEADER>
+%postun [LABEL]
+<end HEADER>
+
+<begin glue>
+# glue post-uninstall
+
+<end glue>
+<begin ui>
+# ui post-uninstall
+
+<end ui>
+<begin locale>
+# locale post-uninstall
+
+<end locale>
+<end %POST-UNINSTALL>
+
+<begin $CHANGELOG>
+
+* Sat Jun 08 2024 Michael Stauber <mstauber@solarspeed.net> 2.3.1-1
+- Updated ui/chorizo/web/Controllers/Ticket.php to offer paid support
+  as well as support subscriptions and prepaid support hours. 
+
+* Sat Jun 08 2024 Michael Stauber <mstauber@solarspeed.net> 2.3.0-6
+- Bugfix in ui/chorizo/web/Controllers/Bugreport.php
+- Added requirement for sssd-client
+
+* Sat Jun 08 2024 Michael Stauber <mstauber@solarspeed.net> 2.3.0-5
+- Modified ui/chorizo/web/Controllers/Ticket.php to get primary IPs 
+  via PHP'ized Network.pm methods.
+
+* Wed Feb 21 2024 Michael Stauber <mstauber@solarspeed.net> 2.3.0-4
+- Tickets now support requests with non standard GUI ports and URIs
+- Modified ui/chorizo/web/Controllers/Ticket.php
+
+* Mon Feb 19 2024 Michael Stauber <mstauber@solarspeed.net> 2.3.0-3
+- Version number bump for Elmer release
+
+* Thu Feb 15 2024 Michael Stauber <mstauber@solarspeed.net> 2.3.0-2
+- Modified 'Support Request' to include server serialNumber and to
+  also report the 2FA settings of the server. If 2FA is enabled and
+  required, the Support-Account will also get 2FA enabled and the
+  relevant data from the .google_authenticator file is included
+  in the submitted request.
+- Modified glue/handlers/ticket.pl
+- Modified glue/schemas/support.schema
+- Modified ui/chorizo/web/Controllers/Bugreport.php
+- Modified ui/chorizo/web/Controllers/SOSReport.php
+- Modified ui/chorizo/web/Controllers/SupportSettings.php
+- Modified ui/chorizo/web/Controllers/Ticket.php
+
+* Thu Dec 14 2023 Michael Stauber <mstauber@solarspeed.net> 2.3.0-1
+- Elmer'ized ui/chorizo/web/Controllers/Bugreport.php
+- Elmer'ized ui/chorizo/web/Controllers/Ticket.php
+
+* Sun Apr 16 2023 Michael Stauber <mstauber@solarspeed.net> 2.2.0-3
+- Caching Support details causes issues right after setting details.
+  Modified relevant GUI pages to force loading of Support data from
+  CODB and ignoring cache.
+
+* Sun Nov 13 2022 Michael Stauber <mstauber@solarspeed.net> 2.2.0-2
+- Release version for BlueOnyx 5211R
+
+* Sun Nov 13 2022 Michael Stauber <mstauber@solarspeed.net> 2.2.0-1
+- Removed SOS-Report functionality and SOS-Report menu file.
+
+* Tue Dec 30 2020 Michael Stauber <mstauber@solarspeed.net> 2.1.0-0BX05
+- Modified ui/chorizo/web/controllers/Ticket.php to hide/disable the
+  checkbox for the useless SOS-Report. If ticked, no ticket will be
+  sent and error handling goes out of the window. Disabled for now.
+
+* Tue Sep 08 2020 Michael Stauber <mstauber@solarspeed.net> 2.1.0-0BX04
+- Modified glue/handlers/ticket.pl to not only check 'is_success' on
+  ticket submit, but also to evaluate the subject of the returned page.
+  Turns out some Nginx error pages send a '200 OK' instead of an error.
+
+* Mon Aug 17 2020 Michael Stauber <mstauber@solarspeed.net> 2.1.0-0BX03
+- Added requirement for perl-LWP-Protocol-https
+
+* Wed May 27 2020 Michael Stauber <mstauber@solarspeed.net> 2.1.0-0BX02
+- [BlueOnyx:23903] Japanese locales updated by Tomohiro Hosaka
+
+* Sat Jun 15 2019 Michael Stauber <mstauber@solarspeed.net> 2.1.0-0BX01
+- Old GUI removed, new GUI adapted for 5210R
+
+* Thu Apr 12 2018 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX18
+- Better error checking in handlers that do the submissions.
+
+* Mon Jan 29 2018 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX17
+- Modified ui/chorizo/web/controllers/ticket.php to add IPv6 IP.
+
+* Thu Feb 23 2017 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX16
+- Adjusted Controllers for base-alpine 2.0
+
+* Tue Jul 19 2016 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX15
+- Added requirement for perl-JSON
+- Modified handlers to no longer SSL-check validity of SSL cert.
+
+* Thu Dec 24 2015 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX14
+- Removed requirement for perl-LWP-Protocol-https as it's EL7 specific.
+
+* Thu Dec 24 2015 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX13
+- Added requirement for perl-LWP-Protocol-https
+
+* Mon Dec 13 2015 Greg Kuhnert <gkuhnert@compassnetworks.com.au> 2.0.0-0BX12
+- Fixed: Sosreport was not generating data on 5209R
+
+* Wed Dec 03 2015 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX11
+- Added constructor/mod_cache_perms.pl to fix cache dir perms.
+
+* Fri Jul 10 2015 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX10
+- Another fix in ui/chorizo/web/controllers/ticket.php to rip out ticket
+  number support.
+
+* Wed Jul 03 2015 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX09
+- Modified ui/chorizo/web/controllers/ticket.php to add error check to
+  online ticket number parsing.
+- Converted UI indentations to spaces.
+
+* Tue Jan 03 2015 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX08
+- Added perl-libwww-perl and sos to requirements.
+
+* Thu Dec 04 2014 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX07
+- Removed CCEd restart from post-install.
+
+* Tue Jul 15 2014 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX06
+- Another bugfix in ui/chorizo/web/controllers/ticket.php
+
+* Tue Jul 15 2014 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX05
+- Small bugfix in ui/chorizo/web/controllers/ticket.php
+
+* Sun Jul 13 2014 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX04
+- Modified glue/sbin/sosreport.sh to allow report generation w/o serial.
+
+* Fri Jul 11 2014 Michael Stauber <mstauber@solarspeed.net> 2.0.0-0BX03
+- Chorizo GUI added. Note: Old GUI not present. This is 520XR only.
+- Modified glue/handlers/sos-delete.pl to turn off debugging switch.
+- Various locale related fixes.
+
+* Mon Jul 07 2014 Michael Stauber <mstauber@solarspeed.net> 1.0.0-0BX02
+- Various locale related fixes.
+
+* Mon Jul 07 2014 Michael Stauber <mstauber@solarspeed.net> 1.0.0-0BX01
+- Initial build.
+
+<end $CHANGELOG>

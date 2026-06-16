@@ -1,0 +1,9 @@
+<item
+    id="base_server_goaccess"
+    label="[[base-sitestats.goaccess]]"
+    description="[[base-sitestats.goaccessDescription]]"
+    url="/sitestats/goaccess" >
+    <parent id="base_serverusage" order="16">
+        <access require="serverStatsServerWeb"/>
+    </parent>
+</item>

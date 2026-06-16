@@ -1,0 +1,20 @@
+<!--
+    $Id: jailkit.schema
+    Copyright (c) 2019 Michael Stauber, SOLARSPEED.NET
+    Copyright (c) 2019 Team BlueOnyx, BLUEONYX.IT
+    All Rights Reserved.
+-->
+
+<class name="System" namespace="Jailkit" version="1.0">
+
+    <property 
+        name="enabled" type="boolean" default="0"
+        writeacl="ruleCapable(serverHttpd)"
+    />
+
+    <property 
+        name="force_update" type="scalar" default=""
+        writeacl="ruleCapable(serverHttpd)"
+    />
+
+</class>

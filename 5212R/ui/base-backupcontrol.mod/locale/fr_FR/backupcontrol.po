@@ -1,0 +1,134 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Last-Translator: Meaulnes Legler <blue@waveweb.ch>\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "desktop_control"
+msgstr "[[base-apache.amAdmservNameTag]]"
+
+msgid "description"
+msgstr "Cliquez ici pour vous rendre à l'interface d'administration «&nbsp;[[base-apache.amAdmservNameTag]]&nbsp;» pour gérer le fonctionnement du serveur."
+
+# UI menu
+
+msgid "desktop_control_settings"
+msgstr "Options [[base-backupcontrol.desktop_control]]"
+
+msgid "lock_desktop"
+msgstr "Verrouiller [[base-backupcontrol.desktop_control]]"
+
+msgid "lock_desktop_help"
+msgstr "Rendre l'interface d'administration [[base-backupcontrol.desktop_control]] inaltérable (en lecture seule)."
+
+msgid "lock_desktop_failed"
+msgstr "Impossible de modifier [[base-backupcontrol.desktop_control]]"
+
+msgid "lock_failed"
+msgstr "Le verrouillage de [[base-backupcontrol.desktop_control]] a échoué."
+
+msgid "unlock_failed"
+msgstr "Le déverrouillage de [[base-backupcontrol.desktop_control]] a échoué."
+
+msgid "locked"
+msgstr "Le [[base-backupcontrol.desktop_control]] a été verrouillé par un administrateur du serveur."
+
+msgid "cap_serverServerDesktop"
+msgstr "Paramètres [[base-backupcontrol.desktop_control]]"
+
+####
+
+msgid "GUIaccessType"
+msgstr "Protocoles d'accès GUI"
+
+msgid "GUIaccessType_help"
+msgstr "Ce qui définit les protocoles sont autorisés à accéder à l'interface graphique. Si vous voulez permettre à la fois accès HTTP et HTTPS, puis réglez-le sur '[[base-backupcontrol.BOTH]]'. Pour permettre l'accès HTTPS uniquement, réglez-le sur '[[base-backupcontrol.HTTPS]]'. Ou vous pouvez le configurer pour '[[base-backupcontrol.HTTP]]' que seulement permis protocole, qui est une mauvaise idée. Recommandé: '[[base-backupcontrol.HTTPS]]'. Par défaut: '[[base-backupcontrol.BOTH]]'"
+
+msgid "GUIredirects"
+msgstr "Redirection vers le serveur-Nom"
+
+msgid "GUIredirects_help"
+msgstr "Le serveur web Apache que l'interface graphique fonctionne sur (admserv) dispose d'un certificat SSL séparée. Si quelqu'un accède à l'interface graphique par HTTPS via le nom de domaine d'un site virtuel (exemple: https://www.site.com:81/login), le navigateur affiche un avertissement indiquant que le certificat SSL du serveur ne correspond pas au nom de domaine . Pour éviter cela, vous pouvez cocher cette case et tout HTTPS accède à l'interface utilisateur sera redirigé vers le nom de domaine complet du serveur. S'IL VOUS PLAÎT NOTE: Utiliser seulement ceci si les serveurs entièrement qualifié nom de domaine a un enregistrement DNS valide, ou l'interface graphique peut devenir inaccessible."
+
+msgid "BOTH"
+msgstr "HTTP et HTTPS"
+
+msgid "HTTP"
+msgstr "HTTP uniquement"
+
+msgid "HTTPS"
+msgstr "HTTPS uniquement"
+
+## CSRF:
+
+msgid "csrf_protection"
+msgstr "Protection de la CSRF"
+
+msgid "csrf_protection_help"
+msgstr "La Cross-Site Request Forgery (CSRF) est une attaque qui force un utilisateur final à exécuter des actions non désirées sur une application web dans laquelle il est actuellement authentifié. Avec un peu d'aide de l'ingénierie sociale (comme l'envoi d'un lien par e-mail ou par chat), un attaquant peut tromper les utilisateurs d'une application web en leur faisant exécuter des actions de son choix. Si la victime est un utilisateur normal, une attaque CSRF réussie peut forcer l'utilisateur à effectuer des requêtes de changement d'état comme la modification de paramètres, l'exécution de transactions au sein de la session authentifiée, etc. Si la victime est un compte administratif, CSRF peut potentiellement compromettre l'ensemble de l'application web. Lorsque la protection CSRF est activée dans l'interface utilisateur graphique, des mesures de protection supplémentaires sont activées afin de prévenir ou de limiter la portée de ces attaques. Cela se fait en insérant un champ CSRF caché dans toutes les pages de l'interface graphique qui contient un jeton supplémentaire avec un délai d'expiration fixe. La validité de ce jeton CSRF caché est vérifiée lors de toutes les transactions. Si une transaction avec un jeton CSRF non valide est tentée, la transaction ne sera pas effectuée et un message d'erreur sera affiché à la place."
+
+msgid "csrf_expire"
+msgstr "Expiration du jeton CSRF"
+
+msgid "csrf_expire_help"
+msgstr "C'est le temps maximum en secondes pendant lequel un jeton CSRF est valide. Par défaut : 7200 (120 minutes). Une période de validité plus courte est plus sûre."
+
+msgid "csrf_regenerate"
+msgstr "CSRF à usage unique"
+
+msgid "csrf_regenerate_help"
+msgstr "Si vous activez cette fonction, le jeton CSRF change chaque fois que vous ouvrez une nouvelle page d'interface graphique. Bien que cette méthode soit la plus sûre, elle présente également des inconvénients : Il n'est plus recommandé d'ouvrir différentes pages d'interface graphique dans plusieurs onglets ou fenêtres de navigateur. En effet, chaque visite d'une page dans un onglet ou un navigateur invalide automatiquement le jeton CSRF dans tous les autres onglets ou fenêtres du navigateur. Pour une sécurité maximale, vous devez activer cette fonction."
+
+#
+### DDOS protection:
+#
+
+msgid "ddos_protection"
+msgstr "Protection contre la force brute de l'interface graphique"
+
+msgid "ddos_protection_help"
+msgstr "Si cette option est activée, le formulaire de connexion GUI est protégé contre les tentatives de connexion par force brute. Les tentatives de connexion invalides sont enregistrées en fonction de l'adresse IP de l'utilisateur. Si une adresse IP échoue à plusieurs reprises à s'authentifier correctement, elle est empêchée d'utiliser le formulaire de connexion jusqu'à l'expiration du verrouillage."
+
+msgid "ddos_attempts"
+msgstr "Tentatives échouées"
+
+msgid "ddos_attempts_help"
+msgstr "Les tentatives échouées définissent le nombre de tentatives échouées autorisées dans un certain laps de temps jusqu'à ce que l'IP en question soit bloquée pour l'utilisation du formulaire de connexion GUI."
+
+msgid "ddos_window"
+msgstr "Cadre temporel"
+
+msgid "ddos_window_help"
+msgstr "Le délai détermine le nombre de secondes pendant lesquelles l'interface graphique suit les tentatives de connexion des adresses IP individuelles. En cas d'échecs répétés de tentatives de connexion depuis la même adresse IP dans le laps de temps spécifié, l'adresse IP en question est bloquée."
+
+msgid "ddos_expire"
+msgstr "Temps d'interdiction"
+
+msgid "ddos_expire_help"
+msgstr "La durée d'interdiction spécifie le nombre de secondes qui doivent s'écouler sans autre échec de tentative de connexion avant qu'une adresse IP précédemment bloquée ne soit autorisée à utiliser à nouveau le formulaire de connexion de l'interface graphique."
+
+#
+### GUI port and URIs:
+#
+
+msgid "GUI_PORT"
+msgstr "Port HTTPS de l'interface graphique"
+
+msgid "GUI_PORT_help"
+msgstr "Spécifiez le port HTTPS pour accéder à l'interface graphique. Le port par défaut est 81."
+
+msgid "GUI_URLs"
+msgstr "Alias de l'interface graphique"
+
+msgid "GUI_URLs_help"
+msgstr "Spécifiez les alias Apache qui redirigent vers la page de connexion de l'interface graphique. Ce champ ne peut pas être vide."
+
+msgid "GUI_PORT_in_use"
+msgstr "Le port de l'interface graphique spécifié est déjà utilisé par un autre service. Veuillez sélectionner un autre port."
+
+msgid "GUI_URLs_minimum_fail"
+msgstr "Vous devez spécifier au moins un alias Apache qui redirige vers l'interface de l'interface graphique."

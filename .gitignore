@@ -1,0 +1,33 @@
+# Editor / OS noise
+*~
+*.swp
+*.swo
+.DS_Store
+
+# Build artifacts
+*.rpm
+*.src.rpm
+*.tar.gz
+*.tgz
+*.zip
+*.iso
+*.img
+*.qcow2
+
+# Logs / temporary files
+*.log
+tmp/
+temp/
+.cache/
+
+# Python
+__pycache__/
+*.pyc
+
+# Node, if any
+node_modules/
+
+# Local configs / secrets
+.env
+*.key
+*.pem

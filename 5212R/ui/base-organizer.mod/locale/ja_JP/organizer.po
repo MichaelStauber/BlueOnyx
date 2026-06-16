@@ -1,0 +1,219 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "radicale_server_long"
+msgstr "ラディカルCalDAV/CardDAV"
+
+msgid "radicale_server"
+msgstr "CalDAV/CardDAV"
+
+msgid "radicale_server_help"
+msgstr "Radicaleは、小さいながらもパワフルなCalDAV（カレンダー、ToDoリスト）とCardDAV（連絡先）サーバーです。多くのCalDAVやCardDAVクライアントと連動します。有効にすると、このサーバー上のすべてのユーザーがカレンダーと連絡先を作成し、CalDAVおよび/またはCardDAVプロトコルをサポートするサードパーティクライアントで使用することができます。例えば 例えば：ThunderbirdはCardBookアドオンでこれをサポートしています。"
+
+msgid "enabled"
+msgstr "Radicale を有効にする"
+
+msgid "enabled_help"
+msgstr "Radicale CalDAV/CardDAV サーバーを有効にします。"
+
+msgid "max_connections"
+msgstr "最大接続数"
+
+msgid "max_connections_help"
+msgstr "Radicale CalDAV/CardDAVサーバーへの最大並列接続数です。0に設定すると制限が無効になります。"
+
+msgid "max_content_length"
+msgstr "リクエストボディの最大長"
+
+msgid "max_content_length_help"
+msgstr "リクエストボディの最大サイズ。(バイト）"
+
+msgid "timeout"
+msgstr "ソケットタイムアウト"
+
+msgid "timeout_help"
+msgstr "ソケットタイムアウト (秒)。Radicale がコネクションを閉じるまでの待ち時間を指定します。"
+
+msgid "delay"
+msgstr "遅延時間"
+
+msgid "delay_help"
+msgstr "Radicaleがログインに失敗した後、同じ発信元IPアドレスからの新規ログインを許可するまでの平均遅延時間。この値の単位は秒です。"
+
+msgid "radicale_off_desc"
+msgstr "Radicale CalDAV/CardDAV サービスは現在このサーバーでは無効になっています。"
+
+##### --- Active monitor
+
+msgid "amRadicaleNameTag"
+msgstr "Radicale CalDAV/CardDAV サーバー"
+
+msgid "amDetailsTitle"
+msgstr "Radicale CalDAV/CardDAV サーバーの詳細"
+
+msgid "amStatusOK"
+msgstr "Radicale CalDAV/CardDAV サーバーは正常に動作しています。"
+
+msgid "amNotAccepting"
+msgstr "Radicale CalDAV/CardDAVサーバーが起動しておらず、再起動できない。Radicale CalDAV/CardDAVサーバーの電源を切り、再度電源を入れてみてください。"
+
+##### --- Error messages:
+
+msgid "ErrorCreatingCollection"
+msgstr "この CalDAV/CardDAV コレクションを作成しようとしてエラーが発生しました。"
+
+msgid "ErrorDecodingCollection"
+msgstr "このユーザーの CalDAV/CardDAV コレクションを確認中にエラーが発生しました。"
+
+msgid "ErrorUpdatingCollection"
+msgstr "既存の CalDAV/CardDAV コレクションを変更しようとしてエラーが発生しました。"
+
+msgid "ErrorFileNotPresent"
+msgstr "エラーが発生しました： 指定された CalDAV/CardDAV コレクションは存在しません。"
+
+msgid "ErrorDeletingCollection"
+msgstr "この CalDAV/CardDAV コレクションを削除しようとしてエラーが発生しました。"
+
+msgid "ErrorRestoringBackup"
+msgstr "この CalDAV/CardDAV コレクションのバックアップを復元しようとしてエラーが発生しました。"
+
+msgid "ErrorCreatingBackup"
+msgstr "この CalDAV/CardDAV コレクションのバックアップを作成しようとしてエラーが発生しました。"
+
+##### --- 2nd batch of locales:
+
+msgid "BackupAll"
+msgstr "すべてをバックアップ"
+
+msgid "BackupAll_help"
+msgstr "すべてのRadicale CalDAV/CardDAVコレクションをバックアップします。"
+
+msgid "RestoreAll"
+msgstr "すべてリストア"
+
+msgid "RestoreAll_help"
+msgstr "すべての Radicale CalDAV/CardDAV コレクションをバックアップからリストアします。バックアップファイルのないコレクションが存在する場合、このコレクションはそのまま残されます。"
+
+msgid "FullGUI"
+msgstr "Radicale GUI"
+
+msgid "FullGUI_help"
+msgstr "Radicaleに内蔵されたGUIにアクセスするためのページを開きます。"
+
+msgid "addressbooks"
+msgstr "アドレス帳"
+
+msgid "calendars"
+msgstr "カレンダー"
+
+msgid "name"
+msgstr "名前"
+
+msgid "backup_date"
+msgstr "バックアップ日"
+
+msgid "action"
+msgstr "アクション"
+
+msgid "click_to_copy_to_clipboard"
+msgstr "このコレクションのURLをコピーします。"
+
+msgid "url_copied_to_clipboard"
+msgstr "このコレクションのURLがクリップボードにコピーされました： "
+
+msgid "click_to_edit_entry"
+msgstr "このコレクションを編集します。"
+
+msgid "click_to_delete_entry"
+msgstr "このコレクションを削除します。"
+
+msgid "baLoad"
+msgstr "バックアップからこのコレクションを復元します。"
+
+msgid "baBackup"
+msgstr "このコレクションをバックアップします。"
+
+msgid "baDownload"
+msgstr "このコレクションのバックアップをダウンロードする。"
+
+msgid "edit_addressbook"
+msgstr "アドレス帳を編集する"
+
+msgid "edit_calendar"
+msgstr "カレンダーの編集"
+
+msgid "col_name"
+msgstr "名前"
+
+msgid "col_name_help"
+msgstr "このコレクションの名前。"
+
+msgid "col_desc"
+msgstr "説明"
+
+msgid "col_desc_help"
+msgstr "このコレクションの説明。"
+
+msgid "col_type"
+msgstr "タイプ"
+
+msgid "col_type_help"
+msgstr "このコレクションのタイプ。"
+
+msgid "col_colour"
+msgstr "色"
+
+msgid "col_colour_help"
+msgstr "このコレクションの色"
+
+msgid "col_subtype"
+msgstr "機能"
+
+msgid "col_subtype_help"
+msgstr "このカレンダーが持つ機能を指定します。"
+
+msgid "create_collection"
+msgstr "Radicale CalDAV/CardDAVコレクションの作成"
+
+msgid "ADDRESSBOOK"
+msgstr "アドレス帳"
+
+msgid "CALENDAR_JOURNAL_TASKS"
+msgstr "カレンダー、ジャーナル、タスク"
+
+msgid "CALENDAR_JOURNAL"
+msgstr "カレンダーとジャーナル"
+
+msgid "CALENDAR_TASKS"
+msgstr "カレンダーとタスク"
+
+msgid "JOURNAL_TASKS"
+msgstr "ジャーナルとタスク"
+
+msgid "CALENDAR"
+msgstr "カレンダー"
+
+msgid "JOURNAL"
+msgstr "ジャーナル"
+
+msgid "TASKS"
+msgstr "タスク"
+
+###
+
+msgid "restore_OK"
+msgstr "コレクションはバックアップから正常に復元されました。"
+
+msgid "backup_OK"
+msgstr "コレクションのバックアップが正常に行われました。"
+
+msgid "delete_OK"
+msgstr "コレクションは正常に削除されました。"
+

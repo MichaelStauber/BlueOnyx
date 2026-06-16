@@ -1,0 +1,38 @@
+{
+	"name": "xxperez/codeigniter4modular",
+	"type": "project",
+	"description": "CodeIgniter4 modular starter app",
+	"homepage": "https://github.com/XXPerez/Codeigniter4Modular",
+	"license": "MIT",
+	"require": {
+		"php": ">=7.2",
+		"codeigniter4/framework": "^4",
+		"ezyang/htmlpurifier": "^4.16",
+		"symfony/yaml": "^6.4 || ^7.1",
+                "cboden/ratchet": "^0.4.4",
+		"react/promise": "^3.2",
+		"ratchet/pawl": "^0.4.1",
+		"sonata-project/google-authenticator": "^2.3"
+	},
+	"require-dev": {
+		"fzaninotto/faker": "^1.9@dev",
+		"mikey179/vfsstream": "1.6.*",
+		"phpunit/phpunit": "^8.5"
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"Tests\\Support\\": "tests/_support"
+		}
+	},
+	"scripts": {
+		"post-update-cmd": [
+			"@composer dump-autoload"
+		],
+		"test": "phpunit"
+	},
+	"support": {
+		"forum": "http://forum.codeigniter.com/",
+		"source": "https://github.com/codeigniter4/CodeIgniter4",
+		"slack": "https://codeigniterchat.slack.com"
+	}
+}

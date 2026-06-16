@@ -1,0 +1,123 @@
+#!/usr/bin/expect
+# $Id: am_smtp.exp
+source /usr/sausalito/swatch/statecodes.tcl
+
+set mta [exec /usr/sausalito/bin/whichmta]
+
+if {![info exists env(redMsg)] || $env(redMsg) eq ""} {
+    set env(redMsg) {[[base-email.amSMTPNotRunning]]}
+}
+if {![info exists env(greenMsg)] || $env(greenMsg) eq ""} {
+    set env(greenMsg) {[[base-email.amSMTPStatusOK]]}
+}
+
+log_user 0
+set timeout 10
+set smtp_timeout_msec [expr {$timeout * 1000}]
+set smtp_ports {587 25}
+
+proc fail {} {
+    global env AM_STATE_RED
+    puts -nonewline $env(redMsg)
+    catch {flush stdout}
+    exit $AM_STATE_RED
+}
+
+proc smtp_timeout {} {
+    set ::smtp_wait_result timeout
+}
+
+proc smtp_readable {sock} {
+    if {[eof $sock]} {
+        set ::smtp_wait_result eof
+        return
+    }
+
+    set rc [gets $sock line]
+    if {$rc >= 0} {
+        set ::smtp_wait_line $line
+        set ::smtp_wait_result line
+    }
+}
+
+proc smtp_read_line {sock description {timeout_msec ""}} {
+    global smtp_timeout_msec
+
+    if {$timeout_msec eq ""} {
+        set timeout_msec $smtp_timeout_msec
+    }
+
+    set ::smtp_wait_line ""
+    set ::smtp_wait_result ""
+    fileevent $sock readable [list smtp_readable $sock]
+    set timer [after $timeout_msec smtp_timeout]
+    vwait ::smtp_wait_result
+    after cancel $timer
+    fileevent $sock readable {}
+
+    if {$::smtp_wait_result eq "line"} {
+        return $::smtp_wait_line
+    }
+    if {$::smtp_wait_result eq "timeout"} {
+        return -code error "timeout waiting for $description"
+    }
+    return -code error "connection closed while waiting for $description"
+}
+
+proc smtp_expect_code {sock code description {timeout_msec ""}} {
+    while {1} {
+        set line [smtp_read_line $sock $description $timeout_msec]
+        if {[regexp "^${code} " $line]} {
+            return $line
+        }
+        if {[regexp "^${code}-" $line]} {
+            continue
+        }
+        return -code error "unexpected reply while waiting for $description: $line"
+    }
+}
+
+proc smtp_open {port} {
+    set sock [socket 127.0.0.1 $port]
+    fconfigure $sock -blocking 0 -buffering line -translation crlf
+    return $sock
+}
+
+proc choose_smtp_port {} {
+    global smtp_ports
+
+    foreach port $smtp_ports {
+        if {![catch {set sock [smtp_open $port]} result]} {
+            if {![catch {smtp_expect_code $sock 220 "SMTP banner on port $port"} result]} {
+                return [list $port $sock]
+            }
+
+            catch {close $sock}
+        }
+    }
+
+    return -code error "no configured SMTP listener is reachable"
+}
+
+proc run_check {} {
+    lassign [choose_smtp_port] port sock
+    puts $sock "EHLO 127.0.0.1"
+    flush $sock
+    smtp_expect_code $sock 250 "EHLO response on port $port"
+    puts $sock "QUIT"
+    flush $sock
+    smtp_expect_code $sock 221 "QUIT response on port $port"
+    close $sock
+}
+
+if {[catch {run_check} result]} {
+    catch {exec systemctl restart $mta >&/dev/null}
+    sleep 5
+    if {[catch {run_check} retry_result]} {
+        fail
+    }
+}
+
+puts -nonewline $env(greenMsg)
+catch {flush stdout}
+exit $AM_STATE_GREEN

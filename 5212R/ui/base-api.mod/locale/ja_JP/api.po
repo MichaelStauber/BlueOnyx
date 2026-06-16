@@ -1,0 +1,111 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "APImenu"
+msgstr "API"
+
+msgid "APImenu_help"
+msgstr "BlueOnyx API のアクセスを設定します。この API を使うことで、独自の API 呼び出しや WHMCS（https://www.whmcs.com/）などの外部ツールを通じて、このサーバーをリモートでプロビジョニングおよび管理できます。"
+
+msgid "apiSettings"
+msgstr "API 設定"
+
+msgid "API_info"
+msgstr "BlueOnyx API は、Vsite、ユーザー、および一部のサーバー管理機能のリモートプロビジョニングをサポートします。API リクエストは HTTP(S) を通じてサーバーの AdmServ デーモンに送信されます。WHMCS 用の統合モジュールも利用可能です。詳しくは次のドキュメントをご参照ください：https://www.blueonyx.it/api-v2-documentation"
+
+msgid "enableServerField"
+msgstr "API を有効化"
+
+msgid "enableServerField_help"
+msgstr "API は常に localhost からアクセス可能です。外部からのアクセスを許可するには、対象の IP アドレスを明示的に許可する必要があります。"
+
+msgid "forceHTTPSField"
+msgstr "HTTPS を強制"
+
+msgid "forceHTTPSField_help"
+msgstr "API へのアクセスを HTTPS 接続のみに制限して、安全な通信を確保します。"
+
+msgid "apiHosts"
+msgstr "リモート IP アクセス"
+
+msgid "apiHosts_help"
+msgstr "この API にアクセスを許可する IP アドレス（CIDR 表記）を指定します。セキュリティ確保のため、信頼できる IP アドレスのみを許可してください。"
+
+msgid "listen_port"
+msgstr "リッスンアドレス"
+
+msgid "listen_port_help"
+msgstr "API がリッスンする IP アドレスとポートを定義します。デフォルトは 'localhost:9092' です。リモートアクセスを許可するには、'0.0.0.0:9092' などに変更してください（またはより限定された IP を指定します）。"
+
+msgid "securityDesc"
+msgstr "セキュリティオプション"
+
+msgid "token_lifetime"
+msgstr "セキュリティトークンの有効期限"
+
+msgid "token_lifetime_help"
+msgstr "リモートクライアント向けのセキュリティトークンの有効期間を設定します（デフォルト：300 秒）。有効期限が切れると、再認証が必要です。"
+
+msgid "api_auth_fails"
+msgstr "API 認証失敗回数"
+
+msgid "api_auth_fails_help"
+msgstr "指定された API ロック時間内で許可される認証失敗の回数を設定します。この回数を超えると、リモート IP は一時的にブロックされます。"
+
+msgid "api_ban_time"
+msgstr "API ロック時間"
+
+msgid "api_ban_time_help"
+msgstr "この秒数の間に認証失敗が一定回数を超えた場合、その IP アドレスは一時的に API アクセスを禁止されます。"
+
+msgid "loggingDesc"
+msgstr "ログ設定"
+
+msgid "logging"
+msgstr "ログ有効化"
+
+msgid "logging_help"
+msgstr "有効にすると、すべての API アクセスと操作が /var/log/cced-api.log に記録されます。"
+
+msgid "debuglog"
+msgstr "デバッグログ"
+
+msgid "debuglog_help"
+msgstr "詳細なログを有効にします。API トランザクションのデバッグに役立ちます。"
+
+msgid "AccessTokenTab"
+msgstr "クライアントシークレット"
+
+msgid "CIDR"
+msgstr "CIDR"
+
+msgid "CIDR_help"
+msgstr "API アクセスが許可された CIDR 形式の IP アドレスまたはサブネット。"
+
+msgid "Token"
+msgstr "クライアントシークレット"
+
+msgid "Token_help"
+msgstr "クライアントが API にアクセスするために使用する認証トークンです。秘密として安全に管理してください。"
+
+msgid "basicSettingsTab"
+msgstr "基本設定"
+
+msgid "amDetailsTitle"
+msgstr "CCEd-API のステータス"
+
+msgid "amStatusOK"
+msgstr "CCEd-API は正常に動作しています。"
+
+msgid "amNotAccepting"
+msgstr "CCEd-API は実行されておらず、再起動にも失敗しました。'systemctl restart cced-api' を使って手動でサービスを再起動し、問題が解決するか確認してください。"
+
+msgid "amAPINameTag"
+msgstr "CCEd-API"

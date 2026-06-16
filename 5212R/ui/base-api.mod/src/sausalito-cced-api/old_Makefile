@@ -1,0 +1,31 @@
+# Makefile for building and installing cced-api
+
+CCED_SRC_DIR := $(CURDIR)
+BIN := cced-api
+PRE := cced-api-pre.sh
+SRC := cced-api.go
+BUILD_DIR := $(CCED_SRC_DIR)
+INSTALL_BIN := /usr/sausalito/sbin/cced-api
+INS_PRE_BIN := /usr/sausalito/bin/cced-api-pre.sh
+CONF_DIR := /etc/cced-api/config
+CERT_DIR := /etc/cced-api/certs
+SYSTEMD_UNIT := /usr/lib/systemd/system/cced-api.service
+LOGROTATE := /etc/logrotate.d/cced-api
+USER_CSTR := /usr/sausalito/sbin/gen_api_admin.pl
+all:
+	# Build and install
+	cd $(BUILD_DIR) && go build -o $(BIN) $(SRC)
+	install -Dm755 $(BUILD_DIR)/$(BIN) $(INSTALL_BIN)
+	install -Dm755 $(BUILD_DIR)/$(PRE) $(INS_PRE_BIN)
+	install -d $(CONF_DIR)
+	install -d $(CERT_DIR)
+	install -m644 $(BUILD_DIR)/cced-api.conf $(CONF_DIR)/cced-api.conf
+	install -Dm644 $(BUILD_DIR)/cced-api.service $(SYSTEMD_UNIT)
+	install -Dm644 $(BUILD_DIR)/cced-api.logrotate $(LOGROTATE)
+	install -Dm755 $(BUILD_DIR)/gen_api_admin.pl $(USER_CSTR)
+
+	systemctl daemon-reexec
+	systemctl daemon-reload
+
+clean:
+	rm -f $(BUILD_DIR)/$(BIN)

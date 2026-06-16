@@ -1,0 +1,148 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "BOTH"
+msgstr "HTTP e HTTPS"
+
+msgid "GUIaccessType"
+msgstr "Protocolli di accesso GUI"
+
+msgid "GUIaccessType_help"
+msgstr ""
+"Questo definisce quali protocolli hanno il permesso di accedere alla GUI. Se "
+"vuoi permettere l'accesso sia HTTP e HTTPS, allora impostalo a [[base-"
+"backupcontrol.BOTH]]. Per permettere solo l'accesso HTTPS, impostalo a "
+"[[base-backupcontrol.HTTPS]]. O puoi configurarlo a [[base-backupcontrol."
+"HTTP]] come unico protocollo permesso, il che e' un'idea cattiva. "
+"Raccomandiamo di impostarlo su [[base-backupcontrol.HTTPS]]. Il valore di "
+"default e': [[base-backupcontrol.BOTH]]"
+
+msgid "GUIredirects"
+msgstr "Reindirizza al Server-Name"
+
+msgid "GUIredirects_help"
+msgstr ""
+"Il Webserver apache dove la GUI e' eseguita (AdmServ) ha un certificato SSL "
+"separato. Se qualcuno accede alla GUI tramite HTTPS usando il dominio di un "
+"sito virtuale (esempio: https://www.site.com:81/login), allora il browser "
+"mostrera' un avviso dicendo che il certificato SSL del server non "
+"corrisponde al dominio. Per evitare che questo accada puoi spuntare questa "
+"casella e tutti gli accesso HTTPS alla GUI verranno reindirizzati al FQDN "
+"del server. Nota: Usare solo se il FQDN del server ha un record DNS valido, "
+"o la GUI potrebbe risultare irraggiungibile."
+
+msgid "HTTP"
+msgstr "Solo HTTP"
+
+msgid "HTTPS"
+msgstr "Solo HTTPS"
+
+msgid "cap_serverServerDesktop"
+msgstr "Impostazioni Server Desktop"
+
+msgid "description"
+msgstr "Clicca qui per controllare il modo di operazione del server desktop."
+
+msgid "desktop_control"
+msgstr "Server Desktop"
+
+msgid "desktop_control_settings"
+msgstr "Controllo [[base-backupcontrol.desktop_control]]"
+
+msgid "lock_desktop"
+msgstr "Blocca Server Desktop"
+
+msgid "lock_desktop_failed"
+msgstr "Errore nel cambiare lo stato di [[base-backupcontrol.desktop_control]]"
+
+msgid "lock_desktop_help"
+msgstr ""
+"Questa opzione da l'abilita' di creare interfacce amministrative (Server "
+"Desktop) sola lettura."
+
+msgid "lock_failed"
+msgstr "Il bloccaggio di [[base-backupcontrol.desktop_control]] e' fallito."
+
+msgid "locked"
+msgstr "Il Server Desktop e' stato bloccato da un amministratore."
+
+msgid "unlock_failed"
+msgstr "Lo Sbloccaggio del [[base-backupcontrol.desktop_control]] e' fallito."
+
+## CSRF:
+
+msgid "csrf_protection"
+msgstr "Protezione CSRF"
+
+msgid "csrf_protection_help"
+msgstr "Cross-Site Request Forgery (CSRF) è un attacco che costringe un utente finale ad eseguire azioni indesiderate su un'applicazione web in cui è attualmente autenticato. Con un piccolo aiuto di social engineering (come l'invio di un link via e-mail o chat), un aggressore può ingannare gli utenti di un'applicazione web per fargli eseguire azioni a scelta dell'aggressore. Se la vittima è un utente normale, un attacco CSRF riuscito può costringere l'utente a eseguire richieste di modifica dello stato come la modifica delle impostazioni, l'esecuzione di transazioni all'interno della sessione autenticata e così via. Se la vittima è un conto amministrativo, il CSRF può potenzialmente compromettere l'intera applicazione web. Quando la protezione CSRF è attivata nell'interfaccia grafica, vengono attivate misure di protezione aggiuntive che hanno lo scopo di prevenire o limitare la portata di tali attacchi. Ciò avviene inserendo un campo CSRF nascosto in tutte le pagine dell'interfaccia grafica che contiene un token aggiuntivo con scadenza fissa. Su tutte le transazioni questo token CSRF nascosto viene controllato per verificarne la validità. Se si tenta di effettuare una transazione con un token CSRF non valido, la transazione non viene eseguita e viene mostrato un messaggio di errore."
+
+msgid "csrf_expire"
+msgstr "Scadenza del token CSRF"
+
+msgid "csrf_expire_help"
+msgstr "Questo è il tempo massimo in secondi in cui un token CSRF è valido. Predefinito: 7200 (120 minuti). Un periodo di validità più breve è più sicuro."
+
+msgid "csrf_regenerate"
+msgstr "CSRF monouso"
+
+msgid "csrf_regenerate_help"
+msgstr "Se si attiva questa funzione, il token CSRF cambia ogni volta che si apre una nuova pagina GUI. Anche se questo è il metodo più sicuro, ha anche dei lati negativi: Non è più consigliato avere diverse pagine GUI aperte in più schede o finestre del browser. Poiché ogni pagina GUI visitata in una scheda o browser invalida automaticamente il token CSRF in tutte le altre schede o finestre del browser. Per la massima sicurezza si dovrebbe abilitare questa funzione."
+
+#
+### DDOS protection:
+#
+
+msgid "ddos_protection"
+msgstr "Protezione brute force della GUI"
+
+msgid "ddos_protection_help"
+msgstr "Se l'opzione è attivata, il modulo di accesso alla GUI è protetto dai tentativi di accesso brute force. I tentativi di accesso non validi vengono registrati in base all'indirizzo IP dell'utente. Se un indirizzo IP fallisce ripetutamente l'autenticazione corretta, gli viene impedito di utilizzare il modulo di accesso fino alla scadenza del blocco."
+
+msgid "ddos_attempts"
+msgstr "Tentativi falliti"
+
+msgid "ddos_attempts_help"
+msgstr "I tentativi falliti definiscono il numero di tentativi falliti consentiti in un determinato intervallo di tempo, fino a quando l'IP in questione non viene bloccato dall'utilizzo del modulo di accesso alla GUI."
+
+msgid "ddos_window"
+msgstr "Periodo di tempo"
+
+msgid "ddos_window_help"
+msgstr "L'intervallo di tempo determina per quanti secondi la GUI tiene traccia dei tentativi di accesso da parte di singoli indirizzi IP. In caso di ripetuti tentativi di accesso falliti nell'arco di tempo specificato dallo stesso indirizzo IP, l'indirizzo IP in questione viene bloccato."
+
+msgid "ddos_expire"
+msgstr "Tempo di divieto"
+
+msgid "ddos_expire_help"
+msgstr "Il tempo di divieto specifica quanti secondi devono trascorrere senza ulteriori tentativi di accesso falliti prima che un indirizzo IP precedentemente bloccato possa utilizzare nuovamente il modulo di accesso della GUI."
+
+#
+### GUI port and URIs:
+#
+
+msgid "GUI_PORT"
+msgstr "Porta HTTPS GUI"
+
+msgid "GUI_PORT_help"
+msgstr "Specifica la porta HTTPS per accedere alla GUI. La porta predefinita è 81."
+
+msgid "GUI_URLs"
+msgstr "Alias GUI"
+
+msgid "GUI_URLs_help"
+msgstr "Specifica gli alias di Apache che reindirizzano alla pagina di login della GUI. Questo campo non può essere vuoto."
+
+msgid "GUI_PORT_in_use"
+msgstr "La porta GUI specificata è già in uso da un altro servizio. Si prega di scegliere un'altra porta."
+
+msgid "GUI_URLs_minimum_fail"
+msgstr "È necessario specificare almeno un alias di Apache che reindirizza all'interfaccia della GUI."
+

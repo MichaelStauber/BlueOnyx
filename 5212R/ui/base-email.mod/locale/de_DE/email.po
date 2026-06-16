@@ -1,0 +1,737 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "CFaccessDenied"
+msgstr "Zugriff verweigert"
+
+msgid "CFauthNotAllowed"
+msgstr " darf nicht als fungieren "
+
+msgid "CFcolonInHostname"
+msgstr "Doppelpunkt im Hostnamen ist nicht zuässig"
+
+msgid "CFdomainRequired"
+msgstr "Domänenname erforderlich"
+
+msgid "CFinvalidHostname"
+msgstr "Ungültiger Hostname"
+
+msgid "CFinvalidListSyntax"
+msgstr "List:; Syntax unzulässig für Empfängeradressen"
+
+msgid "CFnotAuthenticated"
+msgstr "nicht zugriffsberechtigt"
+
+msgid "CFrealDomainRequired"
+msgstr "Echter Domänenname erforderlich"
+
+msgid "CFrelayDenied"
+msgstr "Weiterleitung abgelehnt. Bitte versuchen Sie, erneut Emails zu empfangen bevor Sie erneut den Postversand versuchen. Oder starten Sie Ihr Email-Programm neu."
+
+msgid "CFrelayDeniedFailed"
+msgstr "Weiterleitung abgelehnt. IP-Adresse konnte nicht aufgelößt werden."
+
+msgid "CFrelayDeniedForged"
+msgstr "Weiterleitung abgelehnt. IP-Adresse möglicherweise gefälscht."
+
+msgid "CFrelayDeniedTemp"
+msgstr "Weiterleitung vorrübergehend abgelehnt. Konnte den PTR (Reverse) Record für die Client-Adresse nicht auflösen."
+
+msgid "CFsenderDomainNoexist"
+msgstr "Domäne des Absenders existiert nicht"
+
+msgid "CFuserAddressRequired"
+msgstr "Benutzeradresse erforderlich"
+
+msgid "IMAP"
+msgstr "IMAP Dienst"
+
+msgid "POP"
+msgstr "POP Dienst"
+
+msgid "SMTP"
+msgstr "SMTP Dienst"
+
+msgid "advanced"
+msgstr "Erweitert"
+
+msgid "advanced_help"
+msgstr "Hier können Sie erweiterte [[base-email.emailSettings]] wie z.B. den Übertragungszeitplan und die maximal erlaubte E-Mail-Größe konfigurieren."
+
+msgid "aliasInUse"
+msgstr "Der E-Mail-Aliasname [[VAR.name]] wird auf diesem System bereits verwendet. Bitte wählen Sie einen anderen Namen aus."
+
+msgid "amEmailGreen"
+msgstr "Der Mailserver funktioniert einwandfrei."
+
+msgid "amEmailNameTag"
+msgstr "Mailserver"
+
+msgid "amEmailRed"
+msgstr "Der Mailserver meldet ein schwerwiegendes Problem."
+
+msgid "amEmailYellow"
+msgstr "Der Mailserver meldet ein Problem."
+
+msgid "amIMAPBadResponse"
+msgstr "Der IMAP-Server reagiert nicht erwartungsgemäß."
+
+msgid "amIMAPDetails"
+msgstr "Status des Internet Message Access Protocol (IMAP) Servers"
+
+msgid "amIMAPNameTag"
+msgstr "IMAP Server"
+
+msgid "amIMAPNotRunning"
+msgstr "Der IMAP-Server läuft nicht und konnte nicht neu gestartet werden. Bitte versuchen Sie, den IMAP-Server manuell neu zu starten."
+
+msgid "amIMAPStatusOK"
+msgstr "Der IMAP-Server funktioniert einwandfrei."
+
+msgid "amPOP3BadResponse"
+msgstr "Der POP-Server reagiert nicht erwartungsgemäß."
+
+msgid "amPOP3Details"
+msgstr "Status des Post Office Protocol (POP) Servers"
+
+msgid "amPOP3NameTag"
+msgstr "POP Server"
+
+msgid "amPOP3NotRunning"
+msgstr "Der POP-Server läuft nicht und konnte nicht neu gestartet werden. Bitte versuchen Sie, den POP-Server manuell neu zu starten."
+
+msgid "amPOP3StatusOK"
+msgstr "Der POP-Server funktioniert einwandfrei."
+
+msgid "amSMTPBadResponse"
+msgstr "Der SMTP-Server reagiert nicht erwartungsgemäß."
+
+msgid "amSMTPDetails"
+msgstr "Status des Simple Mail Transfer Protocol (SMTP) Server "
+
+msgid "amSMTPNameTag"
+msgstr "SMTP-Server"
+
+msgid "amSMTPNotRunning"
+msgstr "Der SMTP-Server läuft nicht und konnte nicht neu gestartet werden. Bitte versuchen Sie, den SMTP-Server manuell neu zu starten."
+
+msgid "amSMTPStatusOK"
+msgstr "Der SMTP-Server funktioniert einwandfrei."
+
+msgid "apopEnabled"
+msgstr "Authentifiziertes POP (APOP)"
+
+msgid "apopEnabled_help"
+msgstr "Authentifiziertes POP (APOP) ist für diesen Benutzer aktiviert."
+
+msgid "apopFullText"
+msgstr "APOP aktivieren"
+
+msgid "apopFullText_help"
+msgstr "Authentifiziertes POP (APOP) aktivieren."
+
+msgid "apopPwRequired"
+msgstr "Die Eingabe eines neuen Passworts ist nötig, um APOP für einen Benutzer zu aktivieren."
+
+msgid "badUser"
+msgstr "Falls die Konfigurationsdateien des Mailservers entfernt oder manuell editiert wurden, dann stellen Sie bitte die Originalversionen wieder her und versuchen Sie es noch einmal."
+
+msgid "bad_blockUserField"
+msgstr "Sie haben eine ungültige Adresse in das Feld [[base-email.blockUserField]] eingetragen. Bitte geben Sie eine korrekt formatierte Email-Adresse ein oder lassen Sie das Feld leer. "
+
+msgid "basic"
+msgstr "Dienste"
+
+msgid "basic_help"
+msgstr "Klicken Sie hier um grundlegende  [[base-email.emailSettings]] vorzunehmen und die einzelnen emailspezifischen Dienste zu aktivieren oder zu deaktivieren."
+
+msgid "blockHostField"
+msgstr "E-Mail von Hosts oder Domänen blockieren"
+
+msgid "blockHostField_help"
+msgstr "Geben Sie die Host- oder Domänennamen ein, denen es nicht gestattet wird, E-Mail an diesen Server zu senden. [[base-email.blockHostField_rule]]"
+
+msgid "blockHostField_rule"
+msgstr "Bitte geben Sie einen Host- oder Domänennamen im richtigen Format ein. Dieses Feld ist normalerweise leer. Gültige Eingaben sind z. B. 'www.BlueOnyx.org' oder 'BlueOnyx.org'."
+
+msgid "blockUserField"
+msgstr "E-Mail von Benutzern blockieren"
+
+msgid "blockUserField_help"
+msgstr "Geben Sie die E-Mail-Adressen von Benutzern ein, denen nicht gestattet wird, E-Mail an diesen Server senden. [[base-email.blockUserField_rule]]"
+
+msgid "blockUserField_rule"
+msgstr "Bitte geben Sie eine E-Mai -Adresse im richtigen Format ein. Dieses Feld ist normalerweise leer. Eine gültige Eingabe ist z. B. 'mustermann@firma.de'"
+
+msgid "cantCreateAlias"
+msgstr "Email-Aliasse für diesen Benutzer wurden nicht angelegt."
+
+msgid "cantEditFile"
+msgstr "Leider trat beim Versuch eine Konfigurationsdatei des Mailservers zu bearbeiten ein Fehler auf. [[base-email.badUser]]"
+
+msgid "cantGetUserInfo"
+msgstr "Die Urlaubsfunktion konnte keine Benutzerinformationen von CCE abrufen."
+
+msgid "could_not_tie_apop"
+msgstr "Leider trat ein Systemfehler auf. [[base-email.badUser]]"
+
+msgid "couldnt_create_args_file"
+msgstr "Leider trat beim Versuch eine Konfigurationsdatei des Mailservers zu bearbeiten ein Fehler auf. [[base-email.badUser]]"
+
+msgid "couldnt_enable_imap_pop"
+msgstr "Der POP und/oder IMAP Server konnte wegen eines Systemfehlers nicht neu gestartet werden. [[base-email.badUser]]"
+
+msgid "couldnt_enable_sendmail"
+msgstr "Der SMTP Server konnte wegen eines Systemfehlers nicht neu gestartet werden.  [[base-email.badUser]]"
+
+msgid "couldnt_make_map"
+msgstr "Beim Versuch die Benutzertabelle des Mailservers neu zu schreiben trat ein Fehler auf. [[base-email.badUser]]"
+
+msgid "couldnt_write_sendmailcf"
+msgstr "Beim Versuch die Konfigurationsdatei des Mailservers zu ändern trat ein Fehler auf. [[base-email.badUser]]"
+
+msgid "duplicateKeys"
+msgstr "Die Mailserver Konfigurationsdatei, die für Zugriffs- und Relayfunktionen zuständig ist, konnte nicht aktualisiert werden. Möglicherweise beinhaltet sie Doubletten von Host- oder Domänen-Namen. Oder es wurde versucht, den selben Host oder Benutzer für das Relaying freizuschalten und ihn gleichzeitig zu blockieren. Beides auf einmal ist nicht zulässig."
+
+msgid "emailServers"
+msgstr "Mailserver"
+
+msgid "emailServers_help"
+msgstr "Klicken Sie hier zur Konfiguration des[[base-email.emailServers]]."
+
+msgid "emailServers_menu"
+msgstr "Email"
+
+msgid "emailServices"
+msgstr "Email-Dienste"
+
+msgid "emailServices_help"
+msgstr "Klicken Sie hier um die [[base-email.emailServices]] zu konfigurieren."
+
+msgid "emailSettings"
+msgstr "Mailserver-Einstellungen"
+
+msgid "enableApop"
+msgstr "APOP aktivieren"
+
+msgid "enableApop_help"
+msgstr "Erlaubt es, APOP für Benutzer zu aktivieren. APOP ist eine sichere Methode der Anmeldung an einem POP3 Server. Nur wenige Email-Programme unterstützen APOP, wie z.B. Fetchmail, KMail oder Eudora."
+
+msgid "enableImapField"
+msgstr "IMAP aktivieren"
+
+msgid "enableImapField_help"
+msgstr "Aktivieren oder deaktivieren Sie den Internet Message Access Protocol (IMAP)-Dienst. Wenn Sie diesen Dienst aktivieren, können Benutzer unter Einsatz von E-Mail-Clients, die IMAP unterstützen, E-Mail von diesem Server abrufen. Mit IMAP können Benutzer E-Mail auf dem Server speichern. Dabei ist jedoch kontinuierlicher Zugriff auf den Server erforderlich, während der Benutzer an seinen E-Mails arbeitet."
+
+msgid "enableImapsField"
+msgstr "IMAPS aktivieren"
+
+msgid "enableImapsField_help"
+msgstr "Aktivieren oder deaktivieren Sie den IMAPS-Server mit TLS/SSL Verschlüsselung. Wenn Sie diesen Dienst aktivieren, können Benutzer unter Einsatz von E-Mail-Clients, die IMAPS unterstützen, E-Mail von diesem Server abrufen. Mit IMAPS können Benutzer E-Mail auf dem Server speichern. Dabei ist jedoch kontinuierlicher Zugriff auf den Server erforderlich, während der Benutzer an seinen E-Mails arbeitet."
+
+msgid "enablePopField"
+msgstr "POP aktivieren"
+
+msgid "enablePopField_help"
+msgstr "Aktivieren oder deaktivieren Sie den Post Office Protocol (POP)-Server. Wenn Sie diesen Dienst aktivieren, können Benutzer unter Einsatz der meisten E-Mail-Clients E-Mail von diesem Server abrufen."
+
+msgid "enablePopsField"
+msgstr "POPS aktivieren"
+
+msgid "enablePopsField_help"
+msgstr "Aktivieren oder deaktivieren Sie den Post Office Protocol (POP)-Server mit TLS/SSL Unterstützung. Wenn Sie diesen Dienst aktivieren, können Benutzer unter Einsatz der meisten E-Mail-Clients E-Mail von diesem Server abrufen."
+
+msgid "enableSMTPAuthField"
+msgstr "SMTP Auth aktivieren"
+
+msgid "enableSMTPAuthField_help"
+msgstr "Erlaubt die Aktivierung des Dienstes zur SMTP Authentifizierung. Ist dieser Dienst aktiviert, können Benutzer nur noch Emails versenden, wenn Sie sich mit ihrem Benutzernamen und Passwort am Postausgangsserver anmelden. Sie sollten diese Option aktivieren, damit Ihr Server nicht als offenes Relay misbraucht wird."
+
+msgid "enableSMTPSField"
+msgstr "SMTPS Server aktivieren"
+
+msgid "enableSMTPSField_help"
+msgstr "Erlaubt die Aktivierung des SMTP Servers mit SSL-Unterstützung."
+
+msgid "enableServersField"
+msgstr "SMTP Server aktivieren"
+
+msgid "enableServersField_help"
+msgstr "Aktivieren oder deaktivieren Sie den Simple Mail Transfer Protocol (SMTP)-Dienst. Wenn Sie SMTP aktivieren, kann dieser Server als SMTP-Server zum Senden und Empfangen von E-Mail zwischen anderen Servern fungieren. Mit SMTP können Benutzer diesen Server auch zum Senden von E-Mail verwenden."
+
+msgid "enableSubmissionPortField"
+msgstr "Submission Port aktivieren"
+
+msgid "enableSubmissionPortField_help"
+msgstr "Aktiviert den Submission Port (587) für den alternativen Versand von Emails."
+
+msgid "imapConnectRateField"
+msgstr "Anzahl der maximal erlaubten IMAP Verbindungen"
+
+msgid "imapConnectRateField_help"
+msgstr "Anzahl der maximal pro Minute erlaubten IMAP Verbindungen. Zusätzliche Verbindungsanfragen werden bei Erreichen des Limits abgelehnt."
+
+msgid "imapConnectRateField_invalid"
+msgstr "Bitte geben Sie einen Wert ein, der innerhalb des gültigen Bereichs liegt. Der Standardwert ist 1024."
+
+msgid "imapConnectRateField_missing"
+msgstr "[[base-email.imapConnectRateField_invalid]]"
+
+msgid "masqAddressCantBeLocalhost"
+msgstr "Die erzwungene Absenderadresse darf nicht 'localhost' sein."
+
+msgid "masqAddressField"
+msgstr "Erzwungene Absenderadresse"
+
+msgid "masqAddressField_help"
+msgstr "Geben Sie einen Domänen-Namen oder IP-Adresse ein, welche die Absende-Adresse aller Emails, die durch diesen Server laufen, ersetzt. Diese Funktion nennt man auch 'Domain Masquerading'. [[base-email.masqAddressField_rule]]"
+
+msgid "masqAddressField_rule"
+msgstr "Bitte geben Sie eine richtig formatierte IP-Adresse, einen Host- oder einen Domänennamen ein. Per Vorgabe wird dieses Feld leer gelassen. Gültige Eingaben sind z. B. '192.168.1.100', 'www.BlueOnyx.org' oder 'BlueOnyx.org'."
+
+msgid "maxEmailSizeField"
+msgstr "Maximale E-Mail-Größe (MB)"
+
+msgid "maxEmailSizeField_help"
+msgstr "Stellen Sie die maximale Größee der E-Mai Nachrichten ein, die dieser Server senden oder empfangen kann. [[base-email.maxEmailSizeField_rule]]"
+
+msgid "maxEmailSizeField_rule"
+msgstr "Bitte geben Sie eine Ganzzahl größer als '0' ein. Standardmäßig ist dieses Feld leer. Dadurch kann dieser Server E-Mail-Nachrichten jeder Größe senden und empfangen."
+
+msgid "nonExistentUser"
+msgstr "Die Weiterleitung kann nicht aktiviert werden, weil die folgenden lokalen Benutzernamen nicht vorhanden sind: [[VAR.users]]. Bitte entfernen Sie diese Benutzer von der Liste der Weiterleitungsadressen oder erstellen Sie sie, bevor Sie die Weiterleitung aktivieren."
+
+msgid "popConnectRateField"
+msgstr "Maximale Anzahl von POP Verbindungen"
+
+msgid "popConnectRateField_help"
+msgstr "[[base-email.imapConnectRateField_help]]"
+
+msgid "popConnectRateField_invalid"
+msgstr "Bitte geben Sie eine Zahl an, die innerhalb des spezifizierten Bereichs liegt. Der Standardwert ist 80."
+
+msgid "popConnectRateField_missing"
+msgstr "[[base-email.popConnectRateField_invalid]]"
+
+msgid "popRelayField"
+msgstr "POP Authentifiziertes Relaying"
+
+msgid "popRelayField_help"
+msgstr "Markieren Sie diese Option, um SMTP-Versand durch POP-Authentifizierung zu ermöglichen. Ist diese Option markiert, wird jedem Benutzer, der POP erfolgreich zur Überprüfung von E-Mail verwendet, 15 Minuten lang gestattet, mit dem SMTP-Dienst E-Mail zu senden. Diese Funktion ist veraltet und Sie sollten stattdessen SMTP-Auth verwenden."
+
+msgid "queue0"
+msgstr "Sofort"
+
+msgid "queue1440"
+msgstr "Täglich"
+
+msgid "queue15"
+msgstr "Alle 15 Minuten"
+
+msgid "queue30"
+msgstr "Alle 30 Minuten"
+
+msgid "queue360"
+msgstr "Alle 6 Stunden"
+
+msgid "queue60"
+msgstr "Stündlich"
+
+msgid "queueTimeField"
+msgstr "Übertragungszeitplan"
+
+msgid "queueTimeField_help"
+msgstr "Legen Sie fest, wie oft dieser Server versucht, E-Mail aus der Warteschlange zu übertragen. Normalerweise sollte dies auf 'Sofort' stehen, doch dafür benötigen Sie eine permanente Internetanbindung des Servers. Falls Sie keine permanente Internetanbindung des Servers haben, sollten Sie eine der anderen Methoden verwenden."
+
+msgid "receiveField"
+msgstr "Email für folgende Hosts und Domänen empfangen"
+
+msgid "receiveField_help"
+msgstr "Geben Sie die Host- oder Domänennamen ein, für die dieser Server E-Mails empfangen soll. [[base-email.receiveField_rule]]"
+
+msgid "receiveField_rule"
+msgstr "Bitte geben Sie einen Host- oder Domänennamen im richtigen Format ein. Der Vorgabewert ist der vollqualifizierte Domänenname Ihres Servers. Gültige Eingaben sind z. B. 'www.BlueOnyx.org' oder 'BlueOnyx.org'."
+
+msgid "relayField"
+msgstr "E-Mail von Hosts/Domänen/IP-Adressen weiterleiten"
+
+msgid "relayField_help"
+msgstr "Geben Sie die vollqualifizierten Domänennamen, IP-Adressen oder Hostnamen ein, denen es erlaubt wird, ausgehende Emails über Ihren Mailserver zu verschicken. [[base-email.relayField_rule]]"
+
+msgid "relayField_rule"
+msgstr "Geben Sie eine Liste der IP-Adressen, Host- und Domänennamen ein, denen gestattet wird, E-Mails über diesen Server zu verschicken. Netzwerke können mit Nullen angegeben werden. Um z. B. das Weiterleiten für das Netzwerk '192.168.0.0' mit der Subnetzmaske '255.255.0.0' zu ermöglichen, geben Sie die Adresse '192.168.0.0' an."
+
+msgid "smartRelayField"
+msgstr "Smart Relay Server"
+
+msgid "smartRelayField_help"
+msgstr "Geben Sie den vollqualifizierten Domänennamen eines Mailservers ein, über den alle ausgehenden E-Mail-Nachrichten geleitet werden."
+
+msgid "smartRelayField_rule"
+msgstr "Bitte geben Sie einen vollqualifizierten Domänennamen im richtigen Format ein. Per Vorgabe wird dieses Feld leer gelassen. Eine gültige Eingabe ist z. B. 'BlueOnyx.org'."
+
+msgid "userEmail"
+msgstr "Email-Einstellungen für Benutzer"
+
+msgid "vacationSubject"
+msgstr "Automatische Antwort von"
+
+msgid "amSMTPAuthBadResponse"
+msgstr "Der SMTP-Auth Server gab eine unerwartete Rückantwort."
+
+msgid "amSMTPAuthDetails"
+msgstr "SMTP-Auth Server Status"
+
+msgid "amSMTPAuthNameTag"
+msgstr "SMTP-Auth Server"
+
+msgid "amSMTPAuthNotRunning"
+msgstr "Der SMTP-Auth Server läuft nicht und konnte nicht neu gestartet werden. Bitte versuchen Sie, den SMTP-Auth Server manuell neu zu starten."
+
+msgid "amSMTPAuthStatusOK"
+msgstr "Der SMTP-Auth Server funktioniert einwandfrei."
+
+msgid "ampopRelayBadResponse"
+msgstr "Der POP Authentifiziertes Relaying Server gab eine unerwartete Rückantwort."
+
+msgid "ampopRelayDetails"
+msgstr "POP Authenticated Relaying Status"
+
+msgid "ampopRelayNameTag"
+msgstr "POP Authenticated Relaying Dienst"
+
+msgid "ampopRelayNotRunning"
+msgstr "Der POP Authenticated Relaying Dienst läuft nicht und konnte nicht neu gestartet werden. Bitte versuchen Sie, den POP Authenticated Relaying Dienst manuell neu zu starten."
+
+msgid "ampopRelayStatusOK"
+msgstr "Der POP Authenticated Relaying Server funktioniert einwandfrei."
+
+msgid "mx"
+msgstr "Sekundärer Mailserver"
+
+msgid "mx_help"
+msgstr "Klicken Sie hier um einen sekundären Mailserver zu konfigurieren."
+
+msgid "mx2List"
+msgstr "Liste sekundärer Mailserver"
+
+msgid "addmx_help"
+msgstr "Hier können neue sekundäre Maildomänen hinzugefügt werden."
+
+msgid "secondaryDomain"
+msgstr "Sekundäre Dienste"
+
+msgid "secondaryDomain_help"
+msgstr "Dies ist eine Liste von Domänen, welche sekundäre Mail-Dienste aktiviert haben."
+
+msgid "secondarySettings"
+msgstr "Sekundäre Einstellungen"
+
+msgid "domainField"
+msgstr "Domänen-Name"
+
+msgid "domainField_help"
+msgstr "Geben Sie den Domänen-Namen ein, welcher sekundäre Mail-Dienste bekommen soll."
+
+msgid "maptoField"
+msgstr "Mail-Server"
+
+msgid "maptoField_help"
+msgstr "Geben Sie den primären Namen des Mailservers für diese Domäne ein."
+
+msgid "domainExists_in_relay_error"
+msgstr "Dieser Domänen-Name wird bereits im Email-Weiterleitungsfeld verwendet."
+
+msgid "domainExists_in_site_error"
+msgstr "Dieser Domänen-Name wird bereits von einer Domäne auf dem Server verwendet."
+
+msgid "domainExists_error"
+msgstr "Dieser Domänen-Name ist bereits in der Rubrik sekundärer Mailserver in Verwendung."
+
+
+msgid "error_writing_sendmail_mc"
+msgstr "Es konnte keine aktualisierte /etc/mail/sendmail.mc geschrieben werden. Bitte überprüfen Sie Ihre sendmail.mc auf Veränderungen. Um auf einen gesicherten Stand zurückzukehren kopieren Sie bitte /usr/sausalito/configs/sendmail/sendmail.mc nach /etc/mail/sendmail.mc um und versuchen Sie es dann erneut."
+
+msgid "maxRecipientsPerMessageField"
+msgstr "Maximale Empfänger pro Nachricht"
+
+msgid "maxRecipientsPerMessageField_help"
+msgstr "Legt fest, wie viele Empfänger die einer E-Mail maximal haben darf. Wenn E-Mails mehr Empfänger haben, als hier angegeben, dann wird der Versand der E-Mailabgelehnt."
+
+msgid "delayChecksField"
+msgstr "delay_checks aktivieren"
+
+msgid "delayChecksField_help"
+msgstr "delay_checks ändert die Reihenfolge, in der Sendmail überprüft, ob eine Verbindung korrekt ist oder nicht. Diese Option ist nützlich, wenn Sie RBL-Blacklisten verwenden."
+
+msgid "addmx"
+msgstr "Hinzufügen"
+
+msgid "mxRemoveEntry"
+msgstr "Sind Sie sicher, dass Sie den [[VAR.mxHost]] MX-Server-Datensatz löschen wollen?" 
+
+msgid "blacklist"
+msgstr "Blacklisting"
+
+msgid "blacklist_help"
+msgstr "Klicken Sie hier, um DNSBLs Blacklisting an die E-Mail-Dienst hinzuzufügen."
+
+msgid "blackList"
+msgstr "Blacklisten"
+
+msgid "blackList_help"
+msgstr "Dies sind Listen der verschiedenen Hosts, die als RBLs verwendet werden. Zum Beispiel 'zen.spamhaus.org'."
+
+msgid "activated"
+msgstr "Status"
+
+msgid "activated_help"
+msgstr "Hier können Sie sehen on ein Blacklist-Eintrag aktiv ist oder nicht."
+
+msgid "blacklistHostExists_error"
+msgstr "Diese Blackliste wurde bereits hinzugefügt. Bitte ändern Sie den Hostnamen auf etwas anderes."
+
+msgid "blacklistRemoveEntry"
+msgstr "Sind Sie sicher, dass Sie die Blacklisten-Dienst [[VAR.blacklistHost]] löschen möchten?"
+
+msgid "blacklistHostField"
+msgstr "Blacklist-Dienst"
+
+msgid "blacklistHostField_help"
+msgstr "Geben Sie die <FQDN> des Blacklisten-Dienstes an, den Sie verwenden möchten. Zum Beispiel 'zen.spamhaus.org.'"
+
+msgid "deferField"
+msgstr "Temporär ablehnen"
+
+msgid "deferField_help"
+msgstr "Wenn Sie dieses Feld markieren, wird der Mail-Server bei temporärem Ausfall des Blacklisten-Services die Email-Annahme zu verweigern. Das Standardverhalten des E-Mail-Servers ist es, Emails auch dann anzunehmen, wenn der Blacklisten-Dienst nicht erreichbar ist."
+
+msgid "activeField"
+msgstr "Dienst aktivieren"
+
+msgid "activeField_help"
+msgstr "Wählen Sie diese Option, wenn Sie diese Blacklist-Dienst aktivieren möchten."
+
+msgid "enableZpushField"
+msgstr "Enable Z-Push"
+
+msgid "enableZpushField_help"
+msgstr "Z-push is an open-source application to synchronize ActiveSync compatible PDAs and mobile phones, which allows them access to emails. For more information about how to use Z-Push see: http://www.blueonyx.it/index.php?page=z-push"
+
+msgid "cap_serverEmail"
+msgstr "E-Mail-Server-Einstellungen"
+
+###
+
+msgid "hideHeadersField"
+msgstr "Frühere Header entfernen"
+
+msgid "hideHeadersField_help"
+msgstr "Wenn dieses Kontrollkästchen aktiviert ist, wird dieser Mail-Server alle vorherigen 'received'-Header in E-Mails verstecken wenn er E-Mails an andere Server ausliefert. Dem Empfänger wird dann vorgegaukelt, dass die E-Mails ihren Ursprung auf diesem Mail-Server haben und vorher durch keine anderen Relais gelaufen sind. Dies hat folgende Vorteile: Es verbirgt die heimische IP-Adresse des Mail-Absenders oder autorisierter E-Mail-Server, die über Ihren Mail-Server E-Mails verschicken dürfen. Auf der anderen Seite: Wenn Ihr Server zum Versand von SPAM verwendet wird, dann erschweren die nun fehlenden vorherigen Header die Suche nach dem wahren Ursprung der E-Mails. Verwenden Sie diese Funktion daher mit entsprechender Vorsicht. Üblicherweise ist diese Funktion nicht aktiviert."
+
+### Postfix:
+
+msgid "MTA"
+msgstr "SMTP-Server"
+
+msgid "MTA_help"
+msgstr "Hier können Sie wählen, welchen SMTP-Server Sie verwenden möchten: Sendmail oder Postfix. Postfix ist moderner und unterstützt Server Name Indication (SNI). Für beste Leistung und Benutzerfreundlichkeit sollten Sie Postfix wählen."
+
+### Mailbox format:
+
+msgid "Mailbox_header"
+msgstr "Standard Postfach-Format"
+
+msgid "Mailbox"
+msgstr "Postfach-Format"
+
+msgid "Mailbox_help"
+msgstr "Mit diesem Schalter können Sie das Standardformat aller Postfächer auf diesem Server ändern. Verfügbare Formate sind: Mbox (Standardformat) und Maildir. Bitte beachten Sie, dass eine Änderung des Postfach-Formates keine bestehenden Postfächer in das neue Format konvertiert. Die Konvertierung muss separat durchgeführt werden. Ansonsten sind alle E-Mails in den alten Postfächern nicht mehr über POP3 oder IMAP zugänglich."
+
+msgid "MBCONVERT"
+msgstr "Postfächer konvertieren"
+
+msgid "MBCONVERT_help"
+msgstr "Wenn dieses Kontrollkästchen angekreuzt ist, wird ein Konvertierungsprozess aller Postfächer ausgeführt, die derzeit E-Mails beinhalten. Alle E-Mails in bestehenden Postfächern werden in das im Feld Postfach-Format angezeigte Format konvertiert. Bitte beachten Sie: Wenn Sie viele Postfächer oder sehr große Postfächer haben, führen Sie stattdessen das Skript /usr/sausalito/sbin/mbox_maildir_convert.pl manuell als root in SSH aus. Bitte denken Sie daran, dass Mailbox-Konvertierungen nicht ohne Probleme sind. Maildir-zu-Mbox-Konvertierungen kopieren alle Nachrichten aus Unterordnern zurück in den Posteingang. Selbst unter besten Bedingungen besteht die Gefahr, dass Nachrichten verloren gehen oder beschädigt werden. Bitte benutzen Sie daher diese Option auf eigenes Risiko."
+
+###
+
+msgid "accept_unresolv"
+msgstr "Mail von nicht auflösbaren Domänen akzeptieren"
+
+msgid "accept_unresolv_help"
+msgstr "Diese Funktion ist normalerweise deaktiviert. Wenn sie aktiviert ist, erlaubt sie dem MTA, E-Mails von nicht auflösbaren Domänen zu akzeptieren. Wenn sich Ihr Server in einem internen Netzwerk befindet und/oder E-Mails von Hosts oder Domänen empfangen werden muss, welche nicht über ordnungsgemäße DNS-Einträge verfügen, dann sollten Sie diese Funktion aktivieren."
+
+### OpenDKIM:
+
+msgid "OpenDKIM"
+msgstr "OpenDKIM"
+
+msgid "OpenDKIM_help"
+msgstr "DomainKeys Identified Mail (DKIM) kombiniert mehrere bestehende Anti-Phishing- und Anti-Spam-Methoden, um die Qualität der Klassifizierung und Identifizierung von legitimen E-Mails zu verbessern."
+
+msgid "OpenDKIM_Header"
+msgstr "OpenDKIM-Einstellungen"
+
+msgid "enableOpenDKIM"
+msgstr "OpenDKIM-Dienst"
+
+msgid "enableOpenDKIM_help"
+msgstr "Aktiviert den OpenDKIM-Dienst. DomainKeys Identified Mail (DKIM) kombiniert mehrere bestehende Anti-Phishing- und Anti-Spam-Methoden, um die Qualität der Klassifizierung und Identifizierung legitimer E-Mails zu verbessern. Wenn diese Funktion aktiviert ist, können Sie die GUI verwenden, um DKIM-Schlüssel und DNS-TXT-Einträge für jede Vsite zu konfigurieren, die Sie mit DKIM schützen möchten."
+
+msgid "OpenDKIM_Mode"
+msgstr "OpenDKIM-Modus"
+
+msgid "OpenDKIM_Mode_help"
+msgstr "Wählt den Betriebsmodus aus. Verfügbare Optionen sind Signieren und Verifizieren oder eine Kombination aus beidem. Standardmäßig werden Sign und Verify zusammen verwendet, es sei denn, Sie möchten Ihre Installation nur testen."
+
+msgid "OpenDKIM_SendReports"
+msgstr "Berichte senden"
+
+msgid "OpenDKIM_SendReports_help"
+msgstr "Wenn eine Signaturprüfung fehlschlägt und die Signatur eine Berichtsanforderung enthielt, sendet der Filter einen strukturierten Bericht an diese Adresse, der die zur Reproduktion des Problems erforderlichen Details enthält."
+
+msgid "verify"
+msgstr "Überprüfen"
+
+msgid "sign"
+msgstr "Unterschreiben"
+
+msgid "sign_verify"
+msgstr "Unterschreiben & Prüfen"
+
+msgid "OpenDKIM_enabled"
+msgstr "OpenDKIM aktivieren"
+
+msgid "OpenDKIM_enabled_help"
+msgstr "Dies aktiviert die OpenDKIM-Unterstützung für diese Vsite und erstellt einen DKIM-Schlüssel und einen passenden DNS-TXT-Eintrag. Wenn dieser Server über einen integrierten DNS-Server verfügt, wird der DNS-TXT-Eintrag automatisch erstellt. Wenn ein externer DNS-Server verwendet wird, werden die Details für den erforderlichen DNS-TXT-Eintrag stattdessen in der GUI angezeigt."
+
+msgid "DKIMAliases"
+msgstr "DKIM-Aliase"
+
+msgid "DKIMAliases_help"
+msgstr "Hier wird angezeigt, welche E-Mail-Server-Aliase durch OpenDKIM geschützt sind. Standardmäßig sind dies alle angegebenen E-Mail-Server-Aliase dieser Vsite."
+
+msgid "DKIM_HN_Field"
+msgstr "Hostname des DNS-TXT-Eintrags"
+
+msgid "DKIM_HN_Field_help"
+msgstr "Zeigt den Hostnamen des DKIM DNS TXT-Eintrags an."
+
+msgid "DKIM_DOM_Field"
+msgstr "Domänenname des DNS TXT-Eintrags"
+
+msgid "DKIM_DOM_Field_help"
+msgstr "Zeigt den Domänennamen des DKIM-DNS-TXT-Eintrags an."
+
+msgid "DKIM_TXT"
+msgstr "TXT-Eintrag"
+
+msgid "DKIM_TXT_help"
+msgstr "Zeigt den Wert des DKIM DNS TXT-Records an. Wenn Sie einen externen DNS-Server anstelle des in diesem BlueOnyx-Server eingebauten verwenden, dann ist dies die Information, die Sie dort veröffentlichen möchten."
+
+msgid "DKIM_TXT_PRESENT"
+msgstr "DKIM TXT Record present"
+
+msgid "DKIM_TXT_PRESENT_help"
+msgstr "This field shows if a correct DKIM TXT DNS record is present for this Vsite."
+
+msgid "create_txt"
+msgstr "TXT-Eintrag erstellen"
+
+msgid "create_txt_help"
+msgstr "Wenn kein DKIM TXT DNS-Eintrag für diese Vsite vorhanden ist, können Sie diese Checkbox ankreuzen und speichern. Es wird dann ein korrekter DKIM TXT DNS-Eintrag erstellt."
+
+msgid "multiple_identical_dkim_records_present"
+msgstr "Mögliches Problem entdeckt: Es scheint, dass Sie mehrere DNS TXT Records für denselben DKIM Host- und Domainnamen haben. Bitte überarbeiten Sie Ihre DNS-Einträge."
+
+## OpenDKIM AM related stuff:
+
+msgid "amOpenDKIMBadResponse"
+msgstr "Der OpenDKIM-Server hat eine unerwartete Antwort gegeben."
+
+msgid "amOpenDKIMDetails"
+msgstr "Details zum OpenDKIM-Dienst"
+
+msgid "amOpenDKIMNameTag"
+msgstr "OpenDKIM-Dienst"
+
+msgid "amOpenDKIMNotRunning"
+msgstr "Der OpenDKIM-Dienst läuft nicht und konnte nicht neu gestartet werden. Versuchen Sie im [[base-apache.amAdmservNameTag]], den OpenDKIM-Dienst aus- und wieder einzuschalten, um zu sehen, ob das Problem dadurch behoben wird."
+
+msgid "amOpenDKIMStatusOK"
+msgstr "Der OpenDKIM-Dienst arbeitet normal."
+
+###
+
+msgid "EmailSecurity_header"
+msgstr "E-Mail-Sicherheitseinstellungen"
+
+msgid "authsend_protect"
+msgstr "Fälschung der Absenderidentität verhindern"
+
+msgid "authsend_protect_help"
+msgstr "Verhindert, dass authentifizierte Benutzer E-Mails mit Adressen senden, die ihnen nicht gehören. Postfix prüft, ob die 'MAIL FROM'-Adresse dem authentifizierten Benutzer oder dessen Aliasen gehört und blockiert gefälschte oder unautorisierte Absenderadressen."
+
+###
+
+msgid "user_allow_sender_spoof"
+msgstr "Erlaubt ausgewählten authentifizierten Benutzern, E-Mails mit Adressen zu senden, die ihnen nicht gehören."
+
+### Improved Smart Relay handling:
+
+msgid "enforced"
+msgstr "Erzwungen (TLS erforderlich)"
+
+msgid "optional"
+msgstr "Optional (TLS verwenden, falls verfügbar)"
+
+msgid "insecure"
+msgstr "Unsicher (kein TLS)"
+
+msgid "no_smartRelay_set"
+msgstr "Smart Relay ist aktiviert, aber es wurde kein Smart-Relay-Server angegeben."
+
+msgid "no_smartRelay_port"
+msgstr "Für Smart Relay muss ein gültiger Port angegeben werden."
+
+msgid "smartRelay_credentials_missing"
+msgstr "Unvollständige Zugangsdaten. Entweder müssen sowohl Login als auch Passwort für das Smart Relay angegeben werden, oder beide Felder müssen leer bleiben."
+
+msgid "enable_relay"
+msgstr "Smart Relay aktivieren"
+
+msgid "enable_relay_help"
+msgstr "Wenn aktiviert, werden alle ausgehenden E-Mails über einen externen SMTP-Relay-Server gesendet, anstatt direkt zugestellt zu werden."
+
+msgid "relay_port"
+msgstr "Port"
+
+msgid "relay_port_help"
+msgstr "Der TCP-Port, der für die Verbindung zum Smart-Relay-Server verwendet wird. Übliche Werte sind 587 (STARTTLS) oder 465 (implizites TLS)."
+
+msgid "relay_user"
+msgstr "Relay-Benutzername"
+
+msgid "relay_user_help"
+msgstr "Optionaler Benutzername für die SMTP-Authentifizierung am Smart-Relay-Server. Leer lassen, wenn keine Authentifizierung erforderlich ist."
+
+msgid "relay_pass"
+msgstr "Relay-Passwort"
+
+msgid "relay_pass_help"
+msgstr "Passwort für die SMTP-Authentifizierung am Smart-Relay-Server. Muss zusammen mit dem Benutzernamen angegeben werden."
+
+msgid "relay_security"
+msgstr "TLS-Einstellungen"
+
+msgid "relay_security_help"
+msgstr "Legt fest, wie TLS bei der Verbindung zum Smart-Relay-Server verwendet wird. Erzwungen verlangt eine sichere TLS-Verbindung, Optional nutzt TLS wenn verfügbar, und Unsicher deaktiviert TLS vollständig."
+

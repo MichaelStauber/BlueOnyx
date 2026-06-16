@@ -1,0 +1,112 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2025-01-01 00:00+0000\n"
+"PO-Revision-Date: 2025-01-01 00:00+0000\n"
+"Last-Translator: Michael Stauber <mstauber@blueonyx.it>\n"
+"Language-Team: Team blueonyx\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+msgid "APImenu"
+msgstr "API"
+
+msgid "APImenu_help"
+msgstr "Configure access to the BlueOnyx API, which enables remote provisioning and management of this server—either via your own API calls or using third-party tools such as WHMCS (https://www.whmcs.com/)."
+
+msgid "apiSettings"
+msgstr "API Settings"
+
+msgid "API_info"
+msgstr "The BlueOnyx API supports remote provisioning of Vsites, Users, and certain server management tasks. API requests are sent over HTTP(S) to the server's AdmServ daemon. A WHMCS integration module is available. See the API documentation at: https://www.blueonyx.it/api-v2-documentation"
+
+msgid "enableServerField"
+msgstr "Enable API"
+
+msgid "enableServerField_help"
+msgstr "The API is always accessible from localhost. To allow access from external sources, you must explicitly authorize those IPs."
+
+msgid "forceHTTPSField"
+msgstr "Force HTTPS"
+
+msgid "forceHTTPSField_help"
+msgstr "Restricts API access to HTTPS connections only for secure communication."
+
+msgid "apiHosts"
+msgstr "Remote IP access"
+
+msgid "apiHosts_help"
+msgstr "Specify the IP addresses (in CIDR notation) that are permitted to access this API. For security, only trusted IP ranges should be allowed."
+
+msgid "listen_port"
+msgstr "Listen Address"
+
+msgid "listen_port_help"
+msgstr "Defines the IP and port on which the API listens. The default is 'localhost:9092'. To allow access from remote systems, change this to '0.0.0.0:9092' (or a more specific IP)."
+
+msgid "securityDesc"
+msgstr "Security Options"
+
+msgid "token_lifetime"
+msgstr "Security Token Lifetime"
+
+msgid "token_lifetime_help"
+msgstr "Sets how long security tokens remain valid for remote clients (default: 300 seconds). Once expired, clients must re-authenticate."
+
+msgid "api_auth_fails"
+msgstr "API Authentication Failures"
+
+msgid "api_auth_fails_help"
+msgstr "Number of failed authentication attempts allowed within the API Ban Time window before temporarily blocking the remote IP."
+
+msgid "api_ban_time"
+msgstr "API Ban Time"
+
+msgid "api_ban_time_help"
+msgstr "Time window (in seconds) during which failed authentication attempts are counted. If the limit is exceeded, the remote IP is temporarily banned."
+
+msgid "loggingDesc"
+msgstr "Logging Options"
+
+msgid "logging"
+msgstr "Logging"
+
+msgid "logging_help"
+msgstr "When enabled, all API accesses and operations will be logged to /var/log/cced-api.log."
+
+msgid "debuglog"
+msgstr "Debug Logging"
+
+msgid "debuglog_help"
+msgstr "Enables verbose logging for troubleshooting and debugging API requests."
+
+msgid "AccessTokenTab"
+msgstr "Client-Secrets"
+
+msgid "CIDR"
+msgstr "CIDR"
+
+msgid "CIDR_help"
+msgstr "CIDR-formatted IP address or subnet allowed to access the API."
+
+msgid "Token"
+msgstr "Client-Secret"
+
+msgid "Token_help"
+msgstr "Authentication token used by the client to access the API. These should be kept confidential."
+
+msgid "basicSettingsTab"
+msgstr "Configuration"
+
+msgid "amDetailsTitle"
+msgstr "CCEd-API Status"
+
+msgid "amStatusOK"
+msgstr "The CCEd-API is operating normally."
+
+msgid "amNotAccepting"
+msgstr "The CCEd-API is not running and could not be restarted. Please restart the service manually with 'systemctl restart cced-api' to see if this corrects the problem."
+
+msgid "amAPINameTag"
+msgstr "CCEd-API"
+

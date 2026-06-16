@@ -1,0 +1,111 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "APImenu"
+msgstr "API"
+
+msgid "APImenu_help"
+msgstr "Configure o acesso à API do BlueOnyx, que permite o provisionamento e a gestão remotos deste servidor — através de chamadas API próprias ou com ferramentas de terceiros como o WHMCS (https://www.whmcs.com/)."
+
+msgid "apiSettings"
+msgstr "Definições da API"
+
+msgid "API_info"
+msgstr "A API do BlueOnyx permite o provisionamento remoto de Vsites, utilizadores e algumas funcionalidades de gestão do servidor. Os pedidos à API são enviados via HTTP(S) para o daemon AdmServ do servidor. Está disponível um módulo de integração com WHMCS. Consulte a documentação: https://www.blueonyx.it/api-v2-documentation"
+
+msgid "enableServerField"
+msgstr "Ativar API"
+
+msgid "enableServerField_help"
+msgstr "A API está sempre acessível a partir do localhost. Para permitir o acesso remoto, é necessário autorizar explicitamente os endereços IP."
+
+msgid "forceHTTPSField"
+msgstr "Forçar HTTPS"
+
+msgid "forceHTTPSField_help"
+msgstr "Restringe o acesso à API apenas a ligações HTTPS, garantindo uma comunicação segura."
+
+msgid "apiHosts"
+msgstr "Acesso remoto por IP"
+
+msgid "apiHosts_help"
+msgstr "Indique os endereços IP (no formato CIDR) autorizados a aceder à API. Por razões de segurança, apenas devem ser autorizadas redes de confiança."
+
+msgid "listen_port"
+msgstr "Endereço de escuta"
+
+msgid "listen_port_help"
+msgstr "Define o endereço IP e a porta onde a API escuta. Por predefinição, é 'localhost:9092'. Para permitir o acesso remoto, altere para '0.0.0.0:9092' (ou outro IP mais específico)."
+
+msgid "securityDesc"
+msgstr "Opções de segurança"
+
+msgid "token_lifetime"
+msgstr "Duração do token de segurança"
+
+msgid "token_lifetime_help"
+msgstr "Define o tempo de validade dos tokens de segurança para clientes remotos (predefinido: 300 segundos). Após expirar, é necessário reautenticar."
+
+msgid "api_auth_fails"
+msgstr "Falhas de autenticação API"
+
+msgid "api_auth_fails_help"
+msgstr "Número máximo de falhas de autenticação permitidas dentro do intervalo de tempo definido em 'Tempo de bloqueio da API', antes de bloquear temporariamente o IP remoto."
+
+msgid "api_ban_time"
+msgstr "Tempo de bloqueio da API"
+
+msgid "api_ban_time_help"
+msgstr "Intervalo de tempo (em segundos) no qual as falhas de autenticação são contabilizadas. Se exceder o limite, o IP remoto será temporariamente bloqueado."
+
+msgid "loggingDesc"
+msgstr "Opções de registo"
+
+msgid "logging"
+msgstr "Registo"
+
+msgid "logging_help"
+msgstr "Se estiver ativado, todos os acessos e operações da API serão registados em /var/log/cced-api.log."
+
+msgid "debuglog"
+msgstr "Registo de depuração"
+
+msgid "debuglog_help"
+msgstr "Ativa um registo mais detalhado, útil para depurar pedidos API."
+
+msgid "AccessTokenTab"
+msgstr "Segredos do cliente"
+
+msgid "CIDR"
+msgstr "CIDR"
+
+msgid "CIDR_help"
+msgstr "Endereço IP ou sub-rede no formato CIDR autorizado a aceder à API."
+
+msgid "Token"
+msgstr "Segredo do cliente"
+
+msgid "Token_help"
+msgstr "Token de autenticação utilizado pelo cliente para aceder à API. Deve ser mantido confidencial."
+
+msgid "basicSettingsTab"
+msgstr "Definições básicas"
+
+msgid "amDetailsTitle"
+msgstr "Estado da CCEd-API"
+
+msgid "amStatusOK"
+msgstr "A CCEd-API está a funcionar normalmente."
+
+msgid "amNotAccepting"
+msgstr "A CCEd-API não está em execução e não pôde ser reiniciada. Reinicie o serviço manualmente com 'systemctl restart cced-api' para verificar se o problema é resolvido."
+
+msgid "amAPINameTag"
+msgstr "CCEd-API"

@@ -1,0 +1,7 @@
+<!-- Author: Michael Stauber mstauber@solarspeed.net -->
+<!-- Copyright 2021-2022, SOLARSPEED.NET. All rights reserved. -->
+
+<CLASS name="System" namespace="DDNS" version="1.0">
+  <PROPERTY name="ddns_enabled" type="boolean" default="0"/>
+  <PROPERTY name="ddns_domains" type="scalar" default=""/>
+</CLASS>

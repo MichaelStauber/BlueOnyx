@@ -1,0 +1,14 @@
+passdb {
+  driver = checkpassword
+  args = /usr/sausalito/bin/blueonyx-auth-maponly
+  result_failure = return-fail
+  result_success = continue
+}
+
+passdb {
+  driver = pam
+}
+
+userdb {
+  driver = passwd
+}

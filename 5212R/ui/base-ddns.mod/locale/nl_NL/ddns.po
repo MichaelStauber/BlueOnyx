@@ -1,0 +1,42 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "menu_system_ddns"
+msgstr "Dynamische DNS"
+
+msgid "menu_system_ddns_help"
+msgstr "Met dit menu kunt u dynamische herconfiguratie van uw DNS-records configureren."
+
+msgid "ddns_header"
+msgstr "Dynamische DNS Instellingen"
+
+msgid "ddns_enabled"
+msgstr "DDNS API inschakelen"
+
+msgid "ddns_enabled_help"
+msgstr "Als je dit selectievakje aanvinkt, zal de URL /ddns/ddnsapi op deze GUI reageren op verzoeken om de hieronder gemarkeerde DNS-records dynamisch bij te werken met het IP-adres van de URL die de API URL heeft aangeroepen. Een voorbeeld script voor zulke update verzoeken kan hier op deze server gevonden worden: /usr/sausalito/sbin/ddns-client.pl"
+
+msgid "ddns_domains"
+msgstr "DDNS Domeinen"
+
+msgid "ddns_domains_help"
+msgstr "Om dynamische DNS updates voor bepaalde domeinen toe te staan, verplaatst u de betreffende domeinen in de onderstaande lijst naar links en slaat u de wijzigingen op. Alle domeinen in de lijst aan de linkerkant zullen het IPv4 IP adres overnemen van de client die de API URL aanroept met de juiste authenticatie."
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Status_help"
+msgstr "Status van het DDNS API verzoek"
+
+msgid "dns_update_disabled"
+msgstr "DDNS Updates zijn uitgeschakeld"
+
+msgid "dns_update_success"
+msgstr "Geselecteerde domein A Records hebben nu dit IP: "

@@ -1,0 +1,10 @@
+<item 
+    id="base_webusage" 
+    label="[[base-sitestats.webusage]]" 
+    description="[[base-sitestats.webusageDescription]]" 
+    url="/sitestats/summaryWeb?group=[[VAR.group]]"
+>
+    <parent id="base_siteusage" order="10">
+        <access require="siteAdmin"/>
+    </parent>
+</item>

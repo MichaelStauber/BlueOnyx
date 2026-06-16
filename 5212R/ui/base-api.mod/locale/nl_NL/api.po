@@ -1,0 +1,111 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "APImenu"
+msgstr "API"
+
+msgid "APImenu_help"
+msgstr "Configureer de toegang tot de BlueOnyx API, die het mogelijk maakt om deze server op afstand te voorzien en te beheren — via je eigen API-aanroepen of met externe tools zoals WHMCS (https://www.whmcs.com/)."
+
+msgid "apiSettings"
+msgstr "API-instellingen"
+
+msgid "API_info"
+msgstr "De BlueOnyx API ondersteunt het op afstand aanmaken van Vsites, gebruikers en bepaalde serverbeheerfuncties. API-verzoeken worden via HTTP(S) verzonden naar de AdmServ-daemon van de server. Er is een integratiemodule beschikbaar voor WHMCS. Raadpleeg de documentatie: https://www.blueonyx.it/api-v2-documentation"
+
+msgid "enableServerField"
+msgstr "API inschakelen"
+
+msgid "enableServerField_help"
+msgstr "De API is altijd toegankelijk vanaf localhost. Om externe toegang toe te staan, moeten IP-adressen expliciet worden geautoriseerd."
+
+msgid "forceHTTPSField"
+msgstr "HTTPS afdwingen"
+
+msgid "forceHTTPSField_help"
+msgstr "Beperkt de API-toegang tot alleen HTTPS-verbindingen voor veilige communicatie."
+
+msgid "apiHosts"
+msgstr "Toegang op afstand via IP"
+
+msgid "apiHosts_help"
+msgstr "Specificeer de IP-adressen (in CIDR-notatie) die toegang mogen krijgen tot deze API. Sta alleen vertrouwde IP-bereiken toe voor de veiligheid."
+
+msgid "listen_port"
+msgstr "Luisteradres"
+
+msgid "listen_port_help"
+msgstr "Definieert het IP-adres en de poort waarop de API luistert. Standaard is dit 'localhost:9092'. Voor externe toegang stel je dit in op bijvoorbeeld '0.0.0.0:9092' (of een specifieker IP-adres)."
+
+msgid "securityDesc"
+msgstr "Beveiligingsopties"
+
+msgid "token_lifetime"
+msgstr "Levensduur beveiligingstoken"
+
+msgid "token_lifetime_help"
+msgstr "Bepaalt hoe lang beveiligingstokens geldig zijn voor externe clients (standaard: 300 seconden). Na verloop moet opnieuw worden geverifieerd."
+
+msgid "api_auth_fails"
+msgstr "Mislukte API-authenticaties"
+
+msgid "api_auth_fails_help"
+msgstr "Aantal mislukte pogingen toegestaan binnen het tijdsvenster van de API-blokkering voordat het externe IP tijdelijk wordt geblokkeerd."
+
+msgid "api_ban_time"
+msgstr "API-blokkeringstijd"
+
+msgid "api_ban_time_help"
+msgstr "Tijdsvenster (in seconden) waarin mislukte authenticaties worden bijgehouden. Als het limiet wordt overschreden, wordt het externe IP tijdelijk geblokkeerd."
+
+msgid "loggingDesc"
+msgstr "Logboekinstellingen"
+
+msgid "logging"
+msgstr "Logging"
+
+msgid "logging_help"
+msgstr "Als logging is ingeschakeld, worden alle API-toegangen en -transacties opgeslagen in /var/log/cced-api.log."
+
+msgid "debuglog"
+msgstr "Debug-logging"
+
+msgid "debuglog_help"
+msgstr "Schakelt gedetailleerde logging in voor foutopsporing en debugging van API-verzoeken."
+
+msgid "AccessTokenTab"
+msgstr "Clientgeheimen"
+
+msgid "CIDR"
+msgstr "CIDR"
+
+msgid "CIDR_help"
+msgstr "CIDR-geformatteerd IP-adres of subnet dat toegang heeft tot de API."
+
+msgid "Token"
+msgstr "Clientgeheim"
+
+msgid "Token_help"
+msgstr "Authenticatietoken dat door de client wordt gebruikt om toegang te krijgen tot de API. Houd dit vertrouwelijk."
+
+msgid "basicSettingsTab"
+msgstr "Basisinstellingen"
+
+msgid "amDetailsTitle"
+msgstr "CCEd-API-status"
+
+msgid "amStatusOK"
+msgstr "De CCEd-API werkt normaal."
+
+msgid "amNotAccepting"
+msgstr "De CCEd-API draait niet en kon niet opnieuw worden gestart. Herstart de service handmatig met 'systemctl restart cced-api' om te controleren of het probleem is opgelost."
+
+msgid "amAPINameTag"
+msgstr "CCEd-API"

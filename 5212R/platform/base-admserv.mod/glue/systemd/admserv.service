@@ -1,0 +1,36 @@
+# See admserv.service(8) for more information on using the admserv service.
+
+# Modifying this file in-place is not recommended, because changes
+# will be overwritten during package upgrades.  To customize the
+# behaviour, run "systemctl edit admserv" to create an override unit.
+
+# For example, to pass additional options (such as -D definitions) to
+# the admserv binary at startup, create an override unit (as is done by
+# systemctl edit) and enter the following:
+
+#	[Service]
+#	Environment=OPTIONS=-DMY_DEFINE
+
+[Unit]
+Description=The Apache AdmServ Server
+Wants=admserv-init.service
+After=network.target remote-fs.target nss-lookup.target admserv-init.service
+Documentation=man:admserv.service(8)
+
+[Service]
+#Type=notify
+Type=forking
+Environment=LANG=C
+
+ExecStart=/bin/bash -c '/usr/sausalito/bin/admserv_helper.sh ; /usr/sbin/httpd.admsrv -f /etc/admserv/conf/httpd.conf'
+ExecReload=/bin/bash -c '/usr/sausalito/bin/admserv_helper.sh ; /usr/sbin/httpd.admsrv -f /etc/admserv/conf/httpd.conf -k graceful'
+# Send SIGWINCH for graceful stop
+KillSignal=SIGWINCH
+KillMode=mixed
+PrivateTmp=true
+OOMPolicy=continue
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+

@@ -1,0 +1,37 @@
+<!--
+    Copyright 2001 Sun Microsystems, Inc.  All rights reserved.
+    $Id: copy.xml,v 1.1 2001/11/08 21:21:50 pbaltz Exp $
+-->
+
+<program name="/usr/sausalito/sbin/copy.pl">
+    <capability requires="systemAdministrator" user="root"/>
+</program>
+
+<program name="/usr/sbin/ip">
+    <capability requires="systemAdministrator" user="root"/>
+</program>
+
+<program name="/usr/bin/grep">
+    <capability requires="systemAdministrator" user="root"/>
+</program>
+
+<program name="/usr/bin/awk">
+    <capability requires="systemAdministrator" user="root"/>
+</program>
+
+<program name="/usr/bin/cut">
+    <capability requires="systemAdministrator" user="root"/>
+</program>
+
+<program name="/usr/bin/head">
+    <capability requires="systemAdministrator" user="root"/>
+</program>
+
+<program name="/usr/bin/nmcli">
+    <capability requires="systemAdministrator" user="root"/>
+</program>
+
+<program name="/usr/sbin/ifconfig">
+    <capability requires="systemAdministrator" user="root"/>
+</program>
+

@@ -1,0 +1,135 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "desktop_control"
+msgstr "サーバデスクトップ"
+
+msgid "description"
+msgstr "サーバデスクトップの操作モードを制御できます。"
+
+# UI menu
+
+msgid "desktop_control_settings"
+msgstr "[[base-backupcontrol.desktop_control]] の制御"
+
+msgid "lock_desktop"
+msgstr "サーバデスクトップをロックする"
+
+msgid "lock_desktop_help"
+msgstr "このオプションを選ぶと、管理ユーザインターフェイス (サーバデスクトップ) が読み取り専用になります。"
+ 
+msgid "lock_desktop_failed"
+msgstr "[[base-backupcontrol.desktop_control]] の状態を変更できませんでした。"
+ 
+msgid "lock_failed"
+msgstr "[[base-backupcontrol.desktop_control]] をロックできませんでした。"
+ 
+msgid "unlock_failed"
+msgstr "[[base-backupcontrol.desktop_control]] をアンロックできませんでした。"
+
+msgid "locked"
+msgstr "サーバデスクトップは、サーバ管理者によってロックされています。"
+
+msgid "cap_serverServerDesktop"
+msgstr "サーバ·デスクトップの設定"
+
+###
+
+msgid "GUIaccessType"
+msgstr "GUIアクセスプロトコル"
+
+msgid "GUIaccessType_help"
+msgstr "これは、プロトコルは、GUIへのアクセスを許可するかを定義します。あなたがHTTPとHTTPSの両方のアクセスを許可する場合は、「[[base-backupcontrol.BOTH]]」に設定します。 HTTPSのみアクセスを許可するには、「[[base-backupcontrol.HTTPS]]」に設定します。それとも、悪い考えである「[[base-backupcontrol.HTTP]]」としてのみ許可されたプロトコル、にそれを設定することができます。推奨：「[[base-backupcontrol.HTTPS]]」。デフォルト： '[[base-backupcontrol.BOTH]]」"
+
+msgid "GUIredirects"
+msgstr "サーバ名へのリダイレクト"
+
+msgid "GUIredirects_help"
+msgstr "GUIは（admservに）で実行されていることをApacheのWebサーバーは、別のSSL証明書を持っています。誰かが仮想サイト（します。https：//www.site.com：81/login）のドメイン名を経由して、HTTPSにより、GUIにアクセスすると、ブラウザは、サーバーのSSL証明書は、ドメイン名と一致しないという警告が表示されます。これを防ぐには、このボックスをチェックすることができますし、HTTPSは、GUIへのアクセスはすべて、サーバーの完全修飾ドメイン名にリダイレクトされます。注意：サーバーの完全修飾ドメイン名が有効なDNSレコードを持っている、またはGUIが到達不能になるかもしれない場合にのみ使用してください。"
+
+msgid "BOTH"
+msgstr "HTTPとHTTPS"
+
+msgid "HTTP"
+msgstr "HTTPのみ"
+
+msgid "HTTPS"
+msgstr "HTTPSのみ"
+
+## CSRF:
+
+msgid "csrf_protection"
+msgstr "CSRF保護"
+
+msgid "csrf_protection_help"
+msgstr "クロスサイトリクエストフォージェリ（CSRF）は、エンドユーザーに、現在認証されているWebアプリケーションで不要なアクションを実行させる攻撃です。ソーシャルエンジニアリング（電子メールやチャットを介したリンクの送信など）の少しの助けを借りて、攻撃者はWebアプリケーションのユーザーをだまして攻撃者が選択したアクションを実行させる可能性があります。被害者が通常のユーザーである場合、CSRF攻撃が成功すると、ユーザーは設定の変更、認証されたセッション内でのトランザクションの実行など、状態変更要求を実行する必要があります。被害者が管理者アカウントである場合、CSRFはWebアプリケーション全体を危険にさらす可能性があります。 GUIでCSRF保護が有効になっている場合、そのような攻撃の範囲を防止または制限するように設計された追加の保護手段が有効になります。これは、有効期限が固定された追加のトークンを含むすべてのGUIページに非表示のCSRFフィールドを挿入することによって行われます。すべてのトランザクションで、この非表示のCSRFトークンの有効性がチェックされます。無効なCSRFトークンを使用したトランザクションが試行された場合、トランザクションは実行されず、代わりにエラーメッセージが表示されます。"
+
+msgid "csrf_expire"
+msgstr "CSRFトークンの有効期限"
+
+msgid "csrf_expire_help"
+msgstr "これは、CSRFトークンが有効である秒単位の最大時間です。デフォルト：7200（120分）。有効期間が短いほど安全です。"
+
+msgid "csrf_regenerate"
+msgstr "シングルユースCSRF"
+
+msgid "csrf_regenerate_help"
+msgstr "この機能を有効にすると、新しいGUIページを開くたびにCSRFトークンが変更されます。これは最も安全な方法ですが、欠点もあります。異なるGUIページを複数のタブまたはブラウザウィンドウで開くことは推奨されなくなりました。 1つのタブまたはブラウザで各GUIページにアクセスすると、他のすべてのブラウザタブまたはウィンドウでCSRFトークンが自動的に無効になるためです。最大限のセキュリティを確保するには、この機能を有効にする必要があります。"
+
+#
+### DDOS protection:
+#
+
+msgid "ddos_protection"
+msgstr "GUIブルートフォース保護"
+
+msgid "ddos_protection_help"
+msgstr "このオプションを有効にすると、GUIログインフォームはブルートフォースログインの試行から保護されます。無効なログイン試行は、ユーザーのIPアドレスに従って記録されます。あるIPアドレスが繰り返し正しく認証できない場合、ロックアウトが切れるまでそのIPアドレスはログインフォームを使用できないようになります。"
+
+msgid "ddos_attempts"
+msgstr "失敗した試行回数"
+
+msgid "ddos_attempts_help"
+msgstr "一定時間内に何回失敗したら、そのIPがGUIログインフォームの使用をブロックされるかを設定します。"
+
+msgid "ddos_window"
+msgstr "タイムフレーム"
+
+msgid "ddos_window_help"
+msgstr "タイムフレームは、GUIが個々のIPアドレスからのログイン試行を何秒追跡するかを決定します。同じIPアドレスから指定時間内に何度もログインに失敗した場合、そのIPアドレスはブロックされます。"
+
+msgid "ddos_expire"
+msgstr "禁止時間"
+
+msgid "ddos_expire_help"
+msgstr "ブロックされたIPアドレスが再びGUIログインフォームを使用できるようになるまでに、さらにログインに失敗することなく何秒経過するかを指定します。"
+
+#
+### GUI port and URIs:
+#
+
+msgid "GUI_PORT"
+msgstr "GUI HTTPS ポート"
+
+msgid "GUI_PORT_help"
+msgstr "GUI へのアクセスに使用する HTTPS ポートを指定します。デフォルトのポートは 81 です。"
+
+msgid "GUI_URLs"
+msgstr "GUI エイリアス"
+
+msgid "GUI_URLs_help"
+msgstr "GUI ログインページにリダイレクトする Apache エイリアスを指定してください。このフィールドは空にできません。"
+
+msgid "GUI_PORT_in_use"
+msgstr "指定された新しい GUI ポートは、他のサービスによって既に使用されています。別のポートを選択してください。"
+
+msgid "GUI_URLs_minimum_fail"
+msgstr "GUI インターフェースにリダイレクトする Apache エイリアスを少なくとも一つ指定する必要があります。"
+

@@ -1,0 +1,31 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2025-01-01 00:00+0000\n"
+"PO-Revision-Date: 2025-01-01 00:00+0000\n"
+"Last-Translator: Michael Stauber <mstauber@blueonyx.it>\n"
+"Language-Team: Team blueonyx\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "cceDown"
+msgstr "The Cobalt Configuration Engine (CCE) is not running. Active Monitor cannot run without the Cobalt Configuration Engine. Try restarting the service 'cced.init' or reboot ther server through SSH. If Active Monitor still does not work, please refer to [[base-sauce-basic.techSupportURL]] for technical support."
+
+msgid "defGreenMsg"
+msgstr "This component is normal"
+
+msgid "defRedMsg"
+msgstr "There is a severe problem with this component"
+
+msgid "defUnknownMsg"
+msgstr "The status is unknown for this component"
+
+msgid "defYellowMsg"
+msgstr "There is a problem with this component"
+
+msgid "emailBody"
+msgstr "Active Monitor has detected recent changes in the state of your server appliance.\nFor more details, please see the Active Monitor section of the Server Desktop.\n\nSummary of changes:"
+
+msgid "emailSubject"
+msgstr "Active Monitor state changes"

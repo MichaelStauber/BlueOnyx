@@ -1,0 +1,1226 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "ClientMaxError"
+msgstr ""
+"Den indtastede værdi for [[base-apache.maxClientsField]] er lavere end "
+"værdien indtastet for [[base-apache.maxSpareField]]. Skønt dette er okay, "
+"kan det have en indflydelse på serverens ydeevne. Det anbefales at værdien "
+"for [[base-apache.maxClientsField]] er større end værdien for [[base-"
+"apache.maxSpareField]]."
+
+msgid "MinMaxError"
+msgstr ""
+"[[base-apache.maxSpareField]] skal være højere end eller lig med [[base-"
+"apache.minSpareField]]."
+
+msgid "amAdmservDetails"
+msgstr "Detaljer om serverskrivebordet"
+
+msgid "amAdmservNameTag"
+msgstr "Serverskrivebord"
+
+msgid "amAdmservNotRunning"
+msgstr ""
+"[[base-apache.amAdmservNameTag]]kører ikke og kunne ikke genstartes. Prøv at "
+"genstarte serveren ved at klikke på knappen [[base-power.reboot]] i menuen "
+"[[base-power.power]] under [[base-alpine.serverconfig]]. Kan du stadig ikke "
+"komme ind på [[base-apache.amAdmservNameTag]], gå da venligst til [[base-"
+"sauce-basic.techSupportURL]] for teknisk support."
+
+msgid "amAdmservStatusOK"
+msgstr "Serverskrivebordet kører normalt."
+
+msgid "amApacheDetails"
+msgstr "Webserverdetaljer"
+
+msgid "amApacheNameTag"
+msgstr "Webserver"
+
+msgid "amNotRunning"
+msgstr ""
+"[[base-apache.amApacheNameTag]] kører ikke og kunne ikke genstartes. Prøv at "
+"genstarte serveren ved at klikke på knappen [[base-power.reboot]] i menuen "
+"[[base-power.power]] under [[base-alpine.serverconfig]]. Kan du stadig ikke "
+"tilgå [[base-apache.amApacheNameTag]], besøg da venligst [[base-sauce-"
+"basic.techSupportURL]] for teknisk support."
+
+msgid "amStatusOK"
+msgstr "Webserveren kører som den skal."
+
+msgid "apache"
+msgstr "Web"
+
+msgid "apacheSettings"
+msgstr "Webindstillinger"
+
+msgid "apache_help"
+msgstr "[[base-apache.apacheSettings]] kan ændres her."
+
+msgid "cantConfigCgi"
+msgstr "Beklager, men CGI adgang kan ikke konfigureres korrekt i øjeblikket."
+
+msgid "cgi"
+msgstr "Aktiver Common Gateway Interface (CGI)"
+
+msgid "cgiAccessField"
+msgstr "CGI adgang"
+
+msgid "cgiAccessField_help"
+msgstr ""
+"Slå CGI adgang til eller fra. Du kan indstille adgangsrettigheder for CGI så "
+"kun serveradministratoren kan tilføje CGI scripts, eller så både "
+"administrator og alle valgte brugere kan tilføje CGI filer."
+
+msgid "cgiAll"
+msgstr "Giv adgang til alle brugere"
+
+msgid "cgiNone"
+msgstr "Tillad ikke adgang for brugere"
+
+msgid "cgiSubset"
+msgstr "Tillad kun adgang for specificerede brugere"
+
+msgid "cgiUsersAllowed"
+msgstr "Brugere med adgang"
+
+msgid "cgiUsersDisallowed"
+msgstr "Brugere uden adgang"
+
+msgid "cgiUsersField"
+msgstr "_"
+
+msgid "cgiUsersField_empty"
+msgstr ""
+"Beklager, men du har ikke valgt nogle brugere med CGI adgang. Vælg venligst "
+"brugere som må bruge CGI eller vælg en anden adgangsindstilling."
+
+msgid "cgi_help"
+msgstr "Aktiver brug af CGI applikationer"
+
+msgid "frontpageEnabled"
+msgstr "Aktiver"
+
+msgid "frontpageField"
+msgstr "FrontPage Server Extentions"
+
+msgid "frontpageField_help"
+msgstr "Slå FrontPage Server Extentions til eller fra."
+
+msgid "hostnameLookupsField"
+msgstr "Lav værtsopslag"
+
+msgid "hostnameLookupsField_help"
+msgstr ""
+"Dette slår værtsnavnsopslag til på webservere, Dette medfører at serveren "
+"foretager et DNS opslag på klientens IP adresse når denne forbinder til "
+"serveren, og gemmer dette i en logfil. Denne værtsnavneinformation er "
+"derefter tilgængelig i webserverens forbrugsrapporter. Uden denne "
+"indstilling vil kun klienternes IP adresser vlive rapporteret. ADVARSEL: Ved "
+"at aktivere denne mulighed forringes serverens ydeevne."
+
+msgid "maxClientsField"
+msgstr "Maksimalt antal simultane forbindelser"
+
+msgid "maxClientsField_empty"
+msgstr ""
+"Specificer venligst det maksimale antal simultane forbindelser til "
+"webserveren."
+
+msgid "maxClientsField_help"
+msgstr ""
+"Dette er det maksimale antal forespørgsler der kan laves mod webserveren på "
+"noget tidspunkt. Hver forbindelse kræver sin egen webserverproces. Hvis "
+"dette tal overskrides vil klienterne modtage en besked om at serveren er "
+"optaget, og blive bedt om at forsøge igen senere. Denne indstilling er smart "
+"hvis man vil kontrollere belastningen på webserveren. [[base-"
+"apache.maxServersRAM]]"
+
+msgid "maxClientsField_invalid"
+msgstr ""
+"Det specificerede maksimale antal simultane forbindelser er ikke gyldigt. "
+"Specificer venligst et cifer inden for den anførte mængde."
+
+msgid "maxServersRAM"
+msgstr ""
+"Det maksimale antal webservere er begrænset af mængden af RAM der er "
+"installeret i serveren."
+
+msgid "maxSpareField"
+msgstr "Maksimalt antal servere i reserve"
+
+msgid "maxSpareField_empty"
+msgstr ""
+"Specificer venligst et maksimalt antalt webservere som skal holdes i "
+"reserve."
+
+msgid "maxSpareField_help"
+msgstr ""
+"Webserveren vil starte yderligere processer, efter behov,for at tage hånd om "
+"yderligere belastning. Dette tal er det maksimale antal processer som "
+"systemet vil starte. Sider med meget trafik bør øge dette tal for at give "
+"bedre ydeevne. [[base-apache.maxServersRAM]]"
+
+msgid "maxSpareField_invalid"
+msgstr "[[base-apache.minSpareField_invalid]]"
+
+msgid "minSpareField"
+msgstr "Minimum antal servere i reserve"
+
+msgid "minSpareField_empty"
+msgstr ""
+"Specificer venligst et tal for det minimale antal servere der skal holdes i "
+"reserve."
+
+msgid "minSpareField_help"
+msgstr ""
+"Når serveren starter, eller ikke foretager sig noget, så er dette det "
+"minimale antal webserverprocesser der er tilgængelige for at håndtere "
+"webforespørgsler. [[base-apache.maxServersRAM]]"
+
+msgid "minSpareField_invalid"
+msgstr ""
+"Det specificerede antal servere i reserve er ikke gyldigt. Indtast venligst "
+"et cifer inden for den givne mængde."
+
+msgid "passwordWebmasterField"
+msgstr "webmaster adgangskode"
+
+msgid "passwordWebmasterField_help"
+msgstr ""
+"Indtast en adgangskode til FrontPage klientens webmasterbruger. Websiden kan "
+"tilgås ved at vælge \"Åbn web\" i FrontPage klienten. Log derefter ind med "
+"brugernavnet webmaster og den adgangskode du specificerer her. Når du er "
+"autoriseret vil du kunne oprette yderligere FrontPage brugere igennem "
+"FrontPage klienten."
+
+msgid "passwordWebmasterField_invalid"
+msgstr ""
+"Beklager, men du har ikke indtastet samme adgangskode i begge felter. Den "
+"samme adgangskode skal tastes i begge felter for at sikre imod tastefejl. "
+"Prøv venligst igen."
+
+msgid "passwordWebmasterField_rule"
+msgstr ""
+"Adgangskoden bør være mellem 3 og 16 karakterer lang. En god adgangskode bør "
+"indeholde minimum 5 karakterer, med en blanding af små og store bogstaver, "
+"samt tal og punkteringstejn. Det bør aldrig være et ord der kan findes i en "
+"ordbog. Adgangskode er følsomme over for forskelle mellem små og store "
+"bogstaver."
+
+msgid "phpI18nName"
+msgstr "PHP Scripting"
+
+msgid "cgiI18nName"
+msgstr "Common Gateway Interface (CGI)"
+
+msgid "ssiI18nName"
+msgstr "Server-Side Includes (SSI)"
+
+msgid "userwebs"
+msgstr "Aktiver brugernes ejede webs"
+
+msgid "userwebs_help"
+msgstr "Hvis aktiveret, så hver bruger har sin egen webhotel, som er adskilt fra det primære websted webspace og kan nås via http://www.example.com/~ brugernavn/. Brugere kan derefter uploade deres egne websider via FTP ind i deres egen /web-mappe. BEMÆRK: Hvis der suphp er aktiveret, bruger ejede webs understøttes ikke længere, og denne funktion vil blive slukket."
+
+msgid "ftpnonadminI18nName"
+msgstr "FTP til ikke-Site aktiveret admins"
+
+msgid "userwebsI18nName"
+msgstr "Bruger ejede webs aktiveret"
+
+msgid "Options_AllField"
+msgstr "Alle"
+
+msgid "Options_AllField_help"
+msgstr "Alle muligheder undtagen MultiViews. (Standard: Fra)"
+
+msgid "Options_FollowSymLinksField"
+msgstr "FollowSymLinks"
+
+msgid "Options_FollowSymLinksField_help"
+msgstr "Serveren vil følge symbolske links. (Standard: Til)"
+
+msgid "Options_IncludesField"
+msgstr "Inkluderer"
+
+msgid "Options_IncludesField_help"
+msgstr "Server-side indeholder er tilladt. (Standard: Til)"
+
+msgid "Options_IndexesField"
+msgstr "Indexes"
+
+msgid "Options_IndexesField_help"
+msgstr "Hvis en URL, som kort til en mappe der anmodes og der er ingen DirectoryIndex (fx index.html) i denne mappe, så vil serveren returnere en formateret liste af biblioteket. (Standard: Til)"
+
+msgid "Options_MultiViewsField"
+msgstr "MultiViews"
+
+msgid "Options_MultiViewsField_help"
+msgstr "Indhold forhandlet MultiViews er tilladt. Anvendes til at vise sider på forskellige sprog baseret på browser locales. (Standard: Til)"
+
+msgid "Options_SymLinksIfOwnerMatchField"
+msgstr "SymLinksIfOwnerMatch"
+
+msgid "Options_SymLinksIfOwnerMatchField_help"
+msgstr "Serveren vil kun følge symbolske links, for hvilken indikativprisen fil eller mappe er ejet af den samme bruger-id, som linket. (Standard: Fra)"
+
+msgid "AllowOverride_AllField"
+msgstr "Alle"
+
+msgid "AllowOverride_AllField_help"
+msgstr "Når serveren finder en. Htaccess fil er det nødvendigt at vide, hvilke direktiver erklæret i denne fil kan tilsidesætte tidligere adgangsoplysninger. Tikkende denne boks vil gøre det muligt at tilsidesætte alle Apache indstillinger (Dangerous! Standard: Fra)"
+
+msgid "AllowOverride_AuthConfigField"
+msgstr "AuthConfig"
+
+msgid "AllowOverride_AuthConfigField_help"
+msgstr "Tillad brug af tilladelsen direktiver (AuthDBMGroupFile, AuthDBMUserFile, AuthGroupFile, AuthName, AuthDigestRealmSeed, AuthType, AuthUserFile, Kræv, etc.). (Standard: Til)"
+
+msgid "AllowOverride_FileInfoField"
+msgstr "Fileinfo"
+
+msgid "AllowOverride_FileInfoField_help"
+msgstr "Tillad brug af direktiverne kontrollerende dokumenttyper (AddEncoding, AddLanguage, AddType, DefaultType, ErrorDocument, LanguagePriority, etc.). (Standard: Fra)"
+
+msgid "AllowOverride_IndexesField"
+msgstr "Indexes"
+
+msgid "AllowOverride_IndexesField_help"
+msgstr "Tillad brug af direktiverne kontrollerende directory indeksering (AddDescription, AddIcon, AddIconByEncoding, AddIconByType, DefaultIcon, DirectoryIndex, FancyIndexing, HeaderName, IndexIgnore, IndexOptions, ReadmeName, etc.). (Standard: Til)"
+
+msgid "AllowOverride_LimitField"
+msgstr "Begræns"
+
+msgid "AllowOverride_LimitField_help"
+msgstr "Tillad brug af direktiverne kontrollerende værtsadgang (Tillad, Afvis og Order). (Standard: Til)"
+
+msgid "AllowOverride_OptionsField"
+msgstr "Optioner"
+
+msgid "AllowOverride_OptionsField_help"
+msgstr "Tillad brug af direktiverne kontrollerer specifikke bibliotek funktioner (Options og XBitHack). (Standard: Fra)"
+
+msgid "DIVIDER_TOP"
+msgstr "General Apache konfiguration:"
+
+msgid "DIVIDER_EXPLANATION"
+msgstr "Apache funktioner til virtuelle site mapper:"
+
+msgid "BlueOnyx_Info_Text"
+msgstr "Et afsnit i /etc/httpd/conf.d/blueonyx.conf definerer, hvilke &#39;Funktioner&#39; og &#39;AllowOverride&#39; funktioner er tilladt for mappen (/home/.sites/), hvor alle virtuelle sites bor. Dette begrænser brugen af .htaccess-filer og andre ting. Disse kan ændres nedenfor."
+
+msgid "DIVIDER_OPTIONS"
+msgstr "Valg:"
+
+msgid "DIVIDER_ALLOWOVERRIDE"
+msgstr "AllowOverride:"
+
+msgid "PHP_enabled"
+msgstr "Aktiver PHP Scripting"
+
+msgid "PHP_enabled_help"
+msgstr "Aktivere brugen af ​​PHP-scripts."
+
+msgid "disabled"
+msgstr "Deaktiveret"
+
+msgid "disabled_help"
+msgstr "[[palette.disabled]]"
+
+msgid "cap_serverHttpd"
+msgstr "Apache-indstillinger"
+
+#
+
+msgid "httpPortField"
+msgstr "HTTP Port"
+
+msgid "httpPortField_help"
+msgstr "Apache Webserver normalt kører på port 80 (HTTP). Hvis du ønsker at ændre det til en anden port, så kan du gøre det her. Dette er kun nyttig, hvis du ønsker at bruge noget andet foran Apache til at filtrere, cache eller omdirigere trafik. Såsom en Varnish Cache, en viderestilling fuldmagt eller en load balancer. Hvis du ændrer denne indstilling, så alle eksisterende virtuelle steder vil blive flyttet til den nye havn og alle nye sites vil blive oprettet til at bruge denne nye port. IP-adresser virtuelle steder vil ikke blive ændret."
+
+msgid "sslPortField"
+msgstr "HTTPS/SSL Port"
+
+msgid "sslPortField_help"
+msgstr "Apache Webserver bruger normalt port 443 for HTTPS-trafik. Hvis du ønsker at ændre det til en anden port, så kan du gøre det her. Dette er kun nyttig, hvis du ønsker at bruge noget andet foran Apache til at filtrere, cache eller omdirigere trafik. Såsom en Varnish Cache, en viderestilling fuldmagt eller en load balancer. Hvis du ændrer denne indstilling, så alle eksisterende virtuelle websteder med SSL aktiveret vil skifte fra port 443 til den nye port til SSL-trafik. IP-adresser virtuelle steder vil ikke blive ændret."
+
+msgid "httpPortInUse"
+msgstr "Havnen, du har angivet som ny HTTP-port er allerede i brug af en anden tjeneste. Vælg venligst en anden port i stedet."
+
+msgid "SSLportInUse"
+msgstr "Havnen, du har angivet som ny HTTPS/SSL port er allerede i brug af en anden tjeneste. Vælg venligst en anden port i stedet."
+
+msgid "HSTS"
+msgstr "HSTS"
+
+msgid "HSTS_help"
+msgstr "HTTP Strict Transport Security (HSTS) er et web sikkerhedspolitik mekanisme, hvorved en webserver erklærer, at opfylder bruger agenter (såsom en webbrowser) er at interagere med den ved hjælp af kun sikre HTTPS-forbindelser (dvs. HTTP lagdelt over TLS / SSL). TGV er en IETF standarder track protokol og er specificeret i RFC 6797. For mere info se: http://en.wikipedia.org/wiki/HTTP_Strict_Transport_Security"
+
+######### New for 5209R:
+
+# CHANGED:
+
+msgid "php"
+msgstr "PHP (DSO)"
+
+msgid "php_help"
+msgstr "Denne mulighed giver PHP gennem libphp5.so, som også er kendt som mod_php. Denne indstilling er normalt den hurtigste måde at udføre PHP anmodninger. Men denne funktion bruger apache systembruger at betjene alle PHP anmodninger. Dette kan skabe problemer, når PHP-scripts oprette filer og mapper, da de så vil være ejet af apache, også."
+
+msgid "enableSuPHP"
+msgstr "suphp"
+
+msgid "enableSuPHP_help"
+msgstr "Denne mulighed giver PHP gennem mod_suphp. Det er en meget fleksibel og sikker måde at tjene PHP anmodninger. Hvis du vælger suphp, så PHP-scripts vil køre med UID og GID for ejeren af ​​den virtuelle site. Sørg for at konfigurere en Siteadmin som ejer af din /web mappe gennem '[[base-vsite.fileOwnerMenu]]' menuen!"
+
+# NEW:
+
+msgid "enableModRUID"
+msgstr "PHP (DSO) + mod_ruid2"
+
+msgid "enableModRUID_help"
+msgstr "Denne mulighed giver PHP gennem libphp5.so og Apache-modulet mod_ruid2.so. Denne indstilling er normalt den hurtigste måde at udføre PHP anmodninger på en sikker måde. Den ekstra modul mod_ruid2 vil køre PHP-scripts med UID og GID for ejeren af ​​den virtuelle site. Sørg for at konfigurere en Siteadmin som ejer af din /web mappe gennem '[[base-vsite.fileOwnerMenu]]' menuen!"
+
+msgid "enableModFPM"
+msgstr "FPM/FastCGI"
+
+msgid "enableModFPM_help"
+msgstr "Denne mulighed giver PHP via PHP-FPM og mod_fcgid. Dette er en hurtig og sikker måde at tjene PHP anmodninger. PHP-scripts kan udføres med UID og GID for ejeren af ​​den virtuelle site. Sørg for at konfigurere en Siteadmin som ejer af din /web mappe gennem '[[base-vsite.fileOwnerMenu]]' menuen!"
+
+#
+#### PHP-FPM Active Monitor components:
+#
+
+msgid "amPHPFPMNameTag"
+msgstr "PHP-FPM"
+
+msgid "amPHPFPMDetails"
+msgstr "[[base-apache.amPHPFPMNameTag]]"
+
+msgid "amPHPFPMStatusOK"
+msgstr "Tjenesten PHP-FPM fungerer normalt."
+
+msgid "amPHPFPMNotRunning"
+msgstr "Servicen [[base-apache.amPHPFPMNameTag]] kører ikke, og kunne ikke genstartes. Husk at tjekke logfiler for fejlmeddelelser relateret til denne tjeneste og køre 'systemctl status php-fpm.service 'som root fra kommandolinjen for at finde problemet. Hvis du stadig ikke kan få adgang til [[base-apache.amPHPFPMNameTag]], kan du besøge [[base-sauce-basic.techSupportURL]] til teknisk support."
+
+#
+## Added for support of multiple extra-PHP versions:
+#
+
+msgid "setDefaultPHPVersion"
+msgstr "Standard PHP Version:"
+
+msgid "setDefaultPHPVersion_help"
+msgstr "Som standard din Apache webserver kører med PHP-version leveres af operativsystemet. Hvis du har yderligere PHP-versioner installeret (til rådighed i BlueOnyx Shop), så kan du vælge en anden PHP versioner for at være standard for Apache webserver. Dette valgte PHP-version anvendes derefter på alle virtuelle websteder, der bruger PHP som DSO, eller at brugen PHP via DSO og mod_ruid2."
+
+msgid "extraPHPversions"
+msgstr "PHP-versioner til rådighed for virtuelle brancher:"
+
+msgid "extraPHPversions_help"
+msgstr "Hvis du har flere PHP-versioner installeret, så kan du vælge, hvilke der er til rådighed til brug på virtuelle websteder. Hvis du har en PHP version installeret, at du ikke længere ønsker at bruge, så kan du flytte den til højre side af tabellen nedenfor. Alle virtuelle websteder, der i øjeblikket bruger det vil så blive tilbage til OS medfølgende PHP version. Derudover handicappede PHP version er så ikke længere vælges under oprettelsen af ​​nye virtuelle steder."
+
+msgid "register_globals_exception"
+msgstr "PHP-5.3 undtagelse"
+
+msgid "register_globals_exception_help"
+msgstr "Da PHP-5.4 funktionen 'Register Globals' reelt er blevet fjernet fra PHP. Derfor GUI ikke længere giver mulighed for at gøre det muligt 'Register Globals' til PHP-5.4 og senere. Men: Hvis du har den fås PHP-5.3-pakke installeret og aktiveret, så kan du sætte kryds dette afkrydsningsfelt. Det vil give dig mulighed for at indstille 'Register Globals 'til' On 'for virtuelle websteder, der bruger PHP-5.3."
+
+msgid "PHP_version_Field"
+msgstr "Vsite PHP Version:"
+
+msgid "PHP_version_Field_help"
+msgstr "Dette viser PHP version for denne virtuelle site. Hvis der er installeret flere PHP versioner på serveren og enten suphp eller PHP-FPM bruges, så er det muligt at vælge enten OS medfølgende version af PHP, eller en PHP-version leveres via en af ​​de eventuelt tilgængelige PHP pakker. Opdateret ekstra PHP pakker er tilgængelige i BlueOnyx Store og anden version af PHP er til rådighed. Flere PHP pakker kan installeres samtidig. Per virtuelle websted kun én PHP version kan bruges, selv om forskellige virtuelle sites nemt kan køre forskellige PHP versioner."
+
+msgid "amPHPFPMMASTERNameTag"
+msgstr "[[base-apache.amPHPFPMNameTag]] (OS)"
+
+msgid "amPHPFPMMASTERStatusOK"
+msgstr "Tjenesten PHP-FPM (OS) fungerer normalt."
+
+msgid "amPHPFPMMASTERNotRunning"
+msgstr "Servicen [[base-apache.amPHPFPMNameTag]] kører ikke, og kunne ikke genstartes. Husk at tjekke logfiler for fejlmeddelelser relateret til denne tjeneste og køre 'systemctl status php-fpm.service 'som root fra kommandolinjen for at finde problemet. Hvis du stadig ikke kan få adgang til [[base-apache.amPHPFPMNameTag]], kan du besøge [[base-sauce-basic.techSupportURL]] til teknisk support."
+
+msgid "amPHPFPM53NameTag"
+msgstr "[[base-apache.amPHPFPMNameTag]] 5.3"
+
+msgid "amPHPFPM53StatusOK"
+msgstr "Tjenesten PHP-FPM (til PHP-5.3) fungerer normalt."
+
+msgid "amPHPFPM53NotRunning"
+msgstr "Servicen [[base-apache.amPHPFPM53NameTag]] kører ikke, og kunne ikke genstartes. Husk at tjekke logfiler for fejlmeddelelser relateret til denne tjeneste og køre 'systemctl status php-fpm-5.3.service' som root fra kommandolinjen for at finde problemet. Hvis du stadig ikke kan få adgang til [[base-apache.amPHPFPM53NameTag]], kan du besøge [[base-sauce-basic.techSupportURL]] til teknisk support."
+
+msgid "amPHPFPM54NameTag"
+msgstr "[[base-apache.amPHPFPMNameTag]] 5.4"
+
+msgid "amPHPFPM54StatusOK"
+msgstr "Tjenesten PHP-FPM (til PHP-5.4) fungerer normalt."
+
+msgid "amPHPFPM54NotRunning"
+msgstr "Servicen [[base-apache.amPHPFPM54NameTag]] kører ikke, og kunne ikke genstartes. Husk at tjekke logfiler for fejlmeddelelser relateret til denne tjeneste og køre 'systemctl status php-fpm-5.4.service' som root fra kommandolinjen for at finde problemet. Hvis du stadig ikke kan få adgang til [[base-apache.amPHPFPM54NameTag]], kan du besøge [[base-sauce-basic.techSupportURL]] til teknisk support."
+
+msgid "amPHPFPM55NameTag"
+msgstr "[[base-apache.amPHPFPMNameTag]] 5.5"
+
+msgid "amPHPFPM55StatusOK"
+msgstr "Tjenesten PHP-FPM (til PHP-5.5) fungerer normalt."
+
+msgid "amPHPFPM55NotRunning"
+msgstr "Servicen [[base-apache.amPHPFPM55NameTag]] kører ikke, og kunne ikke genstartes. Husk at tjekke logfiler for fejlmeddelelser relateret til denne tjeneste og køre 'systemctl status php-fpm-5.5.service' som root fra kommandolinjen for at finde problemet. Hvis du stadig ikke kan få adgang til [[base-apache.amPHPFPM55NameTag]], kan du besøge [[base-sauce-basic.techSupportURL]] til teknisk support."
+
+msgid "amPHPFPM56NameTag"
+msgstr "[[base-apache.amPHPFPMNameTag]] 5.6"
+
+msgid "amPHPFPM56StatusOK"
+msgstr "Tjenesten PHP-FPM (til PHP-5.6) fungerer normalt."
+
+msgid "amPHPFPM56NotRunning"
+msgstr "Servicen [[base-apache.amPHPFPM56NameTag]] kører ikke, og kunne ikke genstartes. Husk at tjekke logfiler for fejlmeddelelser relateret til denne tjeneste og køre 'systemctl status php-fpm-5.6.service' som root fra kommandolinjen for at finde problemet. Hvis du stadig ikke kan få adgang til [[base-apache.amPHPFPM56NameTag]], kan du besøge [[base-sauce-basic.techSupportURL]] til teknisk support."
+
+##
+
+msgid "PHP_version"
+msgstr "[[base-apache.PHP_version_Field]]"
+
+msgid "PHP_version_help"
+msgstr "[[base-apache.PHP_version_Field_help]]"
+
+### PHP 7:
+
+msgid "amPHPFPM70NameTag"
+msgstr "[[base-apache.amPHPFPMNameTag]] 7.0"
+
+msgid "amPHPFPM70StatusOK"
+msgstr "Tjenesten PHP-FPM (til PHP-7.0) fungerer normalt."
+
+msgid "amPHPFPM70NotRunning"
+msgstr "Servicen [[base-apache.amPHPFPM70NameTag]] kører ikke, og kunne ikke genstartes. Husk at tjekke logfiler for fejlmeddelelser relateret til denne tjeneste og køre 'systemctl status php-fpm-7.0.service' som root fra kommandolinjen for at finde problemet. Hvis du stadig ikke kan få adgang til [[base-apache.amPHPFPM70NameTag]], kan du besøge [[base-sauce-basic.techSupportURL]] til teknisk support."
+
+#
+
+msgid "amPHPFPM71NameTag"
+msgstr "[[base-apache.amPHPFPMNameTag]] 7.1"
+
+msgid "amPHPFPM71StatusOK"
+msgstr "Tjenesten PHP-FPM (til PHP-7.1) fungerer normalt."
+
+msgid "amPHPFPM71NotRunning"
+msgstr "Servicen [[base-apache.amPHPFPM71NameTag]] kører ikke, og kunne ikke genstartes. Husk at tjekke logfiler for fejlmeddelelser relateret til denne tjeneste og køre 'systemctl status php-fpm-7.1.service' som root fra kommandolinjen for at finde problemet. Hvis du stadig ikke kan få adgang til [[base-apache.amPHPFPM71NameTag]], kan du besøge [[base-sauce-basic.techSupportURL]] til teknisk support."
+
+#
+
+msgid "amPHPFPM72NameTag"
+msgstr "[[base-apache.amPHPFPMNameTag]] 7.2"
+
+msgid "amPHPFPM72StatusOK"
+msgstr "Tjenesten PHP-FPM (til PHP-7.2) fungerer normalt."
+
+msgid "amPHPFPM72NotRunning"
+msgstr "Servicen [[base-apache.amPHPFPM72NameTag]] kører ikke, og kunne ikke genstartes. Husk at tjekke logfiler for fejlmeddelelser relateret til denne tjeneste og køre 'systemctl status php-fpm-7.2.service' som root fra kommandolinjen for at finde problemet. Hvis du stadig ikke kan få adgang til [[base-apache.amPHPFPM72NameTag]], kan du besøge [[base-sauce-basic.techSupportURL]] til teknisk support."
+
+#
+
+msgid "amPHPFPM73NameTag"
+msgstr "[[base-apache.amPHPFPMNameTag]] 7.3"
+
+msgid "amPHPFPM73StatusOK"
+msgstr "Tjenesten PHP-FPM (til PHP-7.3) fungerer normalt."
+
+msgid "amPHPFPM73NotRunning"
+msgstr "Servicen [[base-apache.amPHPFPM73NameTag]] kører ikke, og kunne ikke genstartes. Husk at tjekke logfiler for fejlmeddelelser relateret til denne tjeneste og køre 'systemctl status php-fpm-7.3.service' som root fra kommandolinjen for at finde problemet. Hvis du stadig ikke kan få adgang til [[base-apache.amPHPFPM73NameTag]], kan du besøge [[base-sauce-basic.techSupportURL]] til teknisk support."
+
+#### REDIRECT:
+
+msgid "REDIRECTI18nName"
+msgstr "[[base-apache.redirect_enabled]]"
+
+msgid "redirect_enabled"
+msgstr "Omdirigere/Proxy websted"
+
+msgid "redirect_enabled_help"
+msgstr "Denne mulighed giver dig mulighed for at omdirigere eller proxy hele webstedet for dette virtuelle websted til en anden webadresse. Omdirigeringer kan enten være midlertidige (HTTP Status Code 302) eller permanent (HTTP Status Code 301). Hvis proxy anvendes, vil denne webserver proxy alle anmodninger til den angivne fjernwebadresse."
+
+msgid "RedirectType"
+msgstr "Omdirigeringstype"
+
+msgid "RedirectType_help"
+msgstr "Dette angiver HTTP Status Koden, som enhver webadgang til en hvilken som helst webadresse på dette virtuelle websted omdirigeres til den angivne webadresse. Omdirigeringer kan enten være midlertidige (HTTP Status Code 302) eller permanent (HTTP Status Code 301)."
+
+msgid "target"
+msgstr "Målwebadresse"
+
+msgid "target_help"
+msgstr "Indtast venligst måladressen her. Enhver webadgang til dette virtuelle websted bliver omdirigeret til den angivne webadresse. Dette kan enten være en http: // eller https: // URL. Indtastede webadresser kan indeholde underkataloger, sider og webadresseparametre. Hvis du ønsker, kan du kopiere og indsætte den ønskede målwebadresse fra din browser og indsætte den her."
+
+#
+### Nginx related
+#
+
+msgid "HSTS_Nginx_enabled"
+msgstr "[[base-apache.HSTS]]"
+
+msgid "HSTS_Nginx_enabled_help"
+msgstr "[[base-apache.HSTS_help]]"
+
+#####
+
+msgid "possvals"
+msgstr "Mulige værdier: Interger efterfulgt af 's' (i sekunder), 'm' (i minutter), 'h' (i timer) eller 'd' (for dage)."
+
+msgid "basicSettingsTab"
+msgstr "Apache"
+
+msgid "nginxSettingsTab"
+msgstr "Nginx"
+
+msgid "GENERAL_NGINX_DIVIDER"
+msgstr "Nginx som en SSL-proxy:"
+
+msgid "Nginx_Info_Text"
+msgstr "Apache-webserveren, der følger med BlueOnyx, gør et godt stykke arbejde ved at betjene traditionelle HTTP-sider. Men i forhold til HTTPS har det nogle få fejl. For eksempel kan det ikke svare på HTTP/2-anmodninger, og de understøttede TLS-cifre er heller ikke den bedst mulige da HTTP/2 er en betydelig forbedring, og da vi også vil have vores TLS-forbindelser af den bedst mulige kvalitet og sikkerhed, tilbyder vi nu muligheden for at lade Apache fortsætte med at betjene HTTP-anmodninger og rute alle HTTPS-forbindelser via en Nginx-videresendelse proxy. Hvis du markerer afkrydsningsfeltet nedenfor, vil denne server blive omkonfigureret, så Apache mister autoritet over servering af HTTPS-sider og lader Nginx overtage at gøre HTTPS. Denne funktion kan vendes om til enhver tid ved blot at fjerne afkrydsningsfeltet igen."
+
+msgid "NGINX_CFG_DIVIDER"
+msgstr "Nginx-konfiguration:"
+
+msgid "worker_processes"
+msgstr "Arbejdsprocesser"
+
+msgid "worker_processes_help"
+msgstr "Definerer antallet af arbejdsprocesser. Den optimale værdi afhænger af mange faktorer, herunder (men ikke begrænset til) antallet af CPU-kerner, antallet af harddiskdrev, der lagrer data og lastmønster. Når man er i tvivl, indstiller Det vil være en god start til antallet af tilgængelige CPU-kerner. Værdien 'auto' vil forsøge at autodetektere den. Mulige værdier: 'auto' eller et helt tal." 
+
+msgid "worker_connections"
+msgstr "Arbejdsforbindelser"
+
+msgid "worker_connections_help"
+msgstr "Indstiller det maksimale antal samtidige forbindelser, der kan åbnes af en arbejdsproces. Det skal være opmærksom på, at dette nummer omfatter alle forbindelser (f.eks. forbindelser med proxy servere, blandt andre), ikke kun forbindelser med klienter. En anden overvejelse er at det faktiske antal samtidige forbindelser ikke kan overstige den nuværende grænse for det maksimale antal åbne filer."
+
+msgid "max_age"
+msgstr "Max alder"
+
+msgid "max_age_help"
+msgstr "Når en browser ser HSTS-overskriften fra en HTTPS-hjemmeside, lærer den, at dette domæne kun skal åbnes ved hjælp af HTTPS (SSL eller TLS). Den caches disse oplysninger i maksimal alder (typisk 31.536.000 sekunder, svarende til ca. år)."
+
+msgid "include_subdomains"
+msgstr "Inkluder underdomæner"
+
+msgid "include_subdomains_help"
+msgstr "Den valgfrie underdomæne parameter angiver browseren, at HSTS-politikken også gælder for alle underdomæner i det aktuelle domæne."
+
+msgid "ssl_session_timeout"
+msgstr "SSL-Sessionstidsindstilling"
+
+msgid "ssl_session_timeout_help"
+msgstr "Angiver en tid, hvor en klient kan genbruge sessionsparametrene for den igangværende HTTPS-session. [[base-apache.possvals]]"
+
+msgid "ssl_session_cache"
+msgstr "SSL-Sessionskort"
+
+msgid "ssl_session_cache_help"
+msgstr "Definerer hvor lang tid SSL-session data er cachelagret. [[base-apache.possvals]]"
+
+msgid "ssl_session_tickets"
+msgstr "SSL Session Tickets"
+
+msgid "ssl_session_tickets_help"
+msgstr "Aktiverer eller deaktiverer genoptagelse af session via TLS-sessionskort."
+
+msgid "resolver_valid"
+msgstr "OCSP Resolver Gyldighed"
+
+msgid "resolver_valid_help"
+msgstr "For OCSP-hæftning til at arbejde, skal Nginx bruge DNS-resolvere til at oprette forbindelse til OCSP-respondenter. Denne indstilling definerer, hvor ofte Nginx kontrollerer validiteten af ​​OCSP-resolvere."
+
+msgid "resolver_timeout"
+msgstr "OCSP Resolver Timeout"
+
+msgid "resolver_timeout_help"
+msgstr "Definerer, hvor længe Nginx venter på svar fra en OCSP-resolver, inden den beslutter at forbindelsen ikke virker. [[base-apache.possvals]]"
+
+msgid "ssl_stapling"
+msgstr "OCSP SSL Hæftning"
+
+msgid "ssl_stapling_help"
+msgstr "Aktiverer eller deaktiverer hæftning af OCSP-svar fra serveren. OCSP-hæftning, formelt kendt som TLS-certifikatstatusforespørgselsudvidelsen, gør det muligt for certifikatgiveren at bære ressourceomkostningerne, der er involveret i at levere OCSP-svar ved at tilføje ('hæftning') en tidsstemplet OCSP-svar underskrevet af CA til det oprindelige TLS-håndtryk, hvilket eliminerer behovet for, at kunderne skal kontakte CA."
+
+msgid "ssl_stapling_verify"
+msgstr "OSCP-Verifikation"
+
+msgid "ssl_stapling_verify_help"
+msgstr "Aktiverer eller deaktiverer verifikation af OCSP-svar fra serveren. Standarden er: Ikke aktiveret. Årsagen til dette er, at efter en genstart af Nginx kan det tage flere minutter, før OSCP-status for alle certifikater er etableret igen. OSCP-svar vil blive vist, men med den vedhæftede note, at de mislykkedes at verificere. Tænd kun dette, hvis du ved hvad du laver. "
+
+msgid "enabled"
+msgstr "Nginx SSL Proxy"
+
+msgid "enabled_help"
+msgstr "Aktiverer Nginx SSL Proxy. Alle HTTPS anmodninger besvares derefter af Nginx, som fungerer som en proxy mellem Apache og besøger web browsere."
+
+#####
+
+msgid "ProxyPass_worker_hostname_too_long"
+msgstr "Den indtastede URL er for lang til at være proxied. Hvis du vælger at proxy, må webadressen ikke være længere end 96 tegn."
+
+msgid "https_proxy_not_supported"
+msgstr "Den proxy-webadresse, du angav, bruger HTTPS, som vi ikke kan proxy. Angiv venligst en HTTP-URL i stedet."
+
+### New PHP-Versions:
+
+msgid "amPHPFPM74NameTag"
+msgstr "[[base-apache.amPHPFPMNameTag]] 7.4"
+
+msgid "amPHPFPM74StatusOK"
+msgstr "Tjenesten PHP-FPM (til PHP-7.4) fungerer normalt."
+
+msgid "amPHPFPM74NotRunning"
+msgstr "Servicen [[base-apache.amPHPFPM73NameTag]] kører ikke, og kunne ikke genstartes. Husk at tjekke logfiler for fejlmeddelelser relateret til denne tjeneste og køre 'systemctl status php-fpm-7.4.service' som root fra kommandolinjen for at finde problemet. Hvis du stadig ikke kan få adgang til [[base-apache.amPHPFPM74NameTag]], kan du besøge [[base-sauce-basic.techSupportURL]] til teknisk support."
+
+msgid "amPHPFPM75NameTag"
+msgstr "[[base-apache.amPHPFPMNameTag]] 7.5"
+
+msgid "amPHPFPM75StatusOK"
+msgstr "Tjenesten PHP-FPM (til PHP-7.5) fungerer normalt."
+
+msgid "amPHPFPM75NotRunning"
+msgstr "Servicen [[base-apache.amPHPFPM73NameTag]] kører ikke, og kunne ikke genstartes. Husk at tjekke logfiler for fejlmeddelelser relateret til denne tjeneste og køre 'systemctl status php-fpm-7.5.service' som root fra kommandolinjen for at finde problemet. Hvis du stadig ikke kan få adgang til [[base-apache.amPHPFPM75NameTag]], kan du besøge [[base-sauce-basic.techSupportURL]] til teknisk support."
+
+msgid "amPHPFPM76NameTag"
+msgstr "[[base-apache.amPHPFPMNameTag]] 7.6"
+
+msgid "amPHPFPM76StatusOK"
+msgstr "Tjenesten PHP-FPM (til PHP-7.6) fungerer normalt."
+
+msgid "amPHPFPM76NotRunning"
+msgstr "Servicen [[base-apache.amPHPFPM76NameTag]] kører ikke, og kunne ikke genstartes. Husk at tjekke logfiler for fejlmeddelelser relateret til denne tjeneste og køre 'systemctl status php-fpm-7.6.service' som root fra kommandolinjen for at finde problemet. Hvis du stadig ikke kan få adgang til [[base-apache.amPHPFPM76NameTag]], kan du besøge [[base-sauce-basic.techSupportURL]] til teknisk support."
+
+msgid "amPHPFPM80NameTag"
+msgstr "[[base-apache.amPHPFPMNameTag]] 8.0"
+
+msgid "amPHPFPM80StatusOK"
+msgstr "Tjenesten PHP-FPM (til PHP-8.0) fungerer normalt."
+
+msgid "amPHPFPM80NotRunning"
+msgstr "Servicen [[base-apache.amPHPFPM80NameTag]] kører ikke, og kunne ikke genstartes. Husk at tjekke logfiler for fejlmeddelelser relateret til denne tjeneste og køre 'systemctl status php-fpm-8.0.service' som root fra kommandolinjen for at finde problemet. Hvis du stadig ikke kan få adgang til [[base-apache.amPHPFPM80NameTag]], kan du besøge [[base-sauce-basic.techSupportURL]] til teknisk support."
+
+msgid "amPHPFPM81NameTag"
+msgstr "[[base-apache.amPHPFPMNameTag]] 8.1"
+
+msgid "amPHPFPM81StatusOK"
+msgstr "Tjenesten PHP-FPM (til PHP-8.1) fungerer normalt."
+
+msgid "amPHPFPM81NotRunning"
+msgstr "Servicen [[base-apache.amPHPFPM81NameTag]] kører ikke, og kunne ikke genstartes. Husk at tjekke logfiler for fejlmeddelelser relateret til denne tjeneste og køre 'systemctl status php-fpm-8.1.service' som root fra kommandolinjen for at finde problemet. Hvis du stadig ikke kan få adgang til [[base-apache.amPHPFPM81NameTag]], kan du besøge [[base-sauce-basic.techSupportURL]] til teknisk support."
+
+msgid "amPHPFPM82NameTag"
+msgstr "[[base-apache.amPHPFPMNameTag]] 8.2"
+
+msgid "amPHPFPM82StatusOK"
+msgstr "Tjenesten PHP-FPM (til PHP-8.2) fungerer normalt."
+
+msgid "amPHPFPM82NotRunning"
+msgstr "Servicen [[base-apache.amPHPFPM82NameTag]] kører ikke, og kunne ikke genstartes. Husk at tjekke logfiler for fejlmeddelelser relateret til denne tjeneste og køre 'systemctl status php-fpm-8.2.service' som root fra kommandolinjen for at finde problemet. Hvis du stadig ikke kan få adgang til [[base-apache.amPHPFPM82NameTag]], kan du besøge [[base-sauce-basic.techSupportURL]] til teknisk support."
+
+msgid "amPHPFPM83NameTag"
+msgstr "[[base-apache.amPHPFPMNameTag]] 8.3"
+
+msgid "amPHPFPM83StatusOK"
+msgstr "Tjenesten PHP-FPM (til PHP-8.3) fungerer normalt."
+
+msgid "amPHPFPM83NotRunning"
+msgstr "Servicen [[base-apache.amPHPFPM83NameTag]] kører ikke, og kunne ikke genstartes. Husk at tjekke logfiler for fejlmeddelelser relateret til denne tjeneste og køre 'systemctl status php-fpm-8.3.service' som root fra kommandolinjen for at finde problemet. Hvis du stadig ikke kan få adgang til [[base-apache.amPHPFPM83NameTag]], kan du besøge [[base-sauce-basic.techSupportURL]] til teknisk support."
+
+###
+
+msgid "logs_enabled"
+msgstr "Logfiler aktiveret"
+
+msgid "logs_enabled_help"
+msgstr "Denne switch definerer, om der oprettes webrelateret adgangs- og fejllogfiler til dette Vsite. Hvis du ikke ønsker, at der oprettes nogen webadgangslogfiler til dette Vsite, skal du fjerne markeringen fra dette afkrydsningsfelt. Bemærk: Hvis der ikke genereres nogen webadgangslogfiler, opdateres ikke webbaseret adgangsstatistik for dette Vsite længere."
+
+### New 5211R PHP AM tags:
+
+msgid "amPHPFPM84NameTag"
+msgstr "[[base-apache.amPHPFPMNameTag]] 8.4"
+
+msgid "amPHPFPM84StatusOK"
+msgstr "Tjenesten PHP-FPM (til PHP-8.4) fungerer normalt."
+
+msgid "amPHPFPM84NotRunning"
+msgstr "Servicen [[base-apache.amPHPFPM84NameTag]] kører ikke, og kunne ikke genstartes. Husk at tjekke logfiler for fejlmeddelelser relateret til denne tjeneste og køre 'systemctl status php-fpm-8.4.service' som root fra kommandolinjen for at finde problemet. Hvis du stadig ikke kan få adgang til [[base-apache.amPHPFPM84NameTag]], kan du besøge [[base-sauce-basic.techSupportURL]] til teknisk support."
+
+msgid "amPHPFPM85NameTag"
+msgstr "[[base-apache.amPHPFPMNameTag]] 8.5"
+
+msgid "amPHPFPM85StatusOK"
+msgstr "Tjenesten PHP-FPM (til PHP-8.5) fungerer normalt."
+
+msgid "amPHPFPM85NotRunning"
+msgstr "Servicen [[base-apache.amPHPFPM85NameTag]] kører ikke, og kunne ikke genstartes. Husk at tjekke logfiler for fejlmeddelelser relateret til denne tjeneste og køre 'systemctl status php-fpm-8.5.service' som root fra kommandolinjen for at finde problemet. Hvis du stadig ikke kan få adgang til [[base-apache.amPHPFPM85NameTag]], kan du besøge [[base-sauce-basic.techSupportURL]] til teknisk support."
+
+msgid "amPHPFPM86NameTag"
+msgstr "[[base-apache.amPHPFPMNameTag]] 8.6"
+
+msgid "amPHPFPM86StatusOK"
+msgstr "Tjenesten PHP-FPM (til PHP-8.6) fungerer normalt."
+
+msgid "amPHPFPM86NotRunning"
+msgstr "Servicen [[base-apache.amPHPFPM86NameTag]] kører ikke, og kunne ikke genstartes. Husk at tjekke logfiler for fejlmeddelelser relateret til denne tjeneste og køre 'systemctl status php-fpm-8.6.service' som root fra kommandolinjen for at finde problemet. Hvis du stadig ikke kan få adgang til [[base-apache.amPHPFPM86NameTag]], kan du besøge [[base-sauce-basic.techSupportURL]] til teknisk support."
+
+msgid "amPHPFPM90NameTag"
+msgstr "[[base-apache.amPHPFPMNameTag]] 9.0"
+
+msgid "amPHPFPM90StatusOK"
+msgstr "Tjenesten PHP-FPM (til PHP-9.0) fungerer normalt."
+
+msgid "amPHPFPM90NotRunning"
+msgstr "Servicen [[base-apache.amPHPFPM90NameTag]] kører ikke, og kunne ikke genstartes. Husk at tjekke logfiler for fejlmeddelelser relateret til denne tjeneste og køre 'systemctl status php-fpm-9.0.service' som root fra kommandolinjen for at finde problemet. Hvis du stadig ikke kan få adgang til [[base-apache.amPHPFPM90NameTag]], kan du besøge [[base-sauce-basic.techSupportURL]] til teknisk support."
+
+msgid "amPHPFPM91NameTag"
+msgstr "[[base-apache.amPHPFPMNameTag]] 9.1"
+
+msgid "amPHPFPM91StatusOK"
+msgstr "Tjenesten PHP-FPM (til PHP-9.1) fungerer normalt."
+
+msgid "amPHPFPM91NotRunning"
+msgstr "Servicen [[base-apache.amPHPFPM91NameTag]] kører ikke, og kunne ikke genstartes. Husk at tjekke logfiler for fejlmeddelelser relateret til denne tjeneste og køre 'systemctl status php-fpm-9.1.service' som root fra kommandolinjen for at finde problemet. Hvis du stadig ikke kan få adgang til [[base-apache.amPHPFPM91NameTag]], kan du besøge [[base-sauce-basic.techSupportURL]] til teknisk support."
+
+msgid "amPHPFPM92NameTag"
+msgstr "[[base-apache.amPHPFPMNameTag]] 9.2"
+
+msgid "amPHPFPM92StatusOK"
+msgstr "Tjenesten PHP-FPM (til PHP-9.2) fungerer normalt."
+
+msgid "amPHPFPM92NotRunning"
+msgstr "Servicen [[base-apache.amPHPFPM92NameTag]] kører ikke, og kunne ikke genstartes. Husk at tjekke logfiler for fejlmeddelelser relateret til denne tjeneste og køre 'systemctl status php-fpm-9.2.service' som root fra kommandolinjen for at finde problemet. Hvis du stadig ikke kan få adgang til [[base-apache.amPHPFPM92NameTag]], kan du besøge [[base-sauce-basic.techSupportURL]] til teknisk support."
+
+msgid "amPHPFPM93NameTag"
+msgstr "[[base-apache.amPHPFPMNameTag]] 9.3"
+
+msgid "amPHPFPM93StatusOK"
+msgstr "Tjenesten PHP-FPM (til PHP-9.3) fungerer normalt."
+
+msgid "amPHPFPM93NotRunning"
+msgstr "Servicen [[base-apache.amPHPFPM93NameTag]] kører ikke, og kunne ikke genstartes. Husk at tjekke logfiler for fejlmeddelelser relateret til denne tjeneste og køre 'systemctl status php-fpm-9.3.service' som root fra kommandolinjen for at finde problemet. Hvis du stadig ikke kan få adgang til [[base-apache.amPHPFPM93NameTag]], kan du besøge [[base-sauce-basic.techSupportURL]] til teknisk support."
+
+msgid "amPHPFPM94NameTag"
+msgstr "[[base-apache.amPHPFPMNameTag]] 9.4"
+
+msgid "amPHPFPM94StatusOK"
+msgstr "Tjenesten PHP-FPM (til PHP-9.4) fungerer normalt."
+
+msgid "amPHPFPM94NotRunning"
+msgstr "Servicen [[base-apache.amPHPFPM94NameTag]] kører ikke, og kunne ikke genstartes. Husk at tjekke logfiler for fejlmeddelelser relateret til denne tjeneste og køre 'systemctl status php-fpm-9.4.service' som root fra kommandolinjen for at finde problemet. Hvis du stadig ikke kan få adgang til [[base-apache.amPHPFPM94NameTag]], kan du besøge [[base-sauce-basic.techSupportURL]] til teknisk support."
+
+### Bots and robots.txt additions:
+
+msgid "DIVIDER_BOTS"
+msgstr "Webcrawler- og bot-håndtering"
+
+msgid "xmlrpc_deny"
+msgstr "Afvis adgang til /xmlrpc.php"
+
+msgid "xmlrpc_deny_help"
+msgstr "Afvis al adgang til /xmlrpc.php, som er WordPress REST API'et. Det er blevet et almindeligt mål for brute-force angreb og DDoS-forstærkningsangreb. Medmindre du specifikt bruger gamle værktøjer, der benytter XML-RPC, er det sikkert og tilrådeligt at deaktivere det."
+
+msgid "default_robots_txt"
+msgstr "Aktivér standard robots.txt"
+
+msgid "default_robots_txt_help"
+msgstr "Hvis aktiveret, vil en standard robots.txt blive serveret for alle Vsites, der ikke har deres egen robots.txt-fil i /web."
+
+msgid "bad_useragents_deny"
+msgstr "Aktivér blokering af User-Agent"
+
+msgid "bad_useragents_deny_help"
+msgstr "Søgemaskine webcrawlere og bots, der gennemgår hele indholdet af dine Vsites, kan forårsage en unødig belastning på din server. Aktivering af denne funktion vil vise '403 Forbudt'-fejl til alle besøgende, der identificerer sig via en user-agent streng opført i 'Forbudte User-Agents'."
+
+msgid "bad_useragents"
+msgstr "Forbudte User-Agents"
+
+msgid "bad_useragents_help"
+msgstr "Angiv det fulde eller delvise navn på user-agents, som du vil nægte al adgang til dine Vsites. Én post pr. linje."
+
+msgid "good_useragents"
+msgstr "Tilladte User-Agents"
+
+msgid "good_useragents_help"
+msgstr "Angiv det fulde eller delvise navn på user-agents, som du tillader adgang til dine Vsites. Én post pr. linje."
+
+msgid "base_apache_qos"
+msgstr "Apache-drossling"
+
+msgid "base_apache_qos_help"
+msgstr "Konfigurer Apache-anmodningsdrossling med mod_qos."
+
+msgid "apacheRequestThrottling"
+msgstr "Apache-anmodningsdrossling"
+
+msgid "apacheRequestThrottling_help"
+msgstr "Aktivér og konfigurer serveromfattende Apache-anmodningsdrossling."
+
+msgid "mainStatusDivider"
+msgstr "Hovedstatus"
+
+msgid "mainStatus"
+msgstr "Hovedstatus"
+
+msgid "modQosEnabled"
+msgstr "Aktivér Apache-anmodningsdrossling"
+
+msgid "modQosEnabled_help"
+msgstr "Slå Apache-anmodningsdrossling til eller fra."
+
+msgid "profile"
+msgstr "Beskyttelsesniveau"
+
+msgid "profile_help"
+msgstr "Vælg en forudindstillet profil, eller skift til brugerdefineret."
+
+msgid "modQosProfileConservative"
+msgstr "Konservativ"
+
+msgid "modQosProfileBalanced"
+msgstr "Balanceret"
+
+msgid "modQosProfileAggressive"
+msgstr "Aggressiv"
+
+msgid "modQosProfileCustom"
+msgstr "Brugerdefineret"
+
+msgid "modQosStatus"
+msgstr "Status"
+
+msgid "modQosInstalled"
+msgstr "mod_qos installeret"
+
+msgid "modQosMissing"
+msgstr "mod_qos mangler"
+
+msgid "modQosLoaded"
+msgstr "mod_qos indlæst"
+
+msgid "modQosNotLoaded"
+msgstr "mod_qos ikke indlæst"
+
+msgid "apacheConfigTestStatus"
+msgstr "Apache konfigurationstest"
+
+msgid "apacheConfigTestOK"
+msgstr "OK"
+
+msgid "apacheConfigTestFailed"
+msgstr "Fejl"
+
+msgid "generalLimitsDivider"
+msgstr "Generelle grænser"
+
+msgid "generalLimits"
+msgstr "Generelle grænser"
+
+msgid "generalLimits_help"
+msgstr "Konfigurer de vigtigste globale mod_qos-grænser."
+
+msgid "clientEntries"
+msgstr "Klientposter"
+
+msgid "clientEntries_help"
+msgstr "Maksimalt antal klientposter som mod_qos holder styr på."
+
+msgid "srvMaxConnPerIP"
+msgstr "Maksimale forbindelser pr. IP"
+
+msgid "srvMaxConnPerIP_help"
+msgstr "Maksimalt antal samtidige forbindelser pr. klient-IP."
+
+msgid "srvMaxConnBusyThreshold"
+msgstr "Travlhedstærskel"
+
+msgid "srvMaxConnBusyThreshold_help"
+msgstr "Antal forbindelser hvor per-IP-grænsen bliver strengere."
+
+msgid "minDataRate"
+msgstr "Minimum datahastighed"
+
+msgid "minDataRate_help"
+msgstr "Minimum overførselshastighed for anmodningens data i bytes pr. sekund."
+
+msgid "maxDataRate"
+msgstr "Maksimum datahastighed"
+
+msgid "maxDataRate_help"
+msgstr "Maksimal overførselshastighed for anmodningens data i bytes pr. sekund."
+
+msgid "minDataRateBusyThreshold"
+msgstr "Travl datahastighedstærskel"
+
+msgid "minDataRateBusyThreshold_help"
+msgstr "Tærskel der bruges når Apache er under belastning."
+
+msgid "dynamicRequestProtectionDivider"
+msgstr "Dynamisk anmodningsbeskyttelse"
+
+msgid "dynamicRequestProtectionRulesDivider"
+msgstr "Regler for dynamisk anmodningsbeskyttelse"
+
+msgid "dynamicRequestProtection"
+msgstr "Dynamisk anmodningsbeskyttelse"
+
+msgid "dynamicEnabled"
+msgstr "Aktivér dynamisk anmodningsbeskyttelse"
+
+msgid "dynamicEnabled_help"
+msgstr "Aktivér mønstergenkendelse og registrering af hændelsesanmodninger."
+
+msgid "eventRequestLimit"
+msgstr "Grænse for hændelsesanmodninger"
+
+msgid "eventRequestLimit_help"
+msgstr "Maksimalt antal registrerede hændelsesanmodninger pr. klient."
+
+msgid "eventLimitCount"
+msgstr "Tælling for hændelsesgrænse"
+
+msgid "eventLimitCount_help"
+msgstr "Antal hændelsesanmodninger tilladt i det konfigurerede tidsvindue."
+
+msgid "eventLimitSeconds"
+msgstr "Sekunder for hændelsesgrænse"
+
+msgid "eventLimitSeconds_help"
+msgstr "Tidsvindue i sekunder for optælling af hændelsesanmodninger."
+
+msgid "modQosRules"
+msgstr "Dynamiske URL-regler"
+
+msgid "modQosRules_help"
+msgstr "Definér regex-baserede anmodningsmønstre og deres vægte."
+
+msgid "addRule"
+msgstr "Tilføj regel"
+
+msgid "addRule_help"
+msgstr "Åbn formularen for at tilføje en ny dynamisk anmodningsregel."
+
+msgid "addRuleDivider"
+msgstr "Tilføj regel"
+
+msgid "addRuleDivider_help"
+msgstr "Definér en ny dynamisk anmodningsregel."
+
+msgid "modQosRule_enabled"
+msgstr "Aktiveret"
+
+msgid "modQosRule_enabled_help"
+msgstr "Aktivér eller deaktivér denne regel."
+
+msgid "modQosRule_description"
+msgstr "Beskrivelse"
+
+msgid "modQosRule_description_help"
+msgstr "Menneskeligt læsbar beskrivelse af reglen."
+
+msgid "modQosRule_regex"
+msgstr "Regex"
+
+msgid "modQosRule_regex_help"
+msgstr "Regulært udtryk som matches mod request-URI."
+
+msgid "modQosRule_weight"
+msgstr "Vægt"
+
+msgid "modQosRule_weight_help"
+msgstr "Regelvægt brugt til anmodningsscoring."
+
+msgid "modQosRule_eventRequest"
+msgstr "Hændelsesanmodning"
+
+msgid "modQosRule_eventRequest_help"
+msgstr "Markér matchede anmodninger som hændelsesanmodninger."
+
+msgid "modQosRule_sortOrder"
+msgstr "Sorteringsrækkefølge"
+
+msgid "modQosRule_sortOrder_help"
+msgstr "Visnings- og behandlingsrækkefølge for reglen."
+
+msgid "modQosRule_delete"
+msgstr "Slet"
+
+msgid "modQosRule_delete_help"
+msgstr "Slet denne regel."
+
+msgid "modQosRuleDescriptionRequired"
+msgstr "Regelbeskrivelse er påkrævet."
+
+msgid "modQosRuleRegexRequired"
+msgstr "Regelregex er påkrævet."
+
+msgid "repeatOffenderDivider"
+msgstr "Blokering af gentagne overtrædere"
+
+msgid "repeatOffenderBlocking"
+msgstr "Blokering af gentagne overtrædere"
+
+msgid "blockEnabled"
+msgstr "Aktivér blokering af gentagne overtrædere"
+
+msgid "blockEnabled_help"
+msgstr "Blokér klienter der gentagne gange udløser fejl eller grænseoverskridelser."
+
+msgid "blockCount"
+msgstr "Blokeringstælling"
+
+msgid "blockCount_help"
+msgstr "Antal overtrædelser før en klient blokeres."
+
+msgid "blockSeconds"
+msgstr "Blokeringssekunder"
+
+msgid "blockSeconds_help"
+msgstr "Hvor længe en klient forbliver blokeret, i sekunder."
+
+msgid "count400"
+msgstr "Tæl HTTP 400"
+
+msgid "count400_help"
+msgstr "Behandl HTTP 400-svar som blokér-værdige overtrædelser."
+
+msgid "weight400"
+msgstr "HTTP 400-vægt"
+
+msgid "weight400_help"
+msgstr "Blokeringsvægt for HTTP 400-svar."
+
+msgid "count403"
+msgstr "Tæl HTTP 403"
+
+msgid "count403_help"
+msgstr "Behandl HTTP 403-svar som blokér-værdige overtrædelser."
+
+msgid "weight403"
+msgstr "HTTP 403-vægt"
+
+msgid "weight403_help"
+msgstr "Blokeringsvægt for HTTP 403-svar."
+
+msgid "count404"
+msgstr "Tæl HTTP 404"
+
+msgid "count404_help"
+msgstr "Behandl HTTP 404-svar som blokér-værdige overtrædelser."
+
+msgid "weight404"
+msgstr "HTTP 404-vægt"
+
+msgid "weight404_help"
+msgstr "Blokeringsvægt for HTTP 404-svar."
+
+msgid "count408"
+msgstr "Tæl HTTP 408"
+
+msgid "count408_help"
+msgstr "Behandl HTTP 408-svar som blokér-værdige overtrædelser."
+
+msgid "weight408"
+msgstr "HTTP 408-vægt"
+
+msgid "weight408_help"
+msgstr "Blokeringsvægt for HTTP 408-svar."
+
+msgid "count500"
+msgstr "Tæl HTTP 500"
+
+msgid "count500_help"
+msgstr "Behandl HTTP 500-svar som blokér-værdige overtrædelser."
+
+msgid "weight500"
+msgstr "HTTP 500-vægt"
+
+msgid "weight500_help"
+msgstr "Blokeringsvægt for HTTP 500-svar."
+
+msgid "countBrokenConnection"
+msgstr "Tæl brudte forbindelser"
+
+msgid "countBrokenConnection_help"
+msgstr "Behandl brudte forbindelser som blokér-værdige overtrædelser."
+
+msgid "countMinDataRate"
+msgstr "Tæl minimum datahastighed"
+
+msgid "countMinDataRate_help"
+msgstr "Behandl overtrædelser af minimum datahastighed som blokér-værdige hændelser."
+
+msgid "countMaxConnPerIP"
+msgstr "Tæl maksimale forbindelser pr. IP"
+
+msgid "countMaxConnPerIP_help"
+msgstr "Behandl overskridelser af forbindelsesgrænsen pr. IP som blokér-værdige hændelser."
+
+msgid "advancedDivider"
+msgstr "Avanceret"
+
+msgid "advanced"
+msgstr "Avanceret"
+
+msgid "extraDirectives"
+msgstr "Ekstra direktiver"
+
+msgid "extraDirectives_help"
+msgstr "Yderligere Apache-direktiver, der skal medtages i qos_module-blokken."
+
+msgid "generatedConfigPreview"
+msgstr "Forhåndsvisning af genereret konfiguration"
+
+msgid "generatedConfigPreview_help"
+msgstr "Skrivebeskyttet forhåndsvisning af den konfiguration, der bliver skrevet."
+
+msgid "save_reload_apache"
+msgstr "Gem og genindlæs Apache"
+
+msgid "save_reload_apache_help"
+msgstr "Gem indstillingerne og genindlæs Apache efter en vellykket konfigurationstest."
+
+msgid "test_configuration"
+msgstr "Test konfiguration"
+
+msgid "test_configuration_help"
+msgstr "Valider den genererede Apache-konfiguration uden at genindlæse Apache."
+
+msgid "apply_preset"
+msgstr "Anvend forudindstilling"
+
+msgid "apply_preset_help"
+msgstr "Udfyld felterne med de valgte forudindstillede værdier."
+
+msgid "modQosNumericInvalid"
+msgstr "En eller flere numeriske værdier er uden for det tilladte område."
+
+msgid "modQosRegexNoNewlines"
+msgstr "Regel-regex må ikke indeholde linjeskift."
+
+msgid "modQosRegexInvalidChar"
+msgstr "Regel-regex må ikke indeholde dobbelte anførselstegn."
+
+msgid "modQosDescriptionNoNewlines"
+msgstr "Regelbeskrivelser må ikke indeholde linjeskift."
+
+msgid "modQosDangerousDirective"
+msgstr "Ekstra direktiver indeholder tegn, der ikke er tilladt."
+
+msgid "modQosConfigValidationFailed"
+msgstr "Apache-konfigurationsvalidering mislykkedes."
+
+msgid "modQosConfigValidationSuccess"
+msgstr "Apache-konfigurationsvalidering lykkedes."
+
+msgid "modQosWriteFailed"
+msgstr "mod_qos-konfigurationen kunne ikke skrives."
+
+msgid "modQosReloadFailed"
+msgstr "Apache kunne ikke genindlæses."

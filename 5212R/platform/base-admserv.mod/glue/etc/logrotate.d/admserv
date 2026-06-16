@@ -1,0 +1,53 @@
+
+/var/log/admserv/adm_access {
+    daily
+    rotate 366
+    compress
+    missingok
+    notifempty
+    sharedscripts
+    postrotate
+	/bin/kill -HUP `pidof httpd.admsrv` 2> /dev/null || true
+    endscript
+}
+
+/var/log/admserv/adm_error {
+    daily
+    rotate 366
+    compress
+    missingok
+    notifempty
+    sharedscripts
+    postrotate
+	/bin/kill -HUP `pidof httpd.admsrv` 2> /dev/null || true
+    endscript
+}
+
+/var/log/admserv/php-fpm_error.log {
+    daily
+    rotate 366
+    compress
+    missingok
+    notifempty
+    sharedscripts
+    postrotate
+	systemctl restart admserv-php-fpm.service 2> /dev/null || true
+    endscript
+}
+
+/var/log/gui-debug.log {
+    daily
+    prerotate
+	touch /var/log/gui-debug.log 2> /dev/null || true
+	chown admserv:admserv /var/log/gui-debug.log
+    endscript
+    rotate 366
+    compress
+    missingok
+    notifempty
+    postrotate
+	touch /var/log/gui-debug.log 2> /dev/null || true
+	chown admserv:admserv /var/log/gui-debug.log
+    endscript
+
+}

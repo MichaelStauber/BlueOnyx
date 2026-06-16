@@ -1,0 +1,61 @@
+<!--
+    $Id: remote.schema
+    Copyright (c) 2023 Michael Stauber, SOLARSPEED.NET
+    Copyright (c) 2023 Team BlueOnyx, BLUEONYX.IT
+    All Rights Reserved.
+-->
+
+<class name="System" namespace="Radicale" version="1.0">
+
+    <property
+        name="enabled" type="boolean" default="0"
+        writeacl="ruleCapable(serverEmail)"
+    />
+    <property
+        name="force_update" type="scalar" default=""
+        writeacl="ruleCapable(serverEmail)"
+    />
+
+    <property 
+        name="max_connections" type="int" optional="true"
+        default="32"
+        writeacl="ruleCapable(serverEmail)"
+    />
+
+    <property 
+        name="max_content_length" type="int" optional="true"
+        default="100000000"
+        writeacl="ruleCapable(serverEmail)"
+    />
+
+    <property 
+        name="timeout" type="int" optional="true"
+        default="30"
+        writeacl="ruleCapable(serverEmail)"
+    />
+
+    <property 
+        name="delay" type="int" optional="true"
+        default="1"
+        writeacl="ruleCapable(serverEmail)"
+    />
+
+</class>
+
+<class name="User" namespace="Radicale" version="1.0" createacl="ruleAll" destroyacl="ruleAll">
+
+    <property name="backup"
+        type="scalar"
+        default=""
+        optional="true"
+        writeacl="ruleCapable(ruleModifyUser)"
+    />
+
+    <property name="restore"
+        type="scalar"
+        default=""
+        optional="true"
+        writeacl="ruleCapable(ruleModifyUser)"
+    />
+
+</class>

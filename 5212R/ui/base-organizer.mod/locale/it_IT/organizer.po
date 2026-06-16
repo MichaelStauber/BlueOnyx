@@ -1,0 +1,218 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "radicale_server_long"
+msgstr "Radicale CalDAV/CardDAV"
+
+msgid "radicale_server"
+msgstr "CalDAV/CardDAV"
+
+msgid "radicale_server_help"
+msgstr "Radicale è un piccolo ma potente server CalDAV (calendari, elenchi di cose da fare) e CardDAV (contatti). Funziona con molti client CalDAV e CardDAV. Se abilitato, tutti gli utenti di questo server possono creare i propri calendari e contatti e utilizzarli con client di terze parti che supportano i protocolli CalDAV e/o CardDAV. Ad esempio: Thunderbird lo supporta tramite il componente aggiuntivo CardBook."
+
+msgid "enabled"
+msgstr "Abilita Radicale"
+
+msgid "enabled_help"
+msgstr "Abilita il server Radicale CalDAV/CardDAV."
+
+msgid "max_connections"
+msgstr "Numero massimo di connessioni"
+
+msgid "max_connections_help"
+msgstr "Numero massimo di connessioni parallele al server Radicale CalDAV/CardDAV. Impostare a 0 per disabilitare il limite."
+
+msgid "max_content_length"
+msgstr "Lunghezza massima del richiesta"
+
+msgid "max_content_length_help"
+msgstr "La dimensione massima del corpo della richiesta. (byte)"
+
+msgid "timeout"
+msgstr "Timeout del socket"
+
+msgid "timeout_help"
+msgstr "Timeout del socket in secondi. Definisce quanto tempo Radicale aspetterà che una connessione finisca, prima di chiudere la connessione stessa."
+
+msgid "delay"
+msgstr "Ritardo"
+
+msgid "delay_help"
+msgstr "Ritardo medio che Radicale applica dopo un tentativo di accesso fallito prima di consentire un nuovo accesso dallo stesso indirizzo IP di origine. Questo valore è espresso in secondi."
+
+msgid "radicale_off_desc"
+msgstr "I servizi Radicale CalDAV/CardDAV sono attualmente disabilitati su questo server."
+
+##### --- Active monitor
+
+msgid "amRadicaleNameTag"
+msgstr "Server Radicale CalDAV/CardDAV"
+
+msgid "amDetailsTitle"
+msgstr "Dettagli del server Radicale CalDAV/CardDAV"
+
+msgid "amStatusOK"
+msgstr "Il server Radicale CalDAV/CardDAV funziona normalmente."
+
+msgid "amNotAccepting"
+msgstr "Il server Radicale CalDAV/CardDAV non è in funzione e non è stato possibile riavviarlo. Provare a spegnere e riaccendere il server Radicale CalDAV/CardDAV per vedere se il problema si risolve."
+
+##### --- Error messages:
+
+msgid "ErrorCreatingCollection"
+msgstr "Si è verificato un errore durante il tentativo di creare questa raccolta CalDAV/CardDAV."
+
+msgid "ErrorDecodingCollection"
+msgstr "Si è verificato un errore durante il tentativo di determinare quali raccolte CalDAV/CardDAV esistono per questo utente."
+
+msgid "ErrorUpdatingCollection"
+msgstr "Si è verificato un errore durante il tentativo di modificare una raccolta CalDAV/CardDAV esistente."
+
+msgid "ErrorFileNotPresent"
+msgstr "Errore: La raccolta CalDAV/CardDAV specificata non esiste."
+
+msgid "ErrorDeletingCollection"
+msgstr "Si è verificato un errore durante il tentativo di eliminare questa raccolta CalDAV/CardDAV."
+
+msgid "ErrorRestoringBackup"
+msgstr "Si è verificato un errore durante il tentativo di ripristinare il backup di questa collezione CalDAV/CardDAV."
+
+msgid "ErrorCreatingBackup"
+msgstr "Si è verificato un errore durante il tentativo di creare il backup per questa collezione CalDAV/CardDAV."
+
+##### --- 2nd batch of locales:
+
+msgid "BackupAll"
+msgstr "Backup di tutti"
+
+msgid "BackupAll_help"
+msgstr "Eseguire il backup di tutte le raccolte CalDAV/CardDAV di Radicale."
+
+msgid "RestoreAll"
+msgstr "Ripristina tutto"
+
+msgid "RestoreAll_help"
+msgstr "Ripristina tutte le raccolte Radicale CalDAV/CardDAV dai loro backup. Se esiste una collezione che non ha un file di backup, questa collezione verrà lasciata inalterata."
+
+msgid "FullGUI"
+msgstr "GUI di Radicale"
+
+msgid "FullGUI_help"
+msgstr "Apre una pagina che consente di accedere all'interfaccia grafica integrata di Radicale."
+
+msgid "addressbooks"
+msgstr "Rubriche"
+
+msgid "calendars"
+msgstr "Calendari"
+
+msgid "name"
+msgstr "Nome"
+
+msgid "backup_date"
+msgstr "Data di backup"
+
+msgid "action"
+msgstr "Azione"
+
+msgid "click_to_copy_to_clipboard"
+msgstr "Copiare l'URL di questa raccolta."
+
+msgid "url_copied_to_clipboard"
+msgstr "L'URL di questa raccolta è stato copiato negli appunti: "
+
+msgid "click_to_edit_entry"
+msgstr "Modificare questa raccolta."
+
+msgid "click_to_delete_entry"
+msgstr "Eliminare questa raccolta."
+
+msgid "baLoad"
+msgstr "Ripristinare questa raccolta dal backup."
+
+msgid "baBackup"
+msgstr "Eseguire il backup di questa raccolta."
+
+msgid "baDownload"
+msgstr "Scarica il backup di questa raccolta."
+
+msgid "edit_addressbook"
+msgstr "Modifica rubrica"
+
+msgid "edit_calendar"
+msgstr "Modifica calendario"
+
+msgid "col_name"
+msgstr "Nome"
+
+msgid "col_name_help"
+msgstr "Nome di questa raccolta."
+
+msgid "col_desc"
+msgstr "Descrizione"
+
+msgid "col_desc_help"
+msgstr "Descrizione di questa raccolta."
+
+msgid "col_type"
+msgstr "Tipo"
+
+msgid "col_type_help"
+msgstr "Tipo di questa collezione."
+
+msgid "col_colour"
+msgstr "Colore"
+
+msgid "col_colour_help"
+msgstr "Colore di questa collezione."
+
+msgid "col_subtype"
+msgstr "Caratteristiche"
+
+msgid "col_subtype_help"
+msgstr "Specifica le caratteristiche di questo calendario."
+
+msgid "create_collection"
+msgstr "Creare una raccolta Radicale CalDAV/CardDAV"
+
+msgid "ADDRESSBOOK"
+msgstr "Rubrica"
+
+msgid "CALENDAR_JOURNAL_TASKS"
+msgstr "Calendario, Diario e Attività"
+
+msgid "CALENDAR_JOURNAL"
+msgstr "Calendario e Diario"
+
+msgid "CALENDAR_TASKS"
+msgstr "Calendario e Attività"
+
+msgid "JOURNAL_TASKS"
+msgstr "Diario e Attività"
+
+msgid "CALENDAR"
+msgstr "Calendario"
+
+msgid "JOURNAL"
+msgstr "Diario"
+
+msgid "TASKS"
+msgstr "Compiti"
+
+###
+
+msgid "restore_OK"
+msgstr "La collezione è stata ripristinata con successo dal backup."
+
+msgid "backup_OK"
+msgstr "La collezione è stata eseguita con successo il backup."
+
+msgid "delete_OK"
+msgstr "La collezione è stata eliminata con successo."

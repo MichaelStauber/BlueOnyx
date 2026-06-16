@@ -1,0 +1,4 @@
+#!/bin/sh
+
+cat /etc/sysconfig/bxmta |grep ^MTA|cut -d = -f2|tr '[:upper:]' '[:lower:]'
+

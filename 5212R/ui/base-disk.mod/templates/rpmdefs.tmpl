@@ -1,0 +1,388 @@
+# configuration bits for mod_rpmize
+# syntax:
+# <begin [x]section>
+# <end [x]section>
+#
+# x an be $ for a string or % for a hash.
+# if a hash is being used, you can add sub-sections with
+# <begin sub-section>
+# <end sub-section>
+
+
+<begin $DESCRIPTION>
+%package [LABEL]
+Group: System Environment/BlueOnyx
+Summary: [LABEL] for [VENDOR]-[SERVICE].
+[AUTOFILL]
+[BUILDARCH]
+
+%description [LABEL]
+The [VENDOR]-[SERVICE]-[LABEL] package contains the [LABEL]
+information for [VENDOR]-[SERVICE].
+
+<end $DESCRIPTION>
+
+<begin %PREP>
+<end %PREP>
+
+<begin %SETUP>
+<end %SETUP>
+
+<begin %BUILD>
+<end %BUILD>
+
+<begin %INSTALL>
+<end %INSTALL>
+
+<begin %FILES>
+<begin HEADER>
+%files [LABEL]
+%defattr(-,root,root)
+<end HEADER>
+
+<begin locale>
+[AUTOFILL]
+
+<end locale>
+
+<begin glue>
+%attr(0755,root,root) /usr/sausalito/sbin/disk_restorequotas.pl
+[AUTOFILL]
+
+<end glue>
+
+<begin ui>
+[AUTOFILL]
+
+<end ui>
+
+<begin capstone>
+%{RootDir}/capstone/%{Vendor}-%{Service}.cap
+[AUTOFILL]
+
+<end capstone>
+<end %FILES>
+
+<begin %POST-INSTALL>
+<begin HEADER>
+%post [LABEL]
+<end HEADER>
+
+<begin glue>
+# glue post-install
+
+<end glue>
+<begin ui>
+# ui post-install
+
+<end ui>
+<begin locale>
+# locale post-install
+
+<end locale>
+<end %POST-INSTALL>
+
+<begin %POST-UNINSTALL>
+<begin HEADER>
+%postun [LABEL]
+<end HEADER>
+
+<begin glue>
+# glue post-uninstall
+
+<end glue>
+<begin ui>
+# ui post-uninstall
+
+<end ui>
+<begin locale>
+# locale post-uninstall
+
+<end locale>
+<end %POST-UNINSTALL>
+
+<begin $CHANGELOG>
+
+* Tue Dec 23 2025 Michael Stauber <mstauber@solarspeed.net> 3.4.1-8
+- Modified ui/chorizo/web/Controllers/GroupDiskUsage.php with fallback
+  to use '/' partition for calculations if no /home partition is present,
+  but Vsite is incorrectly stating it's on a /home partition.
+
+* Thu Nov 13 2025 Michael Stauber <mstauber@solarspeed.net> 3.4.1-7
+- Modified glue/handlers/Disk.pm's get_dir_size() function to switch
+  it from using find/stat to use 'du --block-size=512' to match kernel
+  quota accounting. Includes all metadata, directories, and allocated
+  blocks — unlike find+stat %b. This ensures more accurate quota 
+  emulation when native quotas are unavailable.
+
+* Tue Sep 16 2025 Michael Stauber <mstauber@solarspeed.net> 3.4.1-6
+- Modified glue/handlers/Disk.pm with better check for presence of
+  dedicated /home partition.
+
+* Sat Jul 19 2025 Michael Stauber <mstauber@solarspeed.net> 3.4.1-5
+- Modified Controllers/ServerDiskUsage.php with exceptions for 5212R
+
+* Fri Jul 11 2025 Michael Stauber <mstauber@solarspeed.net> 3.4.1-4
+- Modified ui/chorizo/web/Controllers/ServerDiskUsage.php for better
+  display of totals for users with unlimited quota.
+
+* Sat Jun 14 2025 Michael Stauber <mstauber@solarspeed.net> 3.4.1-3
+- Modified glue/schemas/disk.schema to set default 0 for 'quota_toggle'
+  as we can't have an undefined integer as default.
+
+* Fri Jun 06 2025 Michael Stauber <mstauber@solarspeed.net> 3.4.1-2
+- Reworked the over-quota suspend/unsuspend Email for Users by 
+  introducing a new CODB key as <useroid> . 'Disk' 'quota_toggle'.
+  This allows us to run the quota-treatment on Users even if their
+  over-quota status hasn't changed.
+- Modified glue/schemas/disk.schema accordingly.
+
+* Sat Oct 26 2024 Michael Stauber <mstauber@solarspeed.net> 3.4.1-1
+- ui/chorizo/web/Controllers/GroupDiskUsage.php: Fixed potential
+  'division by zero'
+
+* Thu Oct 17 2024 Michael Stauber <mstauber@solarspeed.net> 3.4.0-1
+- Usage of Unix::PasswdFile and Unix::GroupFile turns out to be
+  problematic because even for read-only transactions it locks the
+  /etc/passwd and /etc/group files. Sooner or later this will lead
+  to runtime issues with locks being left around.
+- Added our own Base::CustomPasswdFile and Base::CustomGroupFile
+  which serve as drop in replacements for our common read-only 
+  access types.
+- Modified src/base-disk-am/am_disk.pl accordingly
+- Modified src/base-disk-am/get_quotas.pl accordingly
+
+* Sat Jul 13 2024 Michael Stauber <mstauber@solarspeed.net> 3.3.4-1
+- Locale related fixes in glue/handlers/Disk.pm
+
+* Sat Jun 08 2024 Michael Stauber <mstauber@solarspeed.net> 3.3.3-1
+- Modified constructor/93_update_disks_info.pl
+- Modified perl/Disk.pm
+
+* Sat May 18 2024 Michael Stauber <mstauber@solarspeed.net> 3.3.2-2
+- Small fixes in glue/handlers/Disk.pm
+- Small fixes glue/handlers/user_overquota.pl
+
+* Wed May 15 2024 Michael Stauber <mstauber@solarspeed.net> 3.3.2-1
+- Modified glue/handlers/Disk.pm to work with enabled user and group
+  quota on the filesystem level as well as without. If no disk quota
+  is supported by the filesystem, we skip setquota and use find and
+  stat to determine actual disk usage.
+- Modified glue/handlers/user_overquota.pl to switch usage of 
+  Unix::PasswdFile to Base::HomeDir to prevent run-time issues with
+  am_disk.pl or or get_quotas.pl
+- Modified glue/schemas/disk.schema to add the key 'vsite_over_quota'
+  to Vsite . Disk.
+
+* Fri May 10 2024 Michael Stauber <mstauber@solarspeed.net> 3.3.1-3
+- Fixes in ui/chorizo/web/Controllers/ServerDiskUsage.php
+
+* Fri May 10 2024 Michael Stauber <mstauber@solarspeed.net> 3.3.1-2
+- Fixes in ui/chorizo/web/Controllers/ServerDiskUsage.php
+
+* Tue Mar 26 2024 Michael Stauber <mstauber@solarspeed.net> 3.3.1-1
+- Partition fix in ui/chorizo/web/Controllers/UserDiskUsage.php
+
+* Mon Feb 19 2024 Michael Stauber <mstauber@solarspeed.net> 3.3.0-2
+- Version number bump for Elmer release
+
+* Sat Dec 02 2023 Michael Stauber <mstauber@solarspeed.net> 3.3.0-1
+- Elmer'ized ui/chorizo/web/Controllers/GroupDiskUsage.php
+- Elmer'ized ui/chorizo/web/Controllers/ServerDiskUsage.php
+- Elmer'ized ui/chorizo/web/Controllers/UserDiskUsage.php
+
+* Sun Aug 27 2023 Michael Stauber <mstauber@solarspeed.net> 3.2.0-3
+- Applied more consistent ACLs
+
+* Tue Mar 28 2023 Michael Stauber <mstauber@solarspeed.net> 3.2.0-2
+- Small fix in ui/chorizo/web/Controllers/ServerDiskUsage.php
+
+* Fri Nov 18 2022 Michael Stauber <mstauber@solarspeed.net> 3.2.0-1
+- Release version for BlueOnyx 5211R
+
+* Mon Dec 28 2020 Michael Stauber <mstauber@solarspeed.net> 3.1.0-1BX08
+- Fixed controllers/serverDiskUsage.php to deal with double disk summary
+
+* Tue Jun 16 2020 Michael Stauber <mstauber@solarspeed.net> 3.1.0-1BX07
+- Fixes in ui/chorizo/web/controllers/ServerDiskUsage.php
+
+* Fri May 29 2020 Michael Stauber <mstauber@solarspeed.net> 3.1.0-1BX06
+- Fixes in ui/chorizo/web/controllers/GroupDiskUsage.php
+- Fixes in ui/chorizo/web/controllers/ServerDiskUsage.php
+
+* Fri Sep 27 2019 Michael Stauber <mstauber@solarspeed.net> 3.1.0-1BX05
+- Added glue/handlers/user_overquota.pl for quota-check of vacation.pl
+- Modified glue/conf/disk.conf
+
+* Thu Sep 26 2019 Michael Stauber <mstauber@solarspeed.net> 3.1.0-1BX04
+- Bugfixes and further code cleanup. Finalization of the removal of the
+  usage of perl-Quota.
+
+* Thu Sep 26 2019 Michael Stauber <mstauber@solarspeed.net> 3.1.0-1BX03
+- Deprecated usage of perl-Quota and replaced it with using the shell
+  tools from the 'quota' RPM. Requires quota >= v4.0.4
+- Modified glue/conf/disk.conf
+- Modified glue/handlers/Disk.pm
+- Modified src/base-disk-am/base-disk-am.spec
+- Modified src/base-disk-am/get_quotas.pl
+- Modified ui/chorizo/web/controllers/GroupDiskUsage.php
+
+* Fri Jul 05 2019 Michael Stauber <mstauber@solarspeed.net> 3.1.0-1BX02
+- Fixed ui/chorizo/web/controllers/GroupDiskUsage.php
+
+* Wed Jun 05 2019 Michael Stauber <mstauber@solarspeed.net> 3.1.0-1BX01
+- Updated for 5210R.
+
+* Mon Nov 05 2017 Michael Stauber <mstauber@solarspeed.net> 3.0.0-1BX16
+- Modified constructors to use cce->update() insteadt of cce->set().
+
+* Tue Feb 21 2017 Michael Stauber <mstauber@solarspeed.net> 3.0.0-1BX15
+- Adjusted Controllers for base-alpine 2.0
+
+* Fri Jun 24 2016 Michael Stauber <mstauber@solarspeed.net> 3.0.0-1BX14
+- Code cleanup in constructor/94_check_home_partition.pl
+- Modified constructor/93_update_disks_info.pl to delete duplicate Disk
+  objects for mountPoints.
+- Modified glue/handlers/Disk.pm to not fail on quota issues when 
+  dealing with the account of user admin. We really need this.
+- Code cleanup in glue/handlers/modquota.pl
+
+* Sat Jan 09 2016 Michael Stauber <mstauber@solarspeed.net> 3.0.0-1BX13
+- Code cleanup in glue/handlers/servicequota_usage.pl
+- Fixes in ui/chorizo/web/controllers/groupDiskUsage.php
+
+* Thu Jun 25 2015 Michael Stauber <mstauber@solarspeed.net> 3.0.0-1BX12
+- Modified ACLs in ui/chorizo/web/controllers/serverDiskUsage.php
+
+* Tue Jun 16 2015 Michael Stauber <mstauber@solarspeed.net> 3.0.0-1BX11
+- Modified ui/chorizo/web/controllers/groupDiskUsage.php to prevent an
+  undefined index error message in case 2nd level disk quota are not
+  currently working. In that case we'll show disk used and quota limits
+  at 0.00 instead.
+
+* Tue Jun 02 2015 Michael Stauber <mstauber@solarspeed.net> 3.0.0-1BX10
+- Small fix in ui/chorizo/web/controllers/serverDiskUsage.php to prevent
+  'undefined index' errors if ccewrap is not working or get_quotas.pl
+  returns something unexpected.
+
+* Sat May 09 2015 Michael Stauber <mstauber@solarspeed.net> 3.0.0-1BX09
+- We were using 'df -k' in Base::Disk to determine disk usage. We actually
+  need to use 'df -kP' for POSIX compatible output without linefeeds after
+  really long device names. Also added more debugging mechanisms.
+- Modified glue/handlers/Disk.pm
+- Modified glue/handlers/df.pl
+- Modified perl/Disk.pm
+
+* Fri May 01 2015 Michael Stauber <mstauber@solarspeed.net> 3.0.0-1BX08
+- Converted indentation to spaces.
+- Modified ui/chorizo/web/controllers/serverDiskUsage.php to throw in
+  a Class check to make sure we're really only parsing Vsite objects for
+  Vsite disk usage. That makes sure we have all the required indexes.
+
+* Tue Feb 03 2015 Michael Stauber <mstauber@solarspeed.net> 3.0.0-1BX07
+- Extended glue/handlers/Disk.pl with debugging routine.
+
+* Mon Jan 26 2015 Michael Stauber <mstauber@solarspeed.net> 3.0.0-1BX06
+- Somehow the Disk related Perl modules had issues getting the partition
+  info correctly.
+- Modified perl/Disk.pm to add a new disk_get_usage_info() routine.
+- Modified constructor/93_update_disks_info.pl to use it.
+
+* Fri Nov 21 2014 Michael Stauber <mstauber@solarspeed.net> 3.0.0-1BX05
+- ui/chorizo/web/controllers/userDiskUsage.php: Fallback value for $used set.
+
+* Fri Sep 12 2014 Michael Stauber <mstauber@solarspeed.net> 3.0.0-1BX04
+- Bugfix (get_quota.pl related) in ui/chorizo/web/controllers/serverDiskUsage.php
+  Sometimes it reports no quota information back for sites. Which then leaves us
+  without the expected three values. If that happens, we now discard the info.
+
+* Mon Jul 14 2014 Michael Stauber <mstauber@solarspeed.net> 3.0.0-1BX03
+- Bugfix (partitioning related) in ui/chorizo/web/controllers/serverDiskUsage.php
+
+* Fri Jul 11 2014 Michael Stauber <mstauber@solarspeed.net> 3.0.0-1BX02
+- Chorizo GUI added, old GUI disabled.
+
+* Wed May 21 2014 Michael Stauber <mstauber@solarspeed.net> 3.0.0-1BX01
+- Major version number bump for 520XR
+- Modified glue/handlers/groupusage.pl, which was storing used quota
+  amounts in bytes, while all our other quota settings in CODB are stored
+  in megabytes. Fixed it to now store in megabytes, too. Rounded up.
+
+* Wed Feb 05 2014 Michael Stauber <mstauber@solarspeed.net> 2.0.2-1BX03
+- Added cleaned up French translation as provided by Meaulnes Legler.
+
+* Sat Dec 14 2013 Michael Stauber <mstauber@solarspeed.net> 2.0.2-1BX02
+- Merged in locales for the Netherlands ('nl_NL').
+
+* Thu Dec 05 2013 Michael Stauber <mstauber@solarspeed.net> 2.0.2-1BX01
+- Preparational build for 5207R/5208R. Doesn't include new GUI yet.
+- Merged in new locales from 5207R ("es_ES", "fr_FR", "it_IT", "pt_PT").
+- Dropped all two character locales.
+- Converted "ja_JP" from EUC-JP to UTF-8.
+- Merged in new capabilities from Hisao Shibuya's 5200R code branch.
+- Remove .svn directory from rpm package. 
+- Added constructor/94_check_home_partition.pl
+- Modified constructor/93_update_disks_info.pl to drop our old /home work around.
+
+* Tue Mar 20 2012 Michael Stauber <mstauber@solarspeed.net> 2.0.1-1BX07
+- Converted locale encoding from UTF-8 to ISO-8859-1.
+
+* Fri Sep 09 2011 Michael Stauber <mstauber@solarspeed.net> 2.0.1-1BX06
+- Modified ui/web/serverDiskUsage.php to avoid a potential division by zero.
+
+* Sun Aug 14 2011 Michael Stauber <mstauber@solarspeed.net> 2.0.1-1BX05
+- Modified ui/web/serverDiskUsage.php with AWS provisions to allow fake /home partition
+
+* Tue Jul 19 2011 Michael Stauber <mstauber@solarspeed.net> 2.0.1-1BX04
+- Modified constructor/93_update_disks_info.pl to add a simulated /home partition 
+  in case there is no real one. We need a /home 'Disk' object or Vsite creation
+  fails.
+
+* Sun Jun 06 2010 Michael Stauber <mstauber@solarspeed.net> 2.0.1-1BX03
+- Various PHP-5.3 related fixes
+
+* Sat Jun 05 2010 Michael Stauber <mstauber@solarspeed.net> 2.0.1-1BX02
+- Copied 'en' locales to 'en_US'
+
+* Mon Jan 11 2010 Michael Stauber <mstauber@solarspeed.net> 2.0.1-1BX01
+- Modified ui/web/serverDiskUsage.php with provisions to make it easier to spot sites and users that are over quota (or near that limit).
+- Added related new strings to locales.
+- Version number bump to 2.0.1
+
+* Wed Dec 03 2008 Michael Stauber <mstauber@solarspeed.net> 2.0.0-88BQ16
+- Rebuilt for BlueOnyx.
+
+* Fri Nov 28 2008 Michael Stauber <mstauber@solarspeed.net> 2.0.0-88BQ15
+- Updated ui/web/serverDiskUsage.php to to hide /home partition if this is a VPS.
+- It is necessary for compatability to have a "Disk" named /home, but we don't want to confuse users.
+
+* Thu Nov 13 2008 Michael Stauber <mstauber@solarspeed.net> 2.0.0-88BQ14
+- Fixed PHP5 related display issue in ui/web/serverDiskUsage.php
+
+* Sun Jan 27 2008 Michael Stauber <mstauber@solarspeed.net> 2.0.0-88BQ13
+- German locales added.
+
+* Tue Jan 22 2008 Michael Stauber <mstauber@solarspeed.net> 2.0.0-88BQ12
+- Danish locales added. Thanks to Jes Klittum!
+
+* Mon Jun 25 2007 Hisao SHIBUYA <shibuya@bluequartz.org> 2.0.0-88BQ11
+- Fixed duplicate include issue.
+
+* Tue Nov 29 2005 Hisao SHIBUYA <shibuya@alpha.or.jp> 2.0.0-88BQ10
+- rebuild with devel-tools 0.5.1-0BQ7.
+
+* Tue Oct 18 2005 Hisao SHIBUYA <shibuya@alpha.or.jp> 2.0.0-88BQ9
+- rebuild with devel-tools 0.5.1
+
+* Tue Aug 16 2005 Hisao SHIBUYA <shibuya@alpha.or.jp> 2.0.0-88BQ8
+- modified groupDiskUsage.xml to fix menu order.
+
+* Fri Aug 12 2005 Hisao SHIBUYA <shibuya@alpha.or.jp> 2.0.0-88BQ7
+- modified Group tag in rpmdefs.tmpl.
+
+* Fri Aug 12 2005 Hisao SHIBUYA <shibuya@alpha.or.jp> 2.0.0-88BQ6
+- fix menu order for personal profile.
+
+* Thu Aug 11 2005 Hisao SHIBUYA <shibuya@alpha.or.jp> 2.0.0-88BQ5
+- clean up spec file.
+<end $CHANGELOG>

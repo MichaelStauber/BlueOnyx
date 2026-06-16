@@ -1,0 +1,17 @@
+<!--
+$Id: google_auth.xml
+-->
+
+<program name="/usr/sausalito/sbin/gauth_add.sh">
+        <capability requires="adminUser" user="root"/>
+        <capability requires="siteAdmin" user="root"/>
+        <capability requires="manageSite" user="root"/>
+        <capability requires="modifyUser"/>
+</program>
+
+<program name="/usr/sausalito/sbin/gauth_check.sh">
+        <capability requires="adminUser" user="root"/>
+        <capability requires="siteAdmin" user="root"/>
+        <capability requires="manageSite" user="root"/>
+        <capability requires="modifyUser"/>
+</program>

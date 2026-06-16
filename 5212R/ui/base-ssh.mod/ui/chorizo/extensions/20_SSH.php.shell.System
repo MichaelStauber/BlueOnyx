@@ -1,0 +1,214 @@
+<?php
+// $Id: 20_SSH.php.shell.System 
+
+include_once('UIExtension.php');
+
+class SSHExtension extends UIExtension {
+    function display(&$helper, &$container, $prams) {
+        $factory = $helper->getHtmlComponentFactory('base-ssh');
+        $cce = $helper->getCceClient();
+
+        $settings = $cce->get($prams['CCE_OID'], 'SSH');
+
+        $pageId = $prams['PAGED_BLOCK_DEFAULT_PAGE'];
+
+        // SSH enabled or not:
+        $sshField = $factory->getBoolean('SSH_enabled', $settings['enabled']);
+
+        $sshToggleBox = $factory->getMultiChoice('enableSSH');
+        $enable = $factory->getOption('SSH_enabled', $settings['enabled']);
+        $Label = $factory->getLabel('enableSSH', false);
+        $enable->setLabel($Label);
+
+        // Port:
+        // List of ports that we allow SSHd to run on:
+        $portlist = array (
+            '22',
+            '222',
+            '303',
+            '333',
+            '691',
+            '768',
+            '769',
+            '900',
+            '901',
+            '902',
+            '903',
+            '904',
+            '905',
+            '906',
+            '907',
+            '908',
+            '909',
+            '909',
+            '2002'
+        );
+        sort($portlist);
+
+        // If we're currently using a port that's not in that array, we add it to the array:
+        if (!in_array($settings['Port'], $portlist)) {
+            $portlist[] = $settings['Port'];
+        }
+
+        $SSHPort = $factory->getMultiChoice("SSH_Port", array_values($portlist));
+        $SSHPort->setSelected($settings['Port'], true);
+        $SSHPort->setOptional(false);
+        $enable->addFormField(
+            $SSHPort, 
+            $factory->getLabel("SSH_Port"), 
+            $pageId);
+
+        $sshToggleBox->addOption($enable);
+
+        // Protocols:
+        $protolist = array (
+            '2',
+            '2,1',
+            '1,2',
+            '1'
+        );
+
+        $SSHProto = $factory->getMultiChoice("SSH_Proto", array_values($protolist));
+        $SSHProto->setSelected($settings['Protocol'], true);
+        $SSHProto->setOptional(false);
+        $enable->addFormField($SSHProto, $factory->getLabel("SSH_Proto"), $pageId);
+
+        // Build the MultiChoice selector for 'PermitRootLogin':
+        $SSH_root_options = array("0" => "[[palette.No]]", "1" => "[[palette.Yes]]", "2" => "[[base-ssh.without-password]]");
+        $sshRoot_select = $factory->getMultiChoice("SSHrootLogin",array_values($SSH_root_options));
+        $sshRoot_select->setSelected($SSH_root_options[$settings['PermitRootLogin']], true);
+        $enable->addFormField($sshRoot_select,$factory->getLabel("SSHrootLogin"), $pageId);
+
+        // PasswordAuthentication enabled or not:
+        $pwAccess = $factory->getBoolean('PasswordAuthentication', $settings['XPasswordAuthentication']);
+        $enable->addFormField(
+            $pwAccess,
+            $factory->getLabel('PasswordAuthentication'),
+            $pageId
+            );
+
+        //// RSAAuthentication enabled or not:
+        // Deprecated
+        //$RSAAccess = $factory->getBoolean('RSAAuthentication', $settings['RSAAuthentication']);
+        //$enable->addFormField(
+        //    $RSAAccess,
+        //    $factory->getLabel('RSAAuthentication'),
+        //    $pageId
+        //    );
+
+        // PubkeyAuthentication enabled or not:
+        $PKeyAccess = $factory->getBoolean('PubkeyAuthentication', $settings['PubkeyAuthentication']);
+        $enable->addFormField(
+            $PKeyAccess,
+            $factory->getLabel('PubkeyAuthentication'),
+            $pageId
+            );
+
+        // Google Authenticator enabled or not:
+        $GoogleAuthentication_Field = $factory->getBoolean('GoogleAuthentication', $settings['GoogleAuthentication']);
+        $enable->addFormField(
+            $GoogleAuthentication_Field,
+            $factory->getLabel('GoogleAuthentication'),
+            $pageId
+            );
+
+        // AllowTcpForwarding enabled or not:
+        $TCPForwardingAccess = $factory->getBoolean('AllowTcpForwarding', $settings['AllowTcpForwarding']);
+        $enable->addFormField(
+            $TCPForwardingAccess,
+            $factory->getLabel('AllowTcpForwarding'),
+            $pageId
+            );
+
+        // Allow SFTP/SCP;
+        //    $TCPForwardingAccess = $factory->getBoolean('AllowSFTP', $settings['AllowSFTP']);
+        //    $enable->addFormField(
+        //        $TCPForwardingAccess,
+        //        $factory->getLabel('AllowSFTP'),
+        //        $pageId
+        //        );
+        //
+        // <--- This block was removed again, because we can realize the jails without it.
+
+        // Out with the container:
+        $container->addFormField($sshToggleBox, $factory->getLabel('enableSSH'), $pageId);
+
+    }
+
+    function handle(&$helper, &$errors, $prams, $attributes) {
+
+        $cce = $helper->getCceClient();
+
+        // Make CI instance available:
+        $CI = get_instance();
+
+        // Reverse the options:
+        $SSH_root_options_reverse = array("[[palette.No]]" => "0", "[[palette.Yes]]" => "1", "[[base-ssh.without-password]]" => "2");
+
+        if (in_array($attributes['SSHrootLogin'], array_keys($SSH_root_options_reverse))) {
+            $attributes['SSHrootLogin'] = $SSH_root_options_reverse[$attributes['SSHrootLogin']];
+        }
+        else {
+            // Something went wrong. We got an unexpected value for attributes['SSHrootLogin'], so we set this to the default:
+            $attributes['SSHrootLogin'] = '0';
+        }
+        if (($attributes['SSHrootLogin'] < '0') || ($attributes['SSHrootLogin'] > '2')) {
+            // Something went wrong. We got an unexpected value for attributes['SSHrootLogin'], so we set this to the default:
+            $attributes['SSHrootLogin'] = '0';
+        }
+
+        $cce->set($prams['CCE_OID'], 'SSH',
+                    array(
+                    'enabled' => ($attributes['enableSSH'] ? 1 : 0),
+                    'Port' => $attributes['SSH_Port'],
+                    'Protocol' => $attributes['SSH_Proto'],
+                    'PermitRootLogin' => $attributes['SSHrootLogin'],
+                    'XPasswordAuthentication' => ($attributes['PasswordAuthentication'] ? 1 : 0),
+                    'RSAAuthentication' => '0',
+                    'PubkeyAuthentication' => ($attributes['PubkeyAuthentication'] ? 1 : 0),
+                    'GoogleAuthentication' => ($attributes['GoogleAuthentication'] ? 1 : 0),
+                    'AllowTcpForwarding' => ($attributes['AllowTcpForwarding'] ? 1 : 0),
+                    'force_update' => time()
+                    ));
+
+        $errors = array_merge($errors, $cce->errors());
+    }
+}
+
+/*
+Copyright (c) 2008-2023 Michael Stauber, SOLARSPEED.NET
+Copyright (c) 2008-2023 Team BlueOnyx, BLUEONYX.IT
+Copyright (c) 2008 Brian Smith, NuOnce Networks, Inc.
+All Rights Reserved.
+
+1. Redistributions of source code must retain the above copyright 
+   notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright 
+   notice, this list of conditions and the following disclaimer in 
+   the documentation and/or other materials provided with the 
+   distribution.
+
+3. Neither the name of the copyright holder nor the names of its 
+   contributors may be used to endorse or promote products derived 
+   from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
+COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
+ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+POSSIBILITY OF SUCH DAMAGE.
+
+You acknowledge that this software is not designed or intended for 
+use in the design, construction, operation or maintenance of any 
+nuclear facility.
+
+*/
+?>

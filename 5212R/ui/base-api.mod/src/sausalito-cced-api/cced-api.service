@@ -1,0 +1,16 @@
+[Unit]
+Description=CCEd API Proxy Service
+After=network.target cced.init.service
+Requires=cced.init.service
+
+[Service]
+Type=simple
+PermissionsStartOnly=true
+ExecStartPre=/bin/bash -c '/usr/sausalito/bin/cced-api-pre.sh 2>&1'
+ExecStart=/usr/sausalito/sbin/cced-api
+User=admserv
+Group=admserv
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

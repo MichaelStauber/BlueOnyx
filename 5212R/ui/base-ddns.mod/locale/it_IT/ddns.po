@@ -1,0 +1,42 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "menu_system_ddns"
+msgstr "DNS dinamico"
+
+msgid "menu_system_ddns_help"
+msgstr "Questo menu vi permette di configurare la riconfigurazione dinamica dei vostri record DNS."
+
+msgid "ddns_header"
+msgstr "Impostazioni DNS dinamico"
+
+msgid "ddns_enabled"
+msgstr "Abilita DDNS API"
+
+msgid "ddns_enabled_help"
+msgstr "Se si spunta questa casella di controllo, l'URL /ddns/ddnsapi su questa GUI risponderà alle richieste di aggiornare dinamicamente i record DNS contrassegnati sotto con l'indirizzo IP dell'URL che ha chiamato l'URL API. Uno script di esempio per tali richieste di aggiornamento può essere trovato qui su questo server: /usr/sausalito/sbin/ddns-client.pl"
+
+msgid "ddns_domains"
+msgstr "Domini DDNS"
+
+msgid "ddns_domains_help"
+msgstr "Per permettere gli aggiornamenti dinamici del DNS per certi domini, spostare i domini in questione nella lista qui sotto a sinistra e salvare le modifiche. Tutti i domini elencati a sinistra erediteranno l'indirizzo IP IPv4 del client che sta chiamando l'URL API con la corretta autenticazione."
+
+msgid "Status"
+msgstr "Stato"
+
+msgid "Status_help"
+msgstr "Stato della richiesta DDNS API"
+
+msgid "dns_update_disabled"
+msgstr "Gli aggiornamenti DDNS sono disabilitati"
+
+msgid "dns_update_success"
+msgstr "I record A del dominio selezionato hanno ora questo IP: "

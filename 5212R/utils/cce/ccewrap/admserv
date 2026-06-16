@@ -1,0 +1,3 @@
+Defaults:admserv   !requiretty
+%admserv        ALL=(root) NOPASSWD: /usr/sausalito/bin/cced_unstuck.sh
+%admserv        ALL=(root) NOPASSWD: /usr/sausalito/bin/mysql_statustrigger.pl

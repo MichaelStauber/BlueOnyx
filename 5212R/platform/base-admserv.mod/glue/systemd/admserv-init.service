@@ -1,0 +1,12 @@
+[Unit]
+Description=One-time temporary TLS key generation for admserv.service
+Documentation=man:admserv-init.service(8)
+
+ConditionPathExists=|!/etc/admserv/certs/certificate
+ConditionPathExists=|!/etc/admserv/certs/key
+
+[Service]
+Type=oneshot
+RemainAfterExit=no
+
+ExecStart=/usr/libexec/admserv-ssl-gencerts

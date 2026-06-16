@@ -1,0 +1,195 @@
+# configuration bits for mod_rpmize
+# syntax:
+# <begin [x]section>
+# <end [x]section>
+#
+# x an be $ for a string or % for a hash.
+# if a hash is being used, you can add sub-sections with
+# <begin sub-section>
+# <end sub-section>
+
+
+<begin $DESCRIPTION>
+%package [LABEL]
+Group: System Environment/BlueOnyx
+Summary: [LABEL] for [VENDOR]-[SERVICE].
+
+[AUTOFILL]
+[BUILDARCH]
+[PROVIDES]
+
+%description [LABEL]
+The [VENDOR]-[SERVICE]-[LABEL] package contains the [LABEL]
+information for [VENDOR]-[SERVICE].
+
+<end $DESCRIPTION>
+
+<begin %PREP>
+<end %PREP>
+
+<begin %SETUP>
+<end %SETUP>
+
+<begin %BUILD>
+<end %BUILD>
+
+<begin %INSTALL>
+<end %INSTALL>
+
+<begin %FILES>
+<begin HEADER>
+%files [LABEL]
+%defattr(-,root,root)
+<end HEADER>
+
+<begin locale>
+[AUTOFILL]
+
+<end locale>
+
+<begin glue>
+[AUTOFILL]
+%attr(0755,-,-) /usr/sausalito/bin/radicale_backup_check.pl
+%attr(0755,-,-) /usr/sausalito/bin/radicale_backup.pl
+%attr(0755,-,-) /usr/sausalito/bin/radicale_list.pl
+%attr(0755,-,-) /usr/sausalito/bin/radicale_update.pl
+%attr(0755,-,-) /usr/sausalito/bin/radicale_create.pl
+%attr(0755,-,-) /usr/sausalito/bin/radicale_delete.pl
+%attr(0755,-,-) /usr/sausalito/sbin/radicale_backup_all.pl
+%attr(0755,-,-) /usr/sausalito/sbin/radicale_restore_all.pl
+
+<end glue>
+
+<begin ui>
+[AUTOFILL]
+
+<end ui>
+
+<begin capstone>
+%{RootDir}/capstone/%{Vendor}-%{Service}.cap
+[AUTOFILL]
+
+<end capstone>
+<end %FILES>
+
+<begin %POST-INSTALL>
+<begin HEADER>
+%post [LABEL]
+<end HEADER>
+
+<begin glue>
+# glue post-install
+
+# Rehash CCEd: 
+if [ -d "/usr/sausalito/yumcce" ];then 
+  touch /usr/sausalito/yumcce/rehash
+fi
+
+<end glue>
+<begin ui>
+# ui post-install
+# this is somewhat nasty, but it always makes sure that there's a
+# default .html file in case the browser doesn't specify a locale
+if [ x"[DEFLOCALE]" != x ]; then
+	for dir in `find [CCEWEB] -type d`; do 
+		(cd $dir; 
+		if [ x"`ls *.htm[l].[DEFLOCALE] 2> /dev/null`" != x ]; then
+			for file in `ls *.htm[l].[DEFLOCALE]`; do
+				base=`basename $file .[DEFLOCALE]`
+				if [ ! -f $base ]; then
+					ln -s $file $base
+ 				fi
+			done
+		fi)
+	done
+fi
+
+<end ui>
+<begin locale>
+# locale post-install
+
+<end locale>
+<end %POST-INSTALL>
+
+<begin %POST-UNINSTALL>
+<begin HEADER>
+%postun [LABEL]
+<end HEADER>
+
+<begin glue>
+# glue post-uninstall
+
+<end glue>
+<begin ui>
+# ui post-uninstall
+
+<end ui>
+<begin locale>
+# locale post-uninstall
+
+<end locale>
+<end %POST-UNINSTALL>
+
+<begin $CHANGELOG>
+
+* Thu Dec 18 2025 Michael Stauber <mstauber@blueonyx.it> 1.1.0-8
+- Modified ui/chorizo/web/Controllers/AddCollection.php calendar
+  type mapping as suggested by Christoph Schneeberger.
+
+* Tue Jul 01 2025 Michael Stauber <mstauber@blueonyx.it> 1.1.0-7
+- Modified constructor/radicale_check_auth.pl with provisions for
+  BlueOnyx 5210R/5211R/5212R
+- Modified glue/handlers/toggle_radicale.pl with provisions for
+  BlueOnyx 5210R/5211R/5212R
+
+* Fri Jun 20 2025 Michael Stauber <mstauber@blueonyx.it> 1.1.0-6
+- Updated module Makefile with build provisions for 5212R
+
+* Mon Apr 29 2024 Michael Stauber <mstauber@blueonyx.it> 1.1.0-5
+- Bugfix in /ui/chorizo/web/Controllers/PersonalOrganizer.php
+
+* Mon Feb 26 2024 Michael Stauber <mstauber@blueonyx.it> 1.1.0-4
+- Modified Makefile so that module can be used on 5210R and 5211R
+
+* Tue Feb 20 2024 Michael Stauber <mstauber@blueonyx.it> 1.1.0-3
+- Modified ui/chorizo/web/Controllers/PersonalOrganizerExt.php
+
+* Mon Feb 19 2024 Michael Stauber <mstauber@blueonyx.it> 1.1.0-2
+- Version number bump for Elmer release
+
+* Thu Dec 07 2023 Michael Stauber <mstauber@blueonyx.it> 1.1.0-1
+- Elmer'ized ui/chorizo/web/Controllers/Organizer.php
+- Elmer'ized ui/chorizo/web/Controllers/PersonalOrganizer.php
+- Elmer'ized ui/chorizo/web/Controllers/PersonalOrganizerEdit.php
+- Elmer'ized ui/chorizo/web/Controllers/PersonalOrganizerExt.php
+
+* Tue Jul 18 2023 Michael Stauber <mstauber@blueonyx.it> 1.0.6-1
+- Fixed ACL in glue/schemas/radicale.schema
+
+* Mon Jul 17 2023 Michael Stauber <mstauber@blueonyx.it> 1.0.5-1
+- Bugfix in ui/chorizo/web/Controllers/AddCollection.php
+- Bugfix in ui/chorizo/web/Controllers/PersonalOrganizerEdit.php
+
+* Sat Jul 15 2023 Michael Stauber <mstauber@blueonyx.it> 1.0.4-1
+- Fixed denial of access to certain UI pages if Radicale is disabled.
+
+* Wed Jul 13 2023 Michael Stauber <mstauber@blueonyx.it> 1.0.3-1
+- Ported glue/handlers/toggle_radicale.pl over from 5210R to keep
+  foundation on the same basis.
+- Modified ui/chorizo/web/Controllers/Organizer.php to remove
+  debugging line on POST request.
+
+* Sun Jul 09 2023 Michael Stauber <mstauber@blueonyx.it> 1.0.2-1
+- Small bugfixes dealing with restores of users and not yet existing
+  radicale user directories.
+- Modified glue/bin/radicale_backup.pl
+- Modified glue/handlers/user_restore.pl
+
+* Sun Jul 09 2023 Michael Stauber <mstauber@blueonyx.it> 1.0.1-1
+- Release version
+
+* Tue Jun 27 2023 Michael Stauber <mstauber@blueonyx.it> 1.0.0-1
+- Initial build
+
+<end $CHANGELOG>
+

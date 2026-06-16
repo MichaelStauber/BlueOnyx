@@ -1,0 +1,43 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "menu_system_ddns"
+msgstr "Dynamisk DNS"
+
+msgid "menu_system_ddns_help"
+msgstr "Denne menu giver dig mulighed for at konfigurere dynamisk rekonfiguration af dine DNS-poster."
+
+msgid "ddns_header"
+msgstr "Dynamiske DNS-indstillinger"
+
+msgid "ddns_enabled"
+msgstr "Aktiver DDNS API"
+
+msgid "ddns_enabled_help"
+msgstr "Hvis du markerer dette afkrydsningsfelt, vil URL-adressen /ddns/ddnsapi på denne GUI svare på anmodninger om dynamisk at opdatere de DNS-poster, der er markeret nedenfor, med IP-adressen på den URL, der kaldte API-URL'en. Et eksempel på et script til sådanne opdateringsanmodninger findes her på denne server: /usr/sausalito/sbin/ddns-client.pl"
+
+msgid "ddns_domains"
+msgstr "DDNS-domæner"
+
+msgid "ddns_domains_help"
+msgstr "Hvis du vil tillade dynamiske DNS-opdateringer for visse domæner, skal du flytte de pågældende domæner i nedenstående liste til venstre og gemme ændringerne. Alle domæner på listen til venstre vil arve IPv4-IP-adressen på den klient, der kalder API-URL'en med korrekt godkendelse."
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Status_help"
+msgstr "Status for DDNS API-anmodningen"
+
+msgid "dns_update_disabled"
+msgstr "DDNS-opdateringer er deaktiveret"
+
+msgid "dns_update_success"
+msgstr "Udvalgte domæne A Records har nu denne IP: "
+

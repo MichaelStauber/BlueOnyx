@@ -1,0 +1,747 @@
+<?php
+// $Id: 10_EmailSettings.php
+//
+// This extension handles email forwarding and vacation messages.
+//
+// If you came here to find an example for the AutoFeatures of type
+// 'UserExtraServices', then please note this: THIS module is ugly.
+// It doesn't really conform to UIFC standards, as all the form 
+// fields (except for the final one) are done via uifc_ng_helper.php
+// Which itself is a dirty hack that was created before the UIFC
+// Classes had been ported to 520XR. So I took shortcuts, which
+// were removed from all other pages and modules as soon as I had
+// proper UIFC classes created. However, the appearance of the
+// email forwarding and vacation message page from the old GUI is
+// very hard to replicate in the new GUI. Even with all the proper
+// UIFC classes now in place. Hence this one here still uses the
+// somewhat dirty uifc_ng_helper.php, but you shouldn't. If you
+// intend to create a 'UserExtraServices' extension yourself, use
+// the general format of this module as example, but pretty please:
+// Do yourself a favour and use proper UIFC. Thanks!
+//
+// Note: For Elmer this now uses proper UIFC2 methods. Yay!!
+//
+
+include_once("BXTime.php");
+use PHP81_BC\BXTime;
+
+include_once('UIExtension.php');
+
+class EmailSettingsExtension extends UIExtension {
+    function display(&$serverScriptHelper, &$container, $prams) {
+
+        $CI =& get_instance();
+        $BX_SESSION = $CI->getBX_SESSION();
+        $factory = $serverScriptHelper->getHtmlComponentFactory("base-user");
+        $cceClient = $serverScriptHelper->getCceClient();
+        $pageId = 'EmailSettings';
+
+        // Get the User related Objects of interest:
+        $user = $cceClient->get($prams['CCE_OID']);
+        $userEmail = $cceClient->get($prams['CCE_OID'], "Email");
+
+        // Get $sessionId:
+        $sessionId = $BX_SESSION['sessionId'];
+
+        $i18n = new I18n("base-user", $BX_SESSION['loginUser']['localePreference']);
+
+        //---
+        // Get data for the Vsite:
+        $vsite = $cceClient->getObject('Vsite', array('name' => $user['site']));
+
+        // Prefered Email Domain Alias field:
+        $user_mailAliases = $cceClient->scalar_to_array($userEmail['aliases']);
+        if (!in_array($user['name'], $user_mailAliases)) {
+            $user_mailAliases[] = $user['name'];
+        }
+        if (count($user_mailAliases) > "0") {
+            asort($user_mailAliases);
+            // Build the MultiChoice selector:
+            $prefered_ualias_select = $factory->getMultiChoice("prefUserAlias", array_values($user_mailAliases));
+            $pref_ualias_file = '~' . $user["name"] . '/.prefEmailAlias';
+            $ret = $serverScriptHelper->shell("/bin/cat $pref_ualias_file", $pref_ualias, 'root', $sessionId);
+
+            if ($pref_ualias != '') {
+                $pref_ualias = substr($pref_ualias, 0, -1);
+            }
+
+            if (isset($pref_ualias)) {
+                if (in_array($pref_ualias, array_values($user_mailAliases))) {
+                    $prefered_ualias_select->setSelected($pref_ualias, true);
+                }
+                else {
+                    $prefered_ualias_select->setSelected($user['name'], true);
+                }
+            }
+            else {
+                $prefered_ualias_select->setSelected($user['name'], true);
+            }
+        }
+
+        // Prefered Email User Alias field:
+        if (isset($vsite['mailAliases'])) {
+            $vsite_mailAliases = $cceClient->scalar_to_array($vsite['mailAliases']);
+            if (!in_array($vsite['fqdn'], $vsite_mailAliases)) {
+                $vsite_mailAliases[] = $vsite['fqdn'];
+            }
+            if (count($vsite_mailAliases) > "0") {
+                asort($vsite_mailAliases);
+                // Build the MultiChoice selector:
+                $prefered_alias_select = $factory->getMultiChoice("prefDomAlias", array_values($vsite_mailAliases));
+                $pref_alias_file = '~' . $user["name"] . '/.prefEmailDomain';
+                $ret = $serverScriptHelper->shell("/bin/cat $pref_alias_file", $pref_alias, 'root', $sessionId);
+
+                if ($pref_alias != '') {
+                    $pref_alias = substr($pref_alias, 0, -1);
+                }
+
+                if (isset($pref_alias)) {
+                    if (in_array($pref_alias, array_values($vsite_mailAliases))) {
+                        $prefered_alias_select->setSelected($pref_alias, true);
+                    }
+                    else {
+                        $prefered_alias_select->setSelected($vsite['fqdn'], true);
+                    }
+                }
+                else {
+                    $prefered_alias_select->setSelected($vsite['fqdn'], true);
+                }
+            }
+        }
+
+        // Only show this element if the user is member of a Vsite:
+        if (isset($vsite['name'])) {
+            // Show the pulldowns for the prefered alias:
+            if ((count($user_mailAliases) > "0") && (count($vsite_mailAliases) > "0")) {
+
+                if ($BX_SESSION['gui_theme'] == 'adminica') {
+
+                    //
+                    //--- Sender address for Adminica:
+                    //
+
+                    $PrefAliasComplete = $factory->getTextField("PrefAliasComplete", '', 'r');
+                    $PrefAliasComplete->setLabelType("label_top no_lines");
+                    $prefered_ualias_select->setLabelType("label_top no_lines");
+                    $spacer = $factory->getTextField("spacer", '@', 'r');
+                    $spacer->setLabelType("label_top no_lines");
+                    $prefered_alias_select->setLabelType("label_top no_lines");
+                    $fqdn = $factory->getCompositeFormField(array($PrefAliasComplete, $prefered_ualias_select, $spacer, $prefered_alias_select));
+                    $fqdn->setColumnWidths(array('col_25', 'col_25', 'col_50'));
+                    $container->addFormField(
+                            $fqdn,
+                            $factory->getLabel("[[base-user.PrefAliasComplete]]"),
+                            $pageId
+                            );
+                }
+                else {
+
+                    //
+                    //--- Sender address for Elmer:
+                    //
+
+                    // Please note: This has been wrapped into the 'Vacation Message' selector further below:
+
+                    //    // Heading (single line with label):
+                    //    $elmer_sender_address = array();
+                    //    $PrefAliasComplete_label = Label("base-user", "PrefAliasComplete", $i18n);
+                    //    $elmer_sender_address[] = $factory->getRawHTML("PrefAliasComplete", $PrefAliasComplete_label, "r");
+                    //    $header_list = $factory->getCompositeFormField($elmer_sender_address, '');
+                    //    $header_list->setColumnWidths(array('col_25'));
+                    //    $container->addFormField(
+                    //        $header_list,
+                    //        $factory->getLabel(" "),
+                    //        $pageId
+                    //    );
+                    //
+                    //    // Aggregated form fields for the input:
+                    //    $elmer_sender_address_list = array();
+                    //
+                    //    $elmer_sender_address_list[] = $prefered_ualias_select;
+                    //
+                    //    $elmer_sender_address_list[] = $prefered_alias_select;
+                    //
+                    //    $elmer_sender_address_list[] = $factory->getRawHTML("final_spacer", '.', "r");
+                    //
+                    //    $aggregate_sa_list = $factory->getCompositeFormField($elmer_sender_address_list, '');
+                    //    $aggregate_sa_list->setColumnWidths(array('col-sm-3 mt-10', 'col-sm-3 mt-10', 'col-sm-3 mt-10'));
+                    //
+                    //    $container->addFormField(
+                    //        $aggregate_sa_list,
+                    //        $factory->getLabel("PrefAliasComplete"),
+                    //        $pageId
+                    //    );
+
+                }
+            }
+        }
+        //---
+
+        // Line up the Ducks:
+        $forwardSaveField = $userEmail['forwardSave'];
+        $forwardEnableField = $userEmail['forwardEnable'];
+        $autoResponderField = $userEmail['vacationOn'];
+
+        if ($autoResponderField == "1") {
+            $autoResponderField = "1";
+            $autoResponderField_checked = " checked";
+        }
+        else {
+            $autoResponderField = "0";
+            $autoResponderField_checked = "";
+        }
+
+        if (!$userEmail['vacationMsgStart']) {
+            $vacationMsgStart = time();
+        }
+        else {
+            $vacationMsgStart = $userEmail['vacationMsgStart'];
+        }
+        if (!$userEmail['vacationMsgStop']) {
+            $vacationMsgStop = time();
+        }
+        else {
+            $vacationMsgStop = $userEmail['vacationMsgStop'];
+        }
+
+        // Show form based on CODB data:
+        $forwardEmailField = $userEmail["forwardEmail"];
+        $vacationMsg = $userEmail['vacationMsg'];
+        $do_not_reply = $userEmail["do_not_reply"];
+        $do_not_reply_from = $userEmail["do_not_reply_from"];
+
+        // Assemble page_body:
+
+        $name = "autoResponderField";
+        $helptext = $i18n->getWrapped("[[base-user.autoResponderField_help]]");
+        $optional_text = "";
+        $name_opt1 = "enableAutoResponderField";
+        $my_name_opt1 = $i18n->get("[[base-user.enableAutoResponderField]]");
+        $help_opt1 = $i18n->getWrapped("[[base-user.autoResponderField_help]]");
+
+        $autoRespondStartDate = $i18n->get("[[base-user.autoRespondStartDate]]");
+        $autoRespondStartDate_help = $i18n->getWrapped("[[base-user.autoRespondStartDate_help]]");
+
+        $autoRespondStopDate = $i18n->get("[[base-user.autoRespondStopDate]]");
+        $autoRespondStopDate_help = $i18n->getWrapped("[[base-user.autoRespondStartDate_help]]");
+
+        $autoRespondStartTime = $i18n->get("[[base-user.autoRespondStartTime]]");
+        $autoRespondStartTime_help = $i18n->getWrapped("[[base-user.autoRespondStartTime_help]]");
+
+        $autoRespondStoptTime = $i18n->get("[[base-user.autoRespondStoptTime]]");
+        $autoRespondStoptTime_help = $i18n->getWrapped("[[base-user.autoRespondStoptTime_help]]");
+
+        $autoResponderMessageField = $i18n->get("[[base-user.autoResponderMessageField]]");
+        $autoResponderMessageField_help = $i18n->getWrapped("[[base-user.autoResponderMessageField_help]]");
+
+        // Make vacation message charsetsafe by fetching it with /usr/sausalito/sbin/get_vacationMsg.pl directly from CODB:
+        if ($vacationMsg != '') {
+            $vacationMsg_cli = '';
+            $ret = $CI->serverScriptHelper->shell("/usr/sausalito/sbin/get_vacationMsg.pl --name " . $user['name'], $vacationMsg_cli, 'root', $sessionId);
+            if ($ret != '-1') {
+                $vacationMsg = $vacationMsg_cli;
+            }
+        }
+        $vacationMsg = Utf8Encode($vacationMsg);
+
+        // Timepicker select options:
+        $hour_options = array(
+                          '01'  => '01',
+                          '02'  => '02',
+                          '03'  => '03',
+                          '04'  => '04',
+                          '05'  => '05',
+                          '06'  => '06',
+                          '07'  => '07',
+                          '08'  => '08',
+                          '09'  => '09',
+                          '10'  => '10',
+                          '11'  => '11',
+                          '12'  => '12'
+                        );
+
+        $minute_options = array(
+                          '00'  => '00',
+                          '15'  => '15',
+                          '30'  => '30',
+                          '45'  => '45'
+                        );
+
+        $ampm_options = array(
+                          'am'  => 'am',
+                          'pm'  => 'pm'
+                        );
+
+        // User our strftime() substitute class BXTime:
+        $BXTime = new BXTime();
+
+        // Get form friendly start date and time:
+        $form_start_date = $BXTime->bx_strftime("%F",$vacationMsgStart);
+        $form_end_date = $BXTime->bx_strftime("%F",$vacationMsgStop);
+
+        $form_start_time = $BXTime->bx_strftime("%I %M %S %P",$vacationMsgStart);
+        $form_end_time = $BXTime->bx_strftime("%I %M %S %P",$vacationMsgStop);
+
+        if (preg_match('/AM$/', date('h:i A',$vacationMsgStart))) {
+            $start_is_am = "am";
+        }
+        else {
+            $start_is_am = "pm";
+        }
+        if (preg_match('/AM$/', date('h:i A',$vacationMsgStop))) {
+            $stop_is_am = "am";
+        }
+        else {
+            $stop_is_am = "pm";
+        }
+
+        if ($BX_SESSION['gui_theme'] == 'adminica') {
+
+            //
+            //--- Output for Adminica:
+            //
+
+            // Yeah, this is *really* ugly. I know. But does it really make sense to build a class
+            // or to modify a class so that it can display this stuff the way it want? It is not
+            // really worth the effort, so we can afford to do it this way:
+            $mikes_folly = addToggleAbleAutoGrowField("forwardEnableField", "fq_email_address_or_username_multiline", "notrequired", "forwardEnable", "forwardSaveField", $forwardEnableField, $forwardSaveField, "forwardEmailField", "forwardEmailField_rule", "", $forwardEmailField, "base-user", $i18n, $cceClient) .
+                        '
+                        <div class="columns">
+                                <fieldset class="label_side col_25 no_lines">
+                                    <div class="section">
+                                        <label for="' . $name . '" title="' . $helptext . '" class="tooltip right">' . $i18n->get("[[base-user.autoResponderField]]") . '<span>' . $optional_text . '</span></label>
+                                    </div>
+                                </fieldset>
+                            <div class="col_25">
+                                <div class="section">
+                                    <fieldset class="label_top bottom no_lines">
+                                            <INPUT TYPE="HIDDEN" NAME="checkbox-' . $name_opt1 . '" VALUE="' . $autoResponderField . '">
+                                            <div class="uniform inline clearfix">
+                                                    <label for="' . $name_opt1 . '" title="' . $help_opt1 . '" class="tooltip hover"><input type="checkbox" class="mcb-' . $name_opt1 . '" name="' . $name_opt1 . '" id="' . $name_opt1 . '"' . $autoResponderField_checked . '/>'. $my_name_opt1 .'</label>
+                                            </div>
+                                    </fieldset>
+                                </div>
+                            </div>
+                            <div class="col_50">
+                                <div class="section">
+                                   <fieldset class="label_side top right no_lines">
+                                            <label for="' . $autoRespondStartDate . '" title="' . $autoRespondStartDate_help . '" class="tooltip top hover">' . $autoRespondStartDate . '</label>
+                                            <div class="clearfix">
+                                                    <input type="text" name="autoRespondStartDate" class="datepicker" style="width:100px;" value="' . $form_start_date . '">
+                                            </div>
+                                    </fieldset>
+                                    <fieldset class="label_side right no_lines">
+                                            <label for="' . $autoRespondStartTime . '" title="' . $autoRespondStartTime_help . '" class="tooltip top hover">' . $autoRespondStartTime . '</label>
+
+                                                <div class="clearfix time_picker_holder">' . 
+                                                form_dropdown('hour_start', $hour_options, $BXTime->bx_strftime("%I",$vacationMsgStart)) .
+                                                form_dropdown('minute_start', $minute_options, minutes_round($BXTime->bx_strftime("%M",$vacationMsgStart), "15")) .
+                                                form_dropdown('ampm_start', $ampm_options, $start_is_am) . '
+                                                </div>
+
+                                    </fieldset>
+                                   <fieldset class="label_side top right no_lines">
+                                            <label for="' . $autoRespondStopDate . '" title="' . $autoRespondStopDate_help . '" class="tooltip top hover">' . $autoRespondStopDate . '</label>
+                                            <div class="clearfix">
+                                                    <input type="text" name="autoRespondStopDate" class="datepicker" style="width:100px;" value="' . $form_end_date . '">
+                                            </div>
+                                    </fieldset>
+                                    <fieldset class="label_side right no_lines">
+                                            <label for="' . $autoRespondStoptTime . '" title="' . $autoRespondStoptTime_help . '" class="tooltip top hover">' . $autoRespondStoptTime . '</label>
+
+                                                <div class="clearfix time_picker_holder">' . 
+                                                form_dropdown('hour_stop', $hour_options, $BXTime->bx_strftime("%I",$vacationMsgStop)) .
+                                                form_dropdown('minute_stop', $minute_options, minutes_round($BXTime->bx_strftime("%M",$vacationMsgStop), "15")) .
+                                                form_dropdown('ampm_stop', $ampm_options, $stop_is_am) . '
+                                                </div>
+
+                                    </fieldset> 
+
+                                    <INPUT TYPE="HIDDEN" NAME="textarea-do_not_reply" VALUE="' . @htmlentities($do_not_reply) . '">
+                                    <fieldset class="label_top no_lines lesspadding">
+                                      <label for="do_not_reply" title="' . $i18n->getWrapped("[[base-user.do_not_reply_help]]") . '<br>" class="tooltip hover uniform">' . $i18n->get("[[base-user.do_not_reply]]") . '<span>(optional)</span></label>
+                                      <div class="clearfix">
+                                        <textarea name="do_not_reply" title="' . $i18n->get("[[palette.autogrow_expanding]]") . '" class="tooltip autogrow email_addresses " placeholder="' . $i18n->get("[[palette.autogrow_prefill]]") . '">' . $cceClient->scalar_to_string($do_not_reply) . '</textarea>
+                                      </div>
+                                    </fieldset>
+
+                                    <INPUT TYPE="HIDDEN" NAME="textarea-do_not_reply_from" VALUE="' . @htmlentities($do_not_reply_from) . '">
+                                    <fieldset class="label_top no_lines lesspadding">
+                                      <label for="do_not_reply_from" title="' . $i18n->getWrapped("[[base-user.do_not_reply_from_help]]") . '<br>" class="tooltip hover uniform">' . $i18n->get("[[base-user.do_not_reply_from]]") . '<span>(optional)</span></label>
+                                      <div class="clearfix">
+                                        <textarea name="do_not_reply_from" title="' . $i18n->get("[[palette.autogrow_expanding]]") . '" class="tooltip autogrow email_addresses " placeholder="' . $i18n->get("[[palette.autogrow_prefill]]") . '">' . $cceClient->scalar_to_string($do_not_reply_from) . '</textarea>
+                                      </div>
+                                    </fieldset>
+
+                                    <fieldset class="label_top no_lines lesspadding">
+                                        <label for="' . $autoResponderMessageField . '" title="' . $autoResponderMessageField_help . '" class="tooltip">' . $autoResponderMessageField . '<span></span></label>
+                                            <div class="clearfix">
+                                                <textarea name="textarea-vacationMsg" title="' . $i18n->get("[[palette.autogrow_expanding]]") . '" class="tooltip autogrow" placeholder="' . $i18n->get("[[palette.autogrow_prefill]]") . '">' . $vacationMsg . '</textarea>
+                                            </div>
+                                        </span>
+                                    </fieldset>
+                                </div>
+                            </div>
+                        </div>';
+
+            // Push the folly out:
+            $xxx = $factory->getRawHTML("folly", $mikes_folly);
+            $container->addFormField(
+                $xxx,
+                $factory->getLabel("folly"),
+                $pageId
+            );
+        }
+        else {
+
+            //--- Output for Elmer:
+
+            //
+            //-- Email Forwarding:
+            //
+
+            $email_forwarding_selector = $factory->getMultiChoice('forwardEnable');
+            $enable_email_forwarding_selector = $factory->getOption('forwardEnable', $userEmail['forwardEnable'], 'rw');
+            $email_forwarding_selector->addOption($enable_email_forwarding_selector);
+
+            // forwardSaveField:
+            $forwardSave_Field = $factory->getBoolean("forwardSaveField", $forwardSaveField, 'rw');
+            $forwardSave_Field->setOptional(TRUE);
+            $enable_email_forwarding_selector->addFormField($forwardSave_Field, $factory->getLabel('forwardSaveField'));
+
+            // forwardEmailField:
+            $forwardEmail_Field = $factory->getTextBlock("forwardEmailField", $cceClient->scalar_to_string($userEmail['forwardEmail']));
+            $forwardEmail_Field->setOptional(FALSE);
+            $enable_email_forwarding_selector->addFormField($forwardEmail_Field, $factory->getLabel('forwardEmailField'));
+
+            $container->addFormField($email_forwarding_selector, $factory->getLabel('forwardEnableField'), $pageId);
+
+            //
+            //-- Vacation Message:
+            //
+
+            $vacation_selector = $factory->getMultiChoice('enableAutoResponderField');
+            $enable_vacation_selector = $factory->getOption('forwardEnable', $userEmail['vacationOn'], 'rw');
+            $vacation_selector->addOption($enable_vacation_selector);
+
+            if ((isset($prefered_ualias_select)) && (isset($prefered_alias_select))) {
+                // Email Addresses for PrefAliasComplete (just the label):
+                $PrefAliasComplete_label = Label("base-user", "PrefAliasComplete", $i18n);
+                $elmer_sender_address_Label = $factory->getRawHTML("PrefAliasComplete", $PrefAliasComplete_label, "r");
+                $enable_vacation_selector->addFormField($elmer_sender_address_Label, $factory->getLabel('PrefAliasComplete'));
+
+                // The two pulldowns for PrefAliasComplete:
+                $elmer_sender_address_list = array();
+                $elmer_sender_address_list[] = $prefered_ualias_select;
+                $elmer_sender_address_list[] = $prefered_alias_select;
+                $elmer_sender_address_list[] = $factory->getRawHTML("final_spacer", '.', "r");
+                $aggregate_sa_list = $factory->getCompositeFormField($elmer_sender_address_list, '');
+                $aggregate_sa_list->setColumnWidths(array('col-sm-3 mt-10', 'col-sm-3 mt-10'));
+                $aggregate_sa_list_html = $aggregate_sa_list->toHtml();
+                $PrefAliasComplete_Field = $factory->getRawHTML("PrefAliasComplete", $aggregate_sa_list_html);
+                $PrefAliasComplete_Field->setOptional(TRUE);
+                $enable_vacation_selector->addFormField($PrefAliasComplete_Field, $factory->getLabel('PrefAliasComplete'));
+            }
+
+            // Autoresponder Dates:
+            $VM_Start_Field = $factory->getDatePicker("autoRespondStartDate", $vacationMsgStart, "datetime", 'rw');
+            $VM_Start_Field->setCurrentLabel($i18n->get('autoRespondStartDate'));
+            $VM_Start_Field->setDescription($i18n->get('autoRespondStartDate_help'));
+            $VM_Start_Field->setModus('all');
+            $enable_vacation_selector->addFormField($VM_Start_Field, $factory->getLabel('autoRespondStartDate'));
+
+            $VM_End_Field = $factory->getDatePicker("autoRespondStopDate", $vacationMsgStop, "datetime", 'rw');
+            $VM_End_Field->setCurrentLabel($i18n->get('autoRespondStopDate'));
+            $VM_End_Field->setDescription($i18n->get('autoRespondStopDate_help'));
+            $VM_End_Field->setModus('all');
+            $enable_vacation_selector->addFormField($VM_End_Field, $factory->getLabel('autoRespondStopDate'));
+
+            // Never send to ...:
+            $never_send_to_Field = $factory->getTextBlock("do_not_reply", $cceClient->scalar_to_string($do_not_reply));
+            $never_send_to_Field->setOptional(TRUE);
+            $enable_vacation_selector->addFormField($never_send_to_Field, $factory->getLabel('do_not_reply'));
+
+            // Do not reply from ...:
+            $never_reply_from_Field = $factory->getTextBlock("do_not_reply_from", $cceClient->scalar_to_string($do_not_reply_from));
+            $never_reply_from_Field->setOptional(TRUE);
+            $enable_vacation_selector->addFormField($never_reply_from_Field, $factory->getLabel('do_not_reply_from'));
+
+            // Auto-Reply Message:
+            $autoreply_Field = $factory->getTextBlock("autoResponderMessageField", $vacationMsg);
+            $autoreply_Field->setOptional(FALSE);
+            $enable_vacation_selector->addFormField($autoreply_Field, $factory->getLabel('autoResponderMessageField'));
+
+            $container->addFormField($vacation_selector, $factory->getLabel('autoResponderField'), $pageId);
+
+        }
+    }
+
+    function handle(&$serverScriptHelper, &$errors, $prams, $attributes) {
+
+        // Make CI instance available:
+        $CI = get_instance();
+        $BX_SESSION = $CI->getBX_SESSION();
+        $BxPage = $serverScriptHelper->getBxPage();
+        $cceClient = $serverScriptHelper->getCceClient();
+
+        $i18n = $prams['i18n'];
+
+        // Get $sessionId and $loginName from Cookie (if they are set):
+        $sessionId = $BX_SESSION['sessionId'];
+        $loginName = $BX_SESSION['loginName'];
+
+        // Form fields that are required to have input:
+        $required_keys = array('autoRespondStartDate', 'autoRespondStopDate');
+
+        // Set up rules for form validation. These validations happen before we submit to CCE and further checks based on the schemas are done:
+
+        // Items we do NOT want to submit to CCE:
+        $ignore_attributes = array("BlueOnyx_Info_Text");
+
+        if (is_array($attributes)) {
+            // Function GetFormAttributes() walks through the $form_data and returns us the $parameters we want to
+            // submit to CCE. It intelligently handles checkboxes, which only have "on" set when they are ticked.
+            // In that case it pulls the unticked status from the hidden checkboxes and addes them to $parameters.
+            // It also transformes the value of the ticked checkboxes from "on" to "1". 
+            //
+            // Additionally it generates the form_validation rules for CodeIgniter.
+            //
+            // params: $i18n                i18n Object of the error messages
+            // params: $form_data           array with form_data array from CI
+            // params: $required_keys       array with keys that must have data in it. Needed for CodeIgniter's error checks
+            // params: $ignore_attributes   array with items we want to ignore. Such as Labels.
+            // params: $BxPage              our already declared $BxPage Object (for storing validation Errors)
+            // return:                      array with keys and values ready to submit to CCE.
+            $attributes = GetFormAttributes($i18n, $attributes, $required_keys, $ignore_attributes, $BxPage);
+
+            // Get potential errors that GetFormAttributes() ran into from $BxPage:
+            $errors = array_merge($errors, $BxPage->getErrors());
+        }
+
+        //
+        //--- Own error checks:
+        //
+
+        if ($attributes['forwardEmailField'] != '') {
+            if (substr($attributes['forwardEmailField'], 0, 1) === '&' && substr($attributes['forwardEmailField'], -1) === '&') {
+                $email_check = $cceClient->scalar_to_array($attributes['forwardEmailField']);
+            }
+            else {
+                $email_check = preg_split('/\r\n|\r|\n/', $attributes['forwardEmailField']);
+            }
+            $new_forwardEmailField = array();
+            foreach ($email_check as $key => $email) {
+                $checked_email = filter_var($email, FILTER_VALIDATE_EMAIL);
+                if ($checked_email == '') {
+                    if (count($cceClient->find("User", array("name" => $email))) == "0") {
+                        // Entered item is not an email address and not a valid Linux username known to CODB:
+                        $errors[] = ErrorMessage($i18n->get("[[palette.defaultInvalidMessage]]", "palette", array('invalidValue' => '"' . $email . '"', 'name' => $i18n->get("[[base-user.forwardEmailField]]"), 'rule' => $i18n->get("[[base-user.userNameField_help]]"))));
+                    }
+                    else {
+                        // Entered address is a username of an existing user. Add it:
+                        $new_forwardEmailField[] = $email;
+                    }
+                }
+                else {
+                    $new_forwardEmailField[] = $email;
+                }
+            }
+            // We do a preliminary SET with the addresses that validated fine to not loose the whole list:
+            $attributes['forwardEmailField'] = $cceClient->array_to_scalar($new_forwardEmailField);
+            $CODBout = array("forwardEmail" => $attributes['forwardEmailField']);
+
+            // Actual submit to CODB:
+            $cceClient->set($prams['CCE_OID'], "Email", $CODBout);
+            $errors = array_merge($errors, $cceClient->errors());
+        }
+
+        //
+        //--- Handle Submit to CODB and other related transactions:
+        //
+
+        $user = $cceClient->get($prams['CCE_OID']);
+        $userEmail = $cceClient->get($prams['CCE_OID'], "Email");
+        $vsite = $cceClient->getObject('Vsite', array('name' => $user['site']));
+
+        // Only perform this transaction if the user is member of a Vsite:
+        if (isset($vsite['name'])) {
+
+            if (isset($attributes['prefUserAlias'])) {
+                $alias_check = $cceClient->scalar_to_array($userEmail['aliases']);
+                $unamePart = $user['name'];
+                $groupPart = $user['site'];
+                if (!in_array($attributes['prefUserAlias'], $alias_check)) {
+                    $ret = $serverScriptHelper->shell("/bin/rm -f ~$unamePart/.prefEmailAlias", $output, 'root', $sessionId);
+                }
+                else {
+                    // Create a unique temporary file name:
+                    $tempnameShort = tempnam("/tmp/", $unamePart . "_prefUserAlias");
+                    $tempname =  $tempnameShort . ".tmp";
+                    // Write as temporary file:
+                    write_file($tempname, $attributes['prefUserAlias']);
+                    // Move it to the right location and delete the temporary files:
+                    $ret = $serverScriptHelper->shell("/bin/cp $tempname ~$unamePart/.prefEmailAlias", $output, 'root', $sessionId);
+                    $ret = $serverScriptHelper->shell("/bin/chmod 00644 ~$unamePart/.prefEmailAlias", $output, 'root', $sessionId);
+                    $ret = $serverScriptHelper->shell("/bin/chown $unamePart:$groupPart ~$unamePart/.prefEmailAlias", $output, 'root', $sessionId);
+                    $ret = $serverScriptHelper->shell("/bin/rm -f $tempname", $output, 'root', $sessionId);
+                    $ret = $serverScriptHelper->shell("/bin/rm -f $tempnameShort", $output, 'root', $sessionId);
+                }
+            }
+            if (isset($attributes['prefDomAlias'])) {
+                $vsite_alias_check = $cceClient->scalar_to_array($vsite['mailAliases']);
+                $unamePart = $user['name'];
+                $groupPart = $user['site'];
+                if (!in_array($attributes['prefDomAlias'], $vsite_alias_check)) {
+                    $ret = $serverScriptHelper->shell("/bin/rm -f ~$unamePart/.prefEmailDomain", $output, 'root', $sessionId);
+                }
+                else {
+                    // Create a unique temporary file name:
+                    $tempnameShort = tempnam("/tmp/", $unamePart . "_prefDomAlias");
+                    $tempname =  $tempnameShort . ".tmp";
+                    // Write as temporary file:
+                    write_file($tempname, $attributes['prefDomAlias']);
+                    // Move it to the right location and delete the temporary files:
+                    $ret = $serverScriptHelper->shell("/bin/cp $tempname ~$unamePart/.prefEmailDomain", $output, 'root', $sessionId);
+                    $ret = $serverScriptHelper->shell("/bin/chmod 00644 ~$unamePart/.prefEmailDomain", $output, 'root', $sessionId);
+                    $ret = $serverScriptHelper->shell("/bin/chown $unamePart:$groupPart ~$unamePart/.prefEmailDomain", $output, 'root', $sessionId);
+                    $ret = $serverScriptHelper->shell("/bin/rm -f $tempname", $output, 'root', $sessionId);
+                    $ret = $serverScriptHelper->shell("/bin/rm -f $tempnameShort", $output, 'root', $sessionId);
+                }
+            }
+        }
+
+        // Without email address we neither forward nor activate 'save a copy':
+        if (($attributes['forwardEnable'] == "1") || ($attributes['forwardSaveField'] == "1")) {
+            if ($attributes['forwardEmailField'] == "") {
+                $attributes['forwardEnable'] = '0';
+                $attributes['forwardSaveField'] = '0';
+            }
+        }
+
+        // Assemble start and stoptime into Unix format:
+        if ((isset($attributes["ampm_start"])) && ($attributes["ampm_start"] == "pm")) {
+            $attributes["hour_start"] = $attributes["hour_start"] + 12; 
+        } 
+
+        if ((isset($attributes["ampm_stop"])) && ($attributes["ampm_stop"] == "pm")) { 
+            $attributes["hour_stop"] = $attributes["hour_stop"] + 12; 
+        } 
+
+        if ($BX_SESSION['gui_theme'] == 'adminica') {
+
+            //
+            //-- Adminica time conversion:
+            //
+
+            $start_date = explode("-", $attributes["autoRespondStartDate"]);
+            $end_date = explode("-", $attributes["autoRespondStopDate"]);
+            $vacationMsgStart = mktime($attributes["hour_start"], $attributes["minute_start"], "00", $start_date[1], $start_date[2], $start_date[0]); 
+            $vacationMsgStop = mktime($attributes["hour_stop"], $attributes["minute_stop"], "00", $end_date[1], $end_date[2], $end_date[0]); 
+        }
+        else {
+
+            //
+            //-- Elmer time conversion:
+            //
+
+            $vacationMsgStart = strtotime($attributes["autoRespondStartDate"]);
+            $vacationMsgStop = strtotime($attributes["autoRespondStopDate"]);
+
+            // Set Autoresponse Message:
+            $attributes['vacationMsg'] = '';
+            if (isset($attributes['autoResponderMessageField'])) {
+                $attributes['vacationMsg'] = $attributes['autoResponderMessageField'];
+                unset($attributes['autoResponderMessageField']);
+            }
+        }
+
+        // Error: End date before start date:
+        if (($vacationMsgStop - $vacationMsgStart) < 0) { 
+            $errors[] = ErrorMessage($i18n->get("[[base-user.invalidVacationDate]]") . '<br>&nbsp;');
+        } 
+
+        // Error: Vacation message enabled, but no message set:
+        if (($attributes['enableAutoResponderField'] == "1") && (!isset($attributes["vacationMsg"]))) { 
+            $errors[] = ErrorMessage($i18n->get("[[base-user.blank-vacation-ms]]") . '<br>&nbsp;');
+        }
+
+        // Special case: If user is disabled, forwarding WILL be off:
+        $user = $cceClient->get($prams['CCE_OID']);
+        if ($user['ui_enabled'] == "0") {
+            $attributes['forwardEnable'] = "0";
+        }
+
+        // No errors? Submit to CODB:
+        if (count($errors) === 0) {
+            $fwEmailField = $cceClient->scalar_to_array($attributes['forwardEmailField']);
+            $outFW_email = array();
+            foreach ($fwEmailField as $addy) {
+                if ((!filter_var($addy, FILTER_VALIDATE_EMAIL)) && (!preg_match('/^[a-z][a-z0-9_.-]{0,30}$/', $addy))) {
+                    next;
+                }
+                else {
+                    $outFW_email[] = $addy;
+                }
+            }
+
+            // Sanitize vacationMsg:
+            $unclean_vacationMsg = $attributes["vacationMsg"];
+            $sanitized_vacationMsg = html_entity_decode($unclean_vacationMsg);
+            $sanitized_vacationMsg = strip_tags($sanitized_vacationMsg);
+
+            // Assemble the data we want to submit:
+            $CODBout = array("forwardEnable" => $attributes['forwardEnable'], 
+                            "forwardEmail" => $cceClient->array_to_scalar($outFW_email),
+                            "forwardSave" => $attributes['forwardSaveField'],
+                            "vacationOn" => $attributes['enableAutoResponderField'],
+                            "vacationMsg" => $sanitized_vacationMsg,
+                            "vacationMsgStart" => "$vacationMsgStart",
+                            "vacationMsgStop" => "$vacationMsgStop",
+                            "do_not_reply" => $attributes['do_not_reply'],
+                            "do_not_reply_from" => $attributes['do_not_reply_from'],
+                            );
+
+            // Actual submit to CODB:
+            $cceClient->set($prams['CCE_OID'], "Email", $CODBout);
+            $errors = array_merge($errors, $cceClient->errors());
+        }
+    }
+}
+
+/*
+Copyright (c) 2008-2024 Michael Stauber, SOLARSPEED.NET
+Copyright (c) 2008-2024 Team BlueOnyx, BLUEONYX.IT
+Copyright (c) 2008 Brian Smith, NuOnce Networks, Inc.
+All Rights Reserved.
+
+1. Redistributions of source code must retain the above copyright 
+   notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright 
+   notice, this list of conditions and the following disclaimer in 
+   the documentation and/or other materials provided with the 
+   distribution.
+
+3. Neither the name of the copyright holder nor the names of its 
+   contributors may be used to endorse or promote products derived 
+   from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
+COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
+ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+POSSIBILITY OF SUCH DAMAGE.
+
+You acknowledge that this software is not designed or intended for 
+use in the design, construction, operation or maintenance of any 
+nuclear facility.
+
+*/
+?>

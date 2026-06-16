@@ -1,0 +1,132 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "desktop_control"
+msgstr "Server Desktop"
+
+msgid "description"
+msgstr "Klik hier om de Server Desktop modus te controleren."
+
+msgid "desktop_control_settings"
+msgstr "[[base-backupcontrol.desktop_control]] Controle"
+
+msgid "lock_desktop"
+msgstr "Lock Server Desktop"
+
+msgid "lock_desktop_help"
+msgstr "Deze optie geeft de mogelijkheid om de administratieve gebruikersinterface (Server Desktop) alleen-lezen."
+
+msgid "lock_desktop_failed"
+msgstr "Mislukt om de toestand van de [[base-backupcontrol.desktop_control]] wijzigen"
+
+msgid "lock_failed"
+msgstr "De [[base-backupcontrol.desktop_control]] vergrendeling mislukt."
+
+msgid "unlock_failed"
+msgstr "Ontsluiting van het [[base-backupcontrol.desktop_control]] mislukt."
+
+msgid "locked"
+msgstr "De Server Desktop werd opgesloten door een serverbeheerder."
+
+msgid "cap_serverServerDesktop"
+msgstr "Server Desktop Settings"
+
+###
+
+msgid "GUIaccessType"
+msgstr "GUI toegang protocollen"
+
+msgid "GUIaccessType_help"
+msgstr "Dit bepaalt welke protocollen worden toegestaan ​​om toegang tot de GUI. Als u wilt zowel HTTP- en HTTPS-toegang mogelijk te maken, zet het dan op '[[base-backupcontrol.BOTH]]'. Alleen HTTPS-toegang toe te staan, zet deze op '[[base-backupcontrol.HTTPS]]'. Of u kunt het configureren om '[[base-backupcontrol.HTTP]]' als alleen toegestaan ​​protocol, dat is een slecht idee. Aanbevolen: '[[base-backupcontrol.HTTPS]]'. Standaard: '[[base-backupcontrol.BOTH]]'"
+
+msgid "GUIredirects"
+msgstr "Omleiden naar Server-Naam"
+
+msgid "GUIredirects_help"
+msgstr "De Apache Webserver dat de GUI draait op (AdmServ) heeft een apart SSL certificaat. Als iemand toegang heeft tot de GUI van HTTPS via de domeinnaam van een virtuele website (voorbeeld: https://www.site.com:81/login), dan is de browser zal een waarschuwing laten zien dat het SSL-certificaat van de server komt niet overeen met de domeinnaam . Om dit te voorkomen kunt u het vakje en alle HTTPS toegangen tot de GUI zal worden doorgestuurd naar de volledig gekwalificeerde domeinnaam van de server. LET OP: gebruik deze alleen als de servers volledig gekwalificeerde domeinnaam heeft een geldige DNS-record, of de GUI zou onbereikbaar geworden."
+
+msgid "BOTH"
+msgstr "HTTP- en HTTPS"
+
+msgid "HTTP"
+msgstr "HTTP alleen"
+
+msgid "HTTPS"
+msgstr "HTTPS alleen"
+
+## CSRF:
+
+msgid "csrf_protection"
+msgstr "CSRF Bescherming"
+
+msgid "csrf_protection_help"
+msgstr "Cross-Site Request Forgery (CSRF) is een aanval die een eindgebruiker dwingt om ongewenste acties uit te voeren op een webapplicatie waarin hij of zij momenteel is geauthenticeerd. Met een beetje hulp van social engineering (zoals het sturen van een link via e-mail of chat) kan een aanvaller de gebruikers van een webapplicatie verleiden tot het uitvoeren van acties van de keuze van de aanvaller. Als het slachtoffer een normale gebruiker is, kan een succesvolle CSRF-aanval de gebruiker dwingen om toestandsveranderingsverzoeken uit te voeren, zoals het wijzigen van instellingen, het uitvoeren van transacties binnen de geauthenticeerde sessie, enzovoort. Als het slachtoffer een administratief account is, kan CSRF de hele webapplicatie in gevaar brengen. Wanneer CSRF-beveiliging is ingeschakeld in de GUI, worden extra beschermingsmaatregelen ingeschakeld die bedoeld zijn om dergelijke aanvallen te voorkomen of de reikwijdte ervan te beperken. Dit gebeurt door een verborgen CSRF-veld in te voegen in alle GUI-pagina's die een extra token met een vaste vervaltijd bevatten. Bij alle transacties wordt dit verborgen CSRF-token op geldigheid gecontroleerd. Als een transactie met een ongeldig CSRF-token wordt geprobeerd, dan wordt de transactie niet uitgevoerd en wordt in plaats daarvan een foutmelding getoond."
+
+msgid "csrf_expire"
+msgstr "Vervaldatum CSRF-token"
+
+msgid "csrf_expire_help"
+msgstr "Dit is de maximale tijd in seconden dat een CSRF-munt geldig is. Standaard: 7200 (120 minuten). Een kortere geldigheidsduur is veiliger."
+
+msgid "csrf_regenerate"
+msgstr "CSRF voor eenmalig gebruik"
+
+msgid "csrf_regenerate_help"
+msgstr "Als u deze functie inschakelt, verandert het CSRF-token elke keer dat u een nieuwe GUI-pagina opent. Hoewel dit de meest veilige methode is, heeft het ook nadelen: Het is niet langer aan te raden om verschillende GUI-pagina's in meerdere tabbladen of browservensters te openen. Omdat elk bezoek aan een GUI-pagina in één tabblad of browser automatisch het CSRF-merkteken in alle andere browsertabbladen of -vensters ongeldig maakt. Voor maximale veiligheid moet u deze functie inschakelen."
+
+#
+### DDOS protection:
+#
+
+msgid "ddos_protection"
+msgstr "GUI Brute Force Bescherming"
+
+msgid "ddos_protection_help"
+msgstr "Als deze optie is ingeschakeld, wordt het GUI-aanmeldingsformulier beschermd tegen brute force-aanmeldingspogingen. Ongeldige aanmeldingspogingen worden geregistreerd volgens het IP-adres van de gebruiker. Als een IP-adres er herhaaldelijk niet in slaagt zich correct te authenticeren, wordt voorkomen dat het aanmeldingsformulier wordt gebruikt totdat de blokkering afloopt."
+
+msgid "ddos_attempts"
+msgstr "Mislukte pogingen"
+
+msgid "ddos_attempts_help"
+msgstr "Failed attempts definieert hoeveel mislukte pogingen zijn toegestaan binnen een bepaald tijdsbestek totdat het IP in kwestie wordt geblokkeerd voor gebruik van het GUI-aanmeldingsformulier."
+
+msgid "ddos_window"
+msgstr "Tijdsbestek"
+
+msgid "ddos_window_help"
+msgstr "Het tijdsbestek bepaalt hoeveel seconden de GUI inlogpogingen van individuele IP-adressen bijhoudt. Bij herhaalde mislukte inlogpogingen binnen het opgegeven tijdsbestek vanaf hetzelfde IP-adres wordt het betreffende IP-adres geblokkeerd."
+
+msgid "ddos_expire"
+msgstr "Ban Tijd"
+
+msgid "ddos_expire_help"
+msgstr "Ban Time bepaalt hoeveel seconden moeten verstrijken zonder verdere mislukte inlogpogingen voordat een eerder geblokkeerd IP-adres weer gebruik mag maken van het GUI-inlogformulier."
+
+#
+### GUI port and URIs:
+#
+
+msgid "GUI_PORT"
+msgstr "GUI HTTPS-poort"
+
+msgid "GUI_PORT_help"
+msgstr "Geef de HTTPS-poort op voor toegang tot de GUI. De standaardpoort is 81."
+
+msgid "GUI_URLs"
+msgstr "GUI-aliassen"
+
+msgid "GUI_URLs_help"
+msgstr "Specificeer Apache-aliassen die doorverwijzen naar de inlogpagina van de GUI. Dit veld mag niet leeg zijn."
+
+msgid "GUI_PORT_in_use"
+msgstr "De opgegeven GUI-poort wordt al gebruikt door een andere dienst. Kies een andere poort."
+
+msgid "GUI_URLs_minimum_fail"
+msgstr "U moet ten minste één Apache-alias opgeven die doorverwijst naar de GUI-interface."

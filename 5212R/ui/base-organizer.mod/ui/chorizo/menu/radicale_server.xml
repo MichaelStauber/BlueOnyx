@@ -1,0 +1,12 @@
+<item
+    id="radicale_server"
+    label="[[base-organizer.radicale_server]]"
+    description="[[base-organizer.radicale_server_help]]"
+    url="/organizer/organizer"
+    module="user"
+>
+    <parent id="base_controlpanel" order="31">
+        <access require="serverEmail"/>
+    </parent>
+</item>
+

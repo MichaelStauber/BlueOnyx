@@ -1,0 +1,13 @@
+<!--
+	$Id: systemctl.xml
+-->
+
+<program name="/usr/bin/systemctl">
+	<capability requires="adminUser" user="root"/>
+	<capability requires="siteAdmin" user="root"/>
+	<capability requires="manageSite" user="root"/>
+</program>
+
+<program name="/usr/sausalito/sbin/list_mysql_dbs.pl">
+        <capability requires="adminUser" user="root"/>
+</program>

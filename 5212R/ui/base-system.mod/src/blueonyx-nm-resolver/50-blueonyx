@@ -1,0 +1,29 @@
+#!/bin/bash
+#
+# Make sure the server name stays in line with the name configured
+# in CODB for 'hostname' and 'domainname' in the 'System' Object.
+#
+# On AlmaLinux 8 and 9 (and other RHEL clones), the NetworkManager
+# configuration hostname-mode=preserve should prevent NetworkManager
+# from touching the hostname at all. However, there’s a bug/quirk 
+# where NetworkManager will still revert to the short hostname if:
+# 
+# - NetworkManager reads the hostname directly from DHCP (if DHCP is 
+#   used for the interface).
+# 
+# - The hostname set by hostnamectl or in /etc/hostname does not
+#    match NetworkManager’s internal cache.
+#
+# - There’s a timing issue between systemd-hostnamed and 
+#   NetworkManager where they fight over the hostname on session
+#   start (like your SSH login).
+#
+# Net result was that often (on SSH session starts) the server would
+# change from the configured FQDN to just the hostname. Calling this
+# script below automatically on NetworkManager transactions then 
+# automatically fixes it back to what it should be:
+#
+
+if [ -f "/usr/sausalito/bin/fix_hostname.pl" ];then
+    /usr/sausalito/bin/fix_hostname.pl >/dev/null 2>&1 || :
+fi

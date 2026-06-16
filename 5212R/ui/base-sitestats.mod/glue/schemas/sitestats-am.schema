@@ -1,0 +1,77 @@
+<!-- This is the AM Namespace for monitoring Sitestats Services -->
+<class name="ActiveMonitor"     namespace="Sitestats"   version="1.0">
+    <property name="enabled"        type="boolean"  default="1"/>
+    <property name="monitor"    writeACL="ruleCapable(serverActiveMonitor)"
+    type="boolean"  default="1"/>
+    <property name="type"       type="scalar"   default="aggregate"/>
+    <property name="typeData"       type="scalar"   
+    default="GoAccess Monitorix"/>
+
+    <property name="greenMsg"       type="scalar"   
+    default="[[base-sitestats.amSitestatsGreen]]"/>
+    <property name="yellowMsg"      type="scalar"   
+    default="[[base-sitestats.amSitestatsYellow]]"/>
+    <property name="redMsg"     type="scalar"   
+    default="[[base-sitestats.amSitestatsRed]]"/>
+
+    <property name="currentState"   type="amstate"  default="G"/>
+    <property name="lastChange"     type="uint"     default="0"/>
+    <property name="lastRun"        type="uint"     default="0"/>
+    <property name="currentMessage"     type="scalar"   default=""/>
+    <property name="nameTag"        type="scalar"   
+    default="[[base-sitestats.amSitestatsNameTag]]"/>
+
+    <property name="URL"            type="scalar"   
+    default="/base/sitestats/sitestats_amdetails.php"/>
+    <property name="UIGroup"        type="scalar"   default="service"/>
+</class>
+
+<!-- This is the AM Namespace for monitoring GoAccess -->
+<class name="ActiveMonitor"     namespace="GoAccess"    version="1.0">
+    <property name="enabled"        type="boolean"  default="1"/>
+    <property name="monitor"    writeACL="ruleCapable(serverActiveMonitor)"
+    type="boolean"  default="1"/>
+    <property name="type"       type="scalar"   default="exec"/>
+    <property name="typeData"       type="scalar"
+    default="/usr/sausalito/swatch/bin/am_goaccess.pl"/>
+
+    <property name="aggMember"      type="boolean"  default="1"/>
+    <property name="greenMsg"       type="scalar"   
+    default="[[base-sitestats.amGoAccessStatusOK]]"/>
+    <property name="redMsg"     type="scalar"   
+    default="[[base-sitestats.amGoAccessNotRunning]]"/>
+
+    <property name="currentState"   type="amstate"  default="G"/>
+    <property name="lastChange"     type="uint"     default="0"/>
+    <property name="lastRun"        type="uint"     default="0"/>
+    <property name="currentMessage"     type="scalar"   default=""/>
+    <property name="nameTag"        type="scalar"   
+    default="[[base-sitestats.amGoAccessNameTag]]"/>
+
+    <property name="hideUI"     type="boolean"  default="1"/>
+</class>
+
+<!-- This is the AM Namespace for monitoring Monitorix -->
+<class name="ActiveMonitor"     namespace="Monitorix"   version="1.0">
+    <property name="enabled"        type="boolean"  default="1"/>
+    <property name="monitor"    writeACL="ruleCapable(serverActiveMonitor)"
+    type="boolean"  default="1"/>
+    <property name="type"       type="scalar"   default="exec"/>
+    <property name="typeData"       type="scalar"
+    default="/usr/sausalito/swatch/bin/am_monitorix.pl"/>
+
+    <property name="aggMember"      type="boolean"  default="1"/>
+    <property name="greenMsg"       type="scalar"   
+    default="[[base-sitestats.amMonitorixStatusOK]]"/>
+    <property name="redMsg"     type="scalar"   
+    default="[[base-sitestats.amMonitorixNotRunning]]"/>
+
+    <property name="currentState"   type="amstate"  default="G"/>
+    <property name="lastChange"     type="uint"     default="0"/>
+    <property name="lastRun"        type="uint"     default="0"/>
+    <property name="currentMessage"     type="scalar"   default=""/>
+    <property name="nameTag"        type="scalar"   
+    default="[[base-sitestats.amMonitorixNameTag]]"/>
+
+    <property name="hideUI"     type="boolean"  default="1"/>
+</class>

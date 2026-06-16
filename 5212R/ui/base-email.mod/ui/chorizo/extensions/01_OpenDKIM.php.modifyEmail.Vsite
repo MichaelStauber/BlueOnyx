@@ -1,0 +1,223 @@
+<?php
+// $Id: 01_OpenDKIM.php.create.Vsite
+// Copyright (c) 2008-2023 Michael Stauber, SOLARSPEED.NET
+// Copyright (c) 2008-2023 Team BlueOnyx, BLUEONYX.IT
+//
+// ui extension to set settings for php Vsite creation
+
+include_once("UIExtension.php");
+
+class OpenDKIMExtension extends UIExtension
+{
+    function display(&$helper, &$container, &$cce_info)
+    {
+
+        $CI =& get_instance();
+        $System = $CI->getSystem();
+        $BX_SESSION = $CI->getBX_SESSION();
+
+        $factory = $helper->getHtmlComponentFactory("base-email");
+        $i18n = $factory->getI18n();
+        $cce = $helper->getCceClient();
+
+        $System_Email = $cce->get($System['OID'], 'Email');    
+        $System_DNS = $cce->get($System['OID'], 'DNS');
+        $vsite_data = $cce->get($cce_info["CCE_OID"]);
+
+        $defaults = $cce->get($cce_info["CCE_OID"], "OpenDKIM");
+        $pageId = $cce_info['PAGED_BLOCK_DEFAULT_PAGE'];
+
+        if ($System_Email["enableOpenDKIM"] == '0') {
+
+        }
+        else {
+
+            //
+            //--- Fetch list of available OpenDKIM info:
+            //
+
+            $output = '';
+            $failed_to_fetch = '0';
+            $opendkim_array = array();
+            $ret = $CI->serverScriptHelper->shell("/usr/sausalito/bin/get_opendkim.pl --domain " . $vsite_data['domain'], $output, 'root', $BX_SESSION['sessionId']);
+            if ($ret != 0) {
+                // File not present.
+                $failed_to_fetch = '1';
+            }
+            else {
+                $opendkim_array = json_decode($output, true, JSON_FORCE_OBJECT);
+                $json_error = json_last_error();
+                if ($json_error == '1') {
+                    // Failed to decode JSON:
+                    $failed_to_fetch = '1';
+                }
+            }
+
+            // Sense Check:
+            if ((isset($opendkim_array[$vsite_data['domain']]['domains'])) && ($defaults['enabled'] == '0')) {
+                // CCE says this Vsite has no DKIM, but DKIM says it does. So we fix CCEd and the display of the status:
+                $cce->set($cce_info["CCE_OID"], 'OpenDKIM', array('enabled' => '1'));
+                $defaults['enabled'] = '1';
+            }
+
+            //
+            //--- Forms:
+            //
+
+            // OpenDKIM header:
+            $dkim_header_field = $factory->addBXDivider("OpenDKIM_Header", "");
+            $container->addFormField(
+                    $dkim_header_field,
+                    $factory->getLabel("OpenDKIM_Header", false),
+                    $pageId
+                    );
+
+
+            $dkim_enabled_field = $factory->getBoolean("OpenDKIM_enabled", $defaults['enabled'], "rw");
+            $container->addFormField(
+                    $dkim_enabled_field,
+                    $factory->getLabel("OpenDKIM_enabled"),
+                    $pageId
+                    );
+
+            // DKIM alias entries:
+            $DKIMAliases = $i18n->get('[[palette.emptyList]]');
+            if (isset($opendkim_array[$vsite_data['domain']]['domains'])) {
+                if (!empty($opendkim_array[$vsite_data['domain']]['domains'])) {
+                    $DKIMAliases = $opendkim_array[$vsite_data['domain']]['domains'];
+                }
+            }
+            $DKIMAliasesField = $factory->getTextList("DKIMAliases", $DKIMAliases, 'r');
+            $container->addFormField(
+                    $DKIMAliasesField,
+                    $factory->getLabel("DKIMAliases"), $pageId
+                    );
+
+            //
+            //-- DKIM Record Data:
+            //
+            $DKIM_HN_Field = $factory->getTextField("DKIM_HN_Field", 'default._domainkey', 'r');
+            $DKIM_HN_Field->setOptional(true);
+            $DKIM_HN_Field->setType('');
+            $container->addFormField(
+                    $DKIM_HN_Field,
+                    $factory->getLabel("DKIM_HN_Field"), $pageId
+                    );
+
+            $DKIM_DOM_Field = $factory->getTextField("DKIM_DOM_Field", $vsite_data['domain'], 'r');
+            $DKIM_DOM_Field->setOptional(true);
+            $DKIM_DOM_Field->setType('');
+            $container->addFormField(
+                    $DKIM_DOM_Field,
+                    $factory->getLabel("DKIM_DOM_Field"), $pageId
+                    );
+
+            $DKIM_Entry = $i18n->get('[[palette.emptyList]]');
+            $DKIM_EntryField_access = 'r';
+            if (isset($opendkim_array[$vsite_data['domain']]['default._domainkey'])) {
+                $DKIM_Entry = $opendkim_array[$vsite_data['domain']]['default._domainkey'];
+                $DKIM_EntryField_access = 'r';
+            }
+            $DKIM_EntryField = $factory->getTextField("DKIM_TXT", $DKIM_Entry, $DKIM_EntryField_access);
+            $DKIM_EntryField->setOptional(true);
+            $DKIM_EntryField->setType('');
+            $container->addFormField(
+                    $DKIM_EntryField,
+                    $factory->getLabel("DKIM_TXT"), $pageId
+                    );
+
+            // Check if DNS is enabled and DNS record exists:
+            if ($System_DNS['enabled'] == '1') {
+                $haveNoTXT = '0';
+                $Have_DNS_TXT = $cce->find("DnsRecord", array('hostname' => 'default._domainkey', 'domainname' => $vsite_data['domain'], 'type' => 'TXT'));
+
+                if (count($Have_DNS_TXT) == '1') {
+                    $DKIM_TXT_PRESENT_txt = $i18n->get('[[palette.Yes]]');
+                    $DKIM_TXT_PRESENT_hidden = '1';
+                }
+                elseif (count($Have_DNS_TXT) > '1') {
+                    $DKIM_TXT_PRESENT_txt = $i18n->get('[[base-email.multiple_identical_dkim_records_present]]');
+                    $DKIM_TXT_PRESENT_hidden = '1';
+                }
+                else {
+                    $DKIM_TXT_PRESENT_txt = $i18n->get('[[palette.No]]');
+                    $DKIM_TXT_PRESENT_hidden = '0';
+                    $haveNoTXT = '1';
+                }
+
+                $DKIM_DNS_Present_Field = $factory->getTextField("DKIM_TXT_PRESENT", $DKIM_TXT_PRESENT_txt, 'r');
+                $DKIM_DNS_Present_Field->setOptional(true);
+                $DKIM_DNS_Present_Field->setType('');
+                $container->addFormField(
+                        $DKIM_DNS_Present_Field,
+                        $factory->getLabel("DKIM_TXT_PRESENT"), $pageId
+                        );
+
+                $DKIM_DNS_Present_Hidden_Field = $factory->getTextField("DKIM_TXT_PRESENT_HIDDEN", $DKIM_TXT_PRESENT_hidden, '');
+                $DKIM_DNS_Present_Hidden_Field->setOptional(true);
+                $DKIM_DNS_Present_Hidden_Field->setType('');
+                $container->addFormField(
+                        $DKIM_DNS_Present_Hidden_Field,
+                        $factory->getLabel("DKIM_TXT_PRESENT_HIDDEN"), $pageId
+                        );
+
+                if ($haveNoTXT == '1') {
+                    $create_txt_field = $factory->getBoolean("create_txt", '0', "rw");
+                    $container->addFormField(
+                            $create_txt_field,
+                            $factory->getLabel("create_txt"),
+                            $pageId
+                            );
+                }
+            }
+        }
+    }
+
+    function handle(&$helper, &$errors, &$cce_info, &$attributes)
+    {
+
+        $this->attributes = $attributes;
+
+        $cce = $helper->getCceClient();
+
+        $CI =& get_instance();
+        $System = $CI->getSystem();
+        $BX_SESSION = $CI->getBX_SESSION();
+
+        $factory = $helper->getHtmlComponentFactory("base-email");
+        $i18n = $factory->getI18n();
+        $cce = $helper->getCceClient();
+    
+        $System_DNS = $cce->get($System['OID'], 'DNS');
+        $System_Email = $cce->get($System['OID'], 'Email');
+        $vsite_data = $cce->get($cce_info["CCE_OID"]);
+        $vsite_OpenDKIM = $cce->get($cce_info["CCE_OID"], 'OpenDKIM');
+
+        if ($System_Email["enableOpenDKIM"] == '1') {
+
+            // Onboard DNS server is enabled, DKIM is enabled, there is currently no DKIM TXT DNS Record and we're tasked with creating one:
+            if (($System_DNS['enabled'] == '1') && ($this->attributes['OpenDKIM_enabled'] == '1') && ($this->attributes['DKIM_TXT_PRESENT_HIDDEN'] == '0') && ($this->attributes['create_txt'] == '1')) {
+                $parms = array('hostname' => 'default._domainkey', 'domainname' => $vsite_data['domain'], 'type' => 'TXT', 'strings' => $this->attributes['DKIM_TXT']);
+                $ok = $cce->create("DnsRecord", $parms);
+                $errors = array_merge($errors, $cce->errors());
+                $cce->set($System['OID'], 'DNS', array('commit' => time()));
+                $errors = array_merge($errors, $cce->errors());
+            }
+
+            // Vsite has DKIM, but we want to remove it!
+            if (($this->attributes['OpenDKIM_enabled'] == '0') && ($vsite_OpenDKIM['enabled'] == '1')) {
+                $cce->set($cce_info["CCE_OID"], 'OpenDKIM', array('enabled' => '0', 'force_update' => time()));
+                $errors = array_merge($errors, $cce->errors());
+            }
+
+            // Vsite has no DKIM and we want to add it!
+            if (($this->attributes['OpenDKIM_enabled'] == '1') && ($vsite_OpenDKIM['enabled'] == '0')) {
+                $cce->set($cce_info["CCE_OID"], 'OpenDKIM', array('enabled' => '1', 'force_update' => time()));
+                $errors = array_merge($errors, $cce->errors());
+            }
+
+            $errors = array_merge($errors, $cce->errors());
+        }
+    }
+}
+?>

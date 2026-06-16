@@ -1,0 +1,47 @@
+<?php
+// $Id: 43_LOGS.php
+// Copyright (c) 2021 Michael Stauber, SOLARSPEED.NET
+// Copyright (c) 2021 Team BlueOnyx, BLUEONYX.IT
+//
+// ui extension to set settings for cgi Vsite creation
+
+if(defined("LOGS_EXTENSION_CREATE_VSITE"))
+{
+    return 1;
+}
+define("LOGS_EXTENSION_CREATE_VSITE", 1);
+
+include_once("UIExtension.php");
+
+class LOGSExtension extends UIExtension
+{
+    function display(&$helper, &$container, &$cce_info)
+    {
+        $factory = $helper->getHtmlComponentFactory("base-apache");
+        $cce = $helper->getCceClient();
+    
+        $defaults = $cce->get($cce_info["CCE_OID"], 'LOGS');
+        $pageId = $cce_info['PAGED_BLOCK_DEFAULT_PAGE'];
+        $access = "rw";
+
+        //--
+        $logs_enabled_FF = $factory->getBoolean('logs_enabled', $defaults['enabled'], $access);
+        $container->addFormField(
+            $logs_enabled_FF,
+            $factory->getLabel('logs_enabled'),
+            $pageId
+            );
+    }
+
+    function handle(&$helper, &$errors, &$cce_info, &$attributes)
+    {
+        $this->attributes = $attributes;
+
+        $cce = $helper->getCceClient();
+
+        $cce->set($cce_info["CCE_OID"], 'LOGS', array('enabled' => $this->attributes['logs_enabled']));
+
+        $errors = array_merge($errors, $cce->errors());
+    }
+}
+?>

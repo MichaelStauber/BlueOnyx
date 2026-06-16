@@ -1,0 +1,11 @@
+<item 
+    id="base_sitemaintenance" 
+    label="[[base-vsite.sitemaintenance]]" 
+    description="[[base-vsite.sitemaintenanceDescription]]"
+    icon="shuffle"
+    requiresChildren="1"
+>
+    <parent id="base_sitemanage" order="65">
+        <access require="siteAdmin"/>
+    </parent>
+</item>

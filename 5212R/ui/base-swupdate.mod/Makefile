@@ -7,7 +7,7 @@ VENDORNAME='Project BlueOnyx'
 SERVICE=swupdate
 
 VERSION=1.8.8
-RELEASE=2
+RELEASE=3
 
 # add a buildarch if desired
 BUILDARCH=noarch
@@ -20,7 +20,7 @@ BUILDGLUE=yes
 BUILDLOCALE=yes
 BUILDSRC=no
 
-REQUIRES = perl-Sort-Versions wget lynx php-soap perl-Sys-Hostname-FQDN file perl-List-MoreUtils swatch
+REQUIRES = perl-Sort-Versions wget lynx php-soap perl-Sys-Hostname-FQDN file perl-List-MoreUtils swatch s-nail
 
 #########
 # some useful defines

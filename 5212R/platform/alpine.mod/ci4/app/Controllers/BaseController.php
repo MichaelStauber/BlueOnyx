@@ -343,12 +343,13 @@ abstract class BaseController extends Controller
         }
 
         if ((int)$api_check === 0 && (int)$cce_check === 1) {
-            // CCEd socket is alive but cced-api is dead. Just restart
-            // cced-api — no need to unstuck the whole CCEd.
-            timer('BaseController_CCEApi_Restart');
-            shell_exec('/usr/bin/systemctl restart cced-api.service >/dev/null 2>&1 &');
-            $this->rset($api_key, 1, 5); // optimistic: give it 5s to come back
-            timer('BaseController_CCEApi_Restart');
+            // CCEd socket is alive but cced-api is dead. The retry logic
+            // in CceApiClient::callApi() (3 attempts with 1s backoff) and
+            // the socket fallback in CceClient::getAll() handle this
+            // transparently — no separate restart needed here, as admserv
+            // lacks permission for systemctl. If CCEd's socket is also
+            // dead, cced_unstuck.sh (which now restarts cced-api) runs above.
+            if ($this->DEBUG) bx_error_log("BaseController: cced-api is down, relying on retry/fallback");
         }
 
         timer('BaseController_CCE_Check');

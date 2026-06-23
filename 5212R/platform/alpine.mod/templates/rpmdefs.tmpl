@@ -194,6 +194,28 @@ fi
 
 <begin $CHANGELOG>
 
+* Mon Jun 22 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-32
+- Modified ci4/app/Controllers/BaseController.php to add extended liveness 
+  check for cced-api. After the existing Unix socket liveness check, a new
+  check tests whether cced-api is accepting TLS connections on its configured
+  port. The check reads the listen address from /etc/cced-api/config/cced-api.conf
+  (same as CceApiClient), cached in Redis for 2 seconds. If CCEd's socket is 
+  alive but cced-api is dead, it runs systemctl restart cced-api.service in 
+  the background. No need to unstuck the whole CCEd.
+- Modified ci4/app/Libraries/CceApiClient.php to extend callApi() with retry 
+  with backoff. If curl_exec() returns false (connection refused/timeout - 
+  cced-api is down), the method now retries up to 3 times with a 1-second sleep 
+  between attempts. On each retry, the stale curl handle is closed and re-
+  initialized to get a fresh TCP connection. If all 3 attempts fail, it returns 
+  null (instead of json_decode(false) which was null anyway, but now it's 
+  explicit and logged).
+- Modified ci4/app/Libraries/CceClient.php to extend getAll() with API 
+  liveness check + socket fallback. Before routing through the API, getAll() 
+  now calls isApiAvailable() (a quick ping). If the API is down, it falls through
+  to the socket path (which uses find() + external_cce_get.pl). If the API is up 
+  but returns null (all retries failed), it also falls through to the socket path. 
+  Previously, getAll() would silently return an empty array when the API was down.
+
 * Sat May 16 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-31
 - Modified ci4/app/Libraries/uifc2/FormFieldBuilder.php so that Password
   element now shows proper helptext - also below the input field.

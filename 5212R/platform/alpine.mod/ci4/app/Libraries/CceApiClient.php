@@ -100,10 +100,53 @@ class CceApiClient {
         }
 
         curl_setopt($this->curlHandle, CURLOPT_POSTFIELDS, $json);
-        $response = curl_exec($this->curlHandle);
 
-        if ($response === false && $this->DEBUG) {
-            bx_error_log("CceApiClient::callApi() CURL ERROR: " . curl_error($this->curlHandle));
+        // Retry loop: if cced-api is temporarily down (e.g. during a CCEd
+        // restart triggered by a PKG install), curl_exec returns false.
+        // We retry up to 3 times with a 1-second sleep between attempts
+        // before giving up. This covers the typical cced-api restart window.
+        $maxRetries = 3;
+        $retryDelay = 1; // seconds
+        $response = false;
+        $curlError = '';
+
+        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+            $response = curl_exec($this->curlHandle);
+
+            if ($response !== false) {
+                break; // success
+            }
+
+            $curlError = curl_error($this->curlHandle);
+
+            if ($this->DEBUG) {
+                bx_error_log("CceApiClient::callApi() CURL ERROR (attempt $attempt/$maxRetries): " . $curlError);
+            }
+
+            if ($attempt < $maxRetries) {
+                // Close the stale handle so the next attempt gets a fresh connection:
+                curl_close($this->curlHandle);
+                $this->curlHandle = null;
+                sleep($retryDelay);
+                // Re-initialize for the next attempt:
+                $this->curlHandle = curl_init();
+                curl_setopt($this->curlHandle, CURLOPT_URL, $this->getApiUrl());
+                curl_setopt($this->curlHandle, CURLOPT_POST, true);
+                curl_setopt($this->curlHandle, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($this->curlHandle, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+                curl_setopt($this->curlHandle, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($this->curlHandle, CURLOPT_SSL_VERIFYHOST, false);
+                curl_setopt($this->curlHandle, CURLOPT_FORBID_REUSE, false);
+                curl_setopt($this->curlHandle, CURLOPT_FRESH_CONNECT, false);
+                curl_setopt($this->curlHandle, CURLOPT_POSTFIELDS, $json);
+            }
+        }
+
+        if ($response === false) {
+            if ($this->DEBUG) {
+                bx_error_log("CceApiClient::callApi() CURL ERROR: All $maxRetries attempts failed. Last error: " . $curlError);
+            }
+            return null;
         }
 
         if ($this->DEBUG) {

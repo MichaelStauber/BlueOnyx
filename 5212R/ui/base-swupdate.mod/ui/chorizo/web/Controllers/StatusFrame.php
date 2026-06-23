@@ -155,6 +155,90 @@ class StatusFrame extends BaseController {
             $redirect_URL = "/swupdate/download?packageOID=$oid&backUrl=$backUrl";
             $BxPage->ReturnToThisPage($errors, $redirect_URL);
         }
+        // When pkg_install.pl sets uiCMD to 'install,rehashcce' or
+        // 'install,refreshcce' or 'install,refreshui', it will sleep 4
+        // seconds and then restart or reload CCEd. Any iframe or top-window
+        // auto-refresh that fires during that CCEd restart window will hit a
+        // dead CCEd and produce a 500 error. To prevent this, we intercept
+        // these uiCMD values here, clear uiCMD so no further refresh logic
+        // triggers, and render a static page with a Done button instead.
+        // The user can click Done once CCEd is back (typically a few seconds
+        // after the page renders). No auto-refresh is emitted.
+        elseif ((strstr($cmd, 'rehashcce')) || (strstr($cmd, 'refreshcce')) || (strstr($cmd, 'refreshui'))) {
+            // Clear uiCMD so the next page load (e.g. when the user clicks
+            // Done) does not re-enter this branch or the refresh branch:
+            $CI->cceClient->set($System['OID'], "SWUpdate",  array("uiCMD" => '', 'progress' => '100'));
+
+            // Get message:
+            $message = $i18n->interpolate($swupdate["message"]);
+            if (preg_match('/packageInstallSuccess/', $swupdate["message"], $matches, PREG_OFFSET_CAPTURE)) {
+                // Install went fine — append the refresh/rehash notice:
+                $message .= '<br><br>' . $i18n->get("installrefresh");
+            }
+
+            // Set Menu items:
+            $BxPage->setVerticalMenu('base_software');
+            $BxPage->setVerticalMenuChild('base_softwareNew');
+            $page_module = 'base_software';
+
+            $defaultPage = "Basic";
+            $newBackURL = "/swupdate/newSoftware";
+            if (isset($get_form_data['A'])) {
+                $newBackURL = "/swupdate/softwareList";
+            }
+
+            // Spacer at the top:
+            $page_body[] = '<div><br></div>';
+
+            $nameTag = $i18n_EN->Interpolate($package['nameTag']);
+            if ($nameTag === 'nameTag') {
+                $nameTag = $package["name"];
+            }
+
+            $block = $factory->getPagedBlock("installStatus", array($defaultPage));
+            $block->setCurrentLabel($factory->getLabel("installStatus", false, array("fileName" => $nameTag)));
+
+            $xxx = $factory->getHTMLField("statusField", $message, "r");
+            $block->addFormField(
+              $xxx,
+              $factory->getLabel("statusField"),
+              $defaultPage
+            );
+
+            // Stretch the PagedBlock() to a width of 720 pixels:
+            $xxx = $factory->getRawHTML("Spacer", '<IMG BORDER="0" WIDTH="720" HEIGHT="0" SRC="/libImage/spaceHolder.gif">');
+            $block->addFormField(
+                $xxx,
+                $factory->getLabel("Spacer"),
+                $defaultPage
+            );
+
+            // we need to propagate back the URL.
+            $xxx = $factory->getTextField("backbackUrl", $backUrl, "");
+            $block->addFormField(
+                $xxx,
+                ""
+            );
+
+            // Show the Done button immediately. No auto-refresh — the user
+            // clicks Done after CCEd has restarted. This avoids the race
+            // condition where a timed refresh hits CCEd mid-restart.
+            $doneButton = $factory->getButton($newBackURL, '[[palette.done]]');
+            $doneButton->setTarget("window.top.location.href");
+            $doneButton->setButtonSpecialStyle('animated');
+            $doneButton->setIcon('icon-rocket');
+            $doneButton->setButtonColor('success');
+            $block->addButton($doneButton);
+
+            // Page body:
+            $page_body[] = $block->toHtml();
+
+            // Spacer at the bottom:
+            $page_body[] = '<div><br></div>';
+
+            // Out with the page:
+            return $BxPage->render($page_module, $page_body);
+        }
         elseif ((strstr($cmd, 'refresh')) || (strstr($cmd, 'reboot'))) {
 
             $hideBackButton = FALSE;
@@ -347,8 +431,8 @@ class StatusFrame extends BaseController {
     }       
 }
 /*
-Copyright (c) 2008-2024 Michael Stauber, SOLARSPEED.NET
-Copyright (c) 2008-2024 Team BlueOnyx, BLUEONYX.IT
+Copyright (c) 2008-2026 Michael Stauber, SOLARSPEED.NET
+Copyright (c) 2008-2026 Team BlueOnyx, BLUEONYX.IT
 All Rights Reserved.
 
 1. Redistributions of source code must retain the above copyright 

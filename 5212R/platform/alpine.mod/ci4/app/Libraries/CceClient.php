@@ -549,7 +549,22 @@ class CceClient {
     // ==================== getAll() - always prefers API ====================
     function getAll($class_or_oids, $args = []) {
         if ($this->backend !== self::BACKEND_SOCKET) {
-            return $this->getApiClient()->getAll($this->getUsername(), $this->getSessionId(), $class_or_oids, $args);
+            // Check if the API is actually reachable before routing through
+            // it. If cced-api is down (e.g. during a CCEd restart), fall
+            // through to the socket path instead of silently returning an
+            // empty array.
+            if (!is_file('/etc/NOAPI') && $this->isApiAvailable()) {
+                $result = $this->getApiClient()->getAll($this->getUsername(), $this->getSessionId(), $class_or_oids, $args);
+                // If the API returned a non-null result, use it. A null
+                // result means the call failed even after retries.
+                if ($result !== null) {
+                    return $result;
+                }
+                if ($this->DEBUG) bx_error_log("CceClient::getAll(): API returned null, falling back to socket");
+            }
+            else {
+                if ($this->DEBUG) bx_error_log("CceClient::getAll(): API unavailable, using socket fallback");
+            }
         }
         // socket fallback
         $oids = $this->find($class_or_oids, $args);

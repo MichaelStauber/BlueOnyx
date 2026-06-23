@@ -148,6 +148,20 @@ fi
 
 <begin $CHANGELOG>
 
+* Mon Jun 22 2026 Michael Stauber <mstauber@solarspeed.net> 1.8.9-1
+- PKG install with rehashcce/refreshcce/refreshui flags would sometimes
+  enter a race condition where CCEd is still down when the status iFrame
+  reloads, causing a 500 server error. This update addresses that.
+- Modified ui/chorizo/web/Controllers/StatusFrame.php to add a new
+  'elseif' branch that intercepts 'rehashcce/refreshcce/refreshui'
+  in 'uiCMD' before the auto-refresh branches. It shows a static 
+  page with Done button with no 'setTimeout' refresh.
+- Modified glue/sbin/pkg_uninstall.pl Fixes to set 'uiCMD' to 
+  'uninstall,refreshcce' or 'uninstall,rehashcce' + 'progress=100' 
+  before calling exitScript(), so StatusFrame can intercept a 
+  pending CCEd restart during uninstalls too. Changed 'else' to 
+  'elsif' for cleaner fall-through.
+
 * Wed Jun 17 2026 Michael Stauber <mstauber@solarspeed.net> 1.8.8-3
 - Added requirement for s-nail
 

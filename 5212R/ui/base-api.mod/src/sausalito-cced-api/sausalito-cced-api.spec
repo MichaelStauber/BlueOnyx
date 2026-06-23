@@ -1,6 +1,6 @@
 Name:           sausalito-cced-api
 Version:        1.1.0
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        CCEd-API proxy for BlueOnyx
 
 License:        SUN-modified-BSD
@@ -73,6 +73,17 @@ systemctl restart cced-api.service >/dev/null 2>&1 || :
 %systemd_postun_with_restart cced-api.service
 
 %changelog
+* Mon Jun 22 2026 Michael Stauber <mstauber@solarspeed.net> - 1.1.0-3
+- Modified cced-api.service to use Restart=always with RestartSec=3 and
+  StartLimitIntervalSec=0. Previously the service used Restart=on-failure
+  with the systemd default of 100ms between retries and a start limit of
+  5 retries in 10 seconds. When CCEd was restarted (e.g. during PKG
+  installs with rehashcce or refreshcce options), cced-api would crash
+  repeatedly during CCEd's constructor phase and systemd would give up
+  after 5 failures, leaving the GUI without a CCEd connection for several
+  minutes. The new settings ensure cced-api always retries with a 3-second
+  delay and never hits a start rate limit.
+
 * Sun Oct 12 2025 Michael Stauber <mstauber@solarspeed.net> - 1.1.0-2
 - Modified cced-api-pre.sh to enforce proper permissions on certs.
 

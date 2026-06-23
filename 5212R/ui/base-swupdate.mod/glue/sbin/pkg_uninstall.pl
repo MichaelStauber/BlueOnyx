@@ -163,11 +163,13 @@ $cce->destroy($packageOID);
 # Restart or reload CCE if necessary:
 if ($obj->{options} =~ /\brefreshcce\b/) {
     my $restart = ($obj->{options} =~ /\brefreshcce\b/) ? 'restart' : 0;
+    $cce->set($sysOID, 'SWUpdate', { 'uiCMD' => 'uninstall,refreshcce', 'progress' => '100' });
     print LOG "Uninstall of $obj->{vendor}->$obj->{name}-$obj->{version} complete\n";
     exitScript($cce, "Uninstall successful.", $restart);
 }
-else {
+elsif ($obj->{options} =~ /\brehashcce\b/) {
     my $restart = ($obj->{options} =~ /\brehashcce\b/) ? 'rehash' : 0;
+    $cce->set($sysOID, 'SWUpdate', { 'uiCMD' => 'uninstall,rehashcce', 'progress' => '100' });
     print LOG "Uninstall of $obj->{vendor}->$obj->{name}-$obj->{version} complete\n";
     exitScript($cce, "Uninstall successful.", $restart);
 }
@@ -217,8 +219,8 @@ sub exitScript {
 }
 
 # 
-# Copyright (c) 2008-2022 Michael Stauber, SOLARSPEED.NET
-# Copyright (c) 2008-2022 Team BlueOnyx, BLUEONYX.IT
+# Copyright (c) 2008-2026 Michael Stauber, SOLARSPEED.NET
+# Copyright (c) 2008-2026 Team BlueOnyx, BLUEONYX.IT
 # Copyright (c) 2003 Sun Microsystems, Inc. 
 # All Rights Reserved.
 # 

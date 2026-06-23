@@ -242,6 +242,9 @@ fi
 
 %changelog
 
+* Mon Jun 22 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-5
+- Modified ccewrap/cced_unstuck.sh to also restart CCEd-API
+
 * Sun May 17 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-4
 - Modified cscp/src/cscp_parse.c to extend the Logging filter to not only replace
   values with "xxx" in the log if the key contained 'password' (exact match), but

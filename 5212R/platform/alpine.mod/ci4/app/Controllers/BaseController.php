@@ -319,6 +319,38 @@ abstract class BaseController extends Controller
             timer('BaseController_CCE_Restart');
         }
 
+        // Also check if cced-api is alive. The Unix socket check above only
+        // tests CCEd's native socket. cced-api (the HTTP/JSON proxy on port
+        // 9092) can be dead while the socket is fine — e.g. after a CCEd
+        // restart where cced-api crashed during the constructor phase and
+        // systemd gave up restarting it. Without this check, getAll() and
+        // other API-dependent calls silently fail.
+        $api_key = 'admserv:cache:ccedapi:alive';
+        $api_check = $this->rget($api_key);
+
+        if ($api_check === null) {
+            // Check if cced-api is active via systemd. This is a local
+            // D-Bus call (~1ms) — much faster than a TLS HTTP request
+            // (~2s). Since we fixed cced-api.service with Restart=always
+            // and StartLimitIntervalSec=0, systemd will never give up
+            // restarting it, so is-active is a reliable health indicator.
+            $api_check = 0;
+            if (!is_file('/etc/NOAPI')) {
+                $out = trim(`/usr/bin/systemctl is-active cced-api.service 2>/dev/null`);
+                $api_check = ($out === 'active') ? 1 : 0;
+            }
+            $this->rset($api_key, $api_check, 2);   // 2s micro-cache
+        }
+
+        if ((int)$api_check === 0 && (int)$cce_check === 1) {
+            // CCEd socket is alive but cced-api is dead. Just restart
+            // cced-api — no need to unstuck the whole CCEd.
+            timer('BaseController_CCEApi_Restart');
+            shell_exec('/usr/bin/systemctl restart cced-api.service >/dev/null 2>&1 &');
+            $this->rset($api_key, 1, 5); // optimistic: give it 5s to come back
+            timer('BaseController_CCEApi_Restart');
+        }
+
         timer('BaseController_CCE_Check');
 
         // Start with empty Capabilities:

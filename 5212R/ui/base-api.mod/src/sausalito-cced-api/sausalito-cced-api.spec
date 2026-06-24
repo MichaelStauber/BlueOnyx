@@ -1,6 +1,6 @@
 Name:           sausalito-cced-api
 Version:        1.1.0
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        CCEd-API proxy for BlueOnyx
 
 License:        SUN-modified-BSD
@@ -73,6 +73,9 @@ systemctl restart cced-api.service >/dev/null 2>&1 || :
 %systemd_postun_with_restart cced-api.service
 
 %changelog
+* Wed Jun 23 2026 Michael Stauber <mstauber@solarspeed.net> - 1.1.0-4
+- Modified cced-api-pre.sh with check for /etc/admserv/certs/ca-certs
+
 * Mon Jun 22 2026 Michael Stauber <mstauber@solarspeed.net> - 1.1.0-3
 - Modified cced-api.service to use Restart=always with RestartSec=3 and
   StartLimitIntervalSec=0. Previously the service used Restart=on-failure

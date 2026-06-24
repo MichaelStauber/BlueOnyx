@@ -5,7 +5,9 @@ mkdir -p /etc/cced-api/certs
 
 cp -f /etc/admserv/certs/certificate /etc/cced-api/certs/ || true
 cp -f /etc/admserv/certs/key /etc/cced-api/certs/ || true
-cp -f /etc/admserv/certs/ca-certs /etc/cced-api/certs/ || true
+if [ -f /etc/admserv/certs/ca-certs ];then
+	cp -f /etc/admserv/certs/ca-certs /etc/cced-api/certs/ || true
+fi
 chown admserv:admserv /etc/cced-api/certs/* || true
 if [ -f /etc/cced-api/certs/ca-certs ];then
 	chmod 0644 /etc/cced-api/certs/ca-certs || true
@@ -29,8 +31,8 @@ if [ -e /usr/sausalito/sbin/gen_api_admin.pl ];then
 fi
 
 # 
-# Copyright (c) 2008-2025 Michael Stauber, SOLARSPEED.NET
-# Copyright (c) 2008-2025 Team BlueOnyx, BLUEONYX.IT
+# Copyright (c) 2008-2026 Michael Stauber, SOLARSPEED.NET
+# Copyright (c) 2008-2026 Team BlueOnyx, BLUEONYX.IT
 # All Rights Reserved.
 # 
 # 1. Redistributions of source code must retain the above copyright 

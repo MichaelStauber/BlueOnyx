@@ -191,6 +191,10 @@ if (-e "/etc/group.lock") {
     &debug_msg("Breaking /etc/group.lock\n");
     unlink("/etc/group.lock");
 }
+if (-e "/etc/passwd.lock") {
+    &debug_msg("Breaking /etc/passwd.lock\n");
+    unlink("/etc/passwd.lock");
+}
 
 my $hu_user = { 'comment' => $comment }; 
 
@@ -437,6 +441,10 @@ sub check_for_stupid_file {
         unlink ('/etc/group.lock');
         &debug_msg("At checkpoint $checkpoint, ");
         &debug_msg("/etc/group.lock was found.\n");
+    }
+    if (-e "/etc/passwd.lock") {
+        &debug_msg("Breaking /etc/passwd.lock\n");
+        unlink("/etc/passwd.lock");
     }
 }
 
@@ -691,8 +699,8 @@ sub debug_msg {
 }
 
 # 
-# Copyright (c) 2008-2025 Michael Stauber, SOLARSPEED.NET
-# Copyright (c) 2008-2025 Team BlueOnyx, BLUEONYX.IT
+# Copyright (c) 2008-2026 Michael Stauber, SOLARSPEED.NET
+# Copyright (c) 2008-2026 Team BlueOnyx, BLUEONYX.IT
 # Copyright (c) 2003 Sun Microsystems, Inc. 
 # All Rights Reserved.
 # 

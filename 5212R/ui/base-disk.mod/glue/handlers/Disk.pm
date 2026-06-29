@@ -611,7 +611,7 @@ sub check_ext_quotas {
 # Function to check quotas on XFS
 sub check_xfs_quotas {
     my ($mount_point) = @_;
-    my @output = run_command("LC_ALL=C xfs_quota -x -c 'report -h' $mount_point");
+    my @output = run_command("LC_ALL=C /usr/sbin/xfs_quota -x -c 'report -h' $mount_point");
     
     foreach my $line (@output) {
         if ($line =~ /User quota on/i || $line =~ /Group quota on/i) {
@@ -723,7 +723,7 @@ sub check_xfs_quotas {
     my ($mount_point) = @_;
     
     # Check general quota status
-    my @output = run_command("LC_ALL=C xfs_quota -x -c 'report -h' $mount_point");
+    my @output = run_command("LC_ALL=C /usr/sbin/xfs_quota -x -c 'report -h' $mount_point");
     
     # Look for lines indicating quotas are active
     foreach my $line (@output) {

@@ -102,6 +102,11 @@ information for [VENDOR]-[SERVICE].
 
 <begin $CHANGELOG>
 
+* Tue Jul 02 2026 Michael Stauber <mstauber@solarspeed.net> 1.3.2-4
+- Ensure proper propagation of TimeZone changes to GUI config files
+- Modified constructor/setTimeZone.pl to update .env and php.ini 
+- Modified glue/handlers/time.pl to update .env and php.ini 
+
 * Sat May 09 2026 Michael Stauber <mstauber@solarspeed.net> 1.3.2-3
 - Added escapeshellarg() to user-supplied arguments in shell() call for
   Timeconfig.php.

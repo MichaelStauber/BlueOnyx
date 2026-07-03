@@ -30,8 +30,18 @@ else {
     $cce->update($oid,"Time",{timeZone=>$tz}) if $sys->{timeZone} ne $tz;
 }
 # If that doesn't work we're screwed, since that link is usually made by one of the scripts on the BTOS.
-# if it isn't there then knowing the correct time zone is likely to be the 
+# if it isn't there then knowing the correct time zone is likely to be the
 # least of our worries
+
+# Sync CI4 .env and PHP admserv.ini with CODB timezone if they differ:
+my $ci4_env = '/usr/sausalito/ui/chorizo/ci4/.env';
+my $php_ini = '/etc/admserv/php.ini';
+if ((-f $ci4_env) && ($sys->{timeZone} ne '')) {
+    system("/bin/sed -i -e \"s|app\\.appTimezone = '.*'|app.appTimezone = '$sys->{timeZone}'|\" $ci4_env");
+}
+if ((-f $php_ini) && ($sys->{timeZone} ne '')) {
+    system("/bin/sed -i -e \"s|date\\.timezone = '.*'|date.timezone = '$sys->{timeZone}'|\" $php_ini");
+}
 
 # Make sure this isn't running on OpenVZ *and* has a time-server configured:
 if ((-e "/proc/user_beancounters") && (!-f "/etc/vz/conf/0.conf")) {
@@ -63,8 +73,8 @@ $cce->bye('SUCCESS');
 exit 0;
 
 # 
-# Copyright (c) 2008-2024 Michael Stauber, SOLARSPEED.NET
-# Copyright (c) 2008-2024 Team BlueOnyx, BLUEONYX.IT
+# Copyright (c) 2008-2026 Michael Stauber, SOLARSPEED.NET
+# Copyright (c) 2008-2026 Team BlueOnyx, BLUEONYX.IT
 # Copyright (c) 2003 Sun Microsystems, Inc. 
 # All Rights Reserved.
 # 

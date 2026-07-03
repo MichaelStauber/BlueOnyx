@@ -78,6 +78,16 @@ if (!Sauce::Util::editfile($clock, $fn, $zone)) {
     $cce->warn("[[base-time.errorWritingConfFile]]");
 }
 
+# Update CI4 .env and PHP admserv.ini with the new timezone:
+my $ci4_env = '/usr/sausalito/ui/chorizo/ci4/.env';
+my $php_ini = '/etc/admserv/php.ini';
+if ((-f $ci4_env) && ($zone ne '')) {
+    system("/bin/sed -i -e \"s|app\\.appTimezone = '.*'|app.appTimezone = '$zone'|\" $ci4_env");
+}
+if ((-f $php_ini) && ($zone ne '')) {
+    system("/bin/sed -i -e \"s|date\\.timezone = '.*'|date.timezone = '$zone'|\" $php_ini");
+}
+
 # set the time if necessary. 
 my $time = $time_obj->{epochTime};
 
@@ -135,8 +145,8 @@ sub debug_msg {
 }
 
 # 
-# Copyright (c) 2008-2024 Michael Stauber, SOLARSPEED.NET
-# Copyright (c) 2008-2024 Team BlueOnyx, BLUEONYX.IT
+# Copyright (c) 2008-2026 Michael Stauber, SOLARSPEED.NET
+# Copyright (c) 2008-2026 Team BlueOnyx, BLUEONYX.IT
 # Copyright (c) 2003 Sun Microsystems, Inc. 
 # All Rights Reserved.
 # 

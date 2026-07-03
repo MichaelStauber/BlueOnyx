@@ -70,6 +70,11 @@ information for [VENDOR]-[SERVICE].
 <begin glue>
 # glue post-install
 
+# Restart CCEd: 
+if [ -d "/usr/sausalito/yumcce" ];then 
+  touch /usr/sausalito/yumcce/restart
+fi
+
 <end glue>
 <begin ui>
 # ui post-install

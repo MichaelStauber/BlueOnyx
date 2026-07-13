@@ -797,6 +797,12 @@ class BxPage extends Controller {
         $AM_yellow_items = '0';
         $AM_red_items = '0';
         $ActiveMonitorErrors = [];
+        $activeMonitorObj = array(
+            'enabled' => '0',
+            'globalState' => 'G'
+        );
+        $ActiveMonitorData = array();
+        $AMnames = array();
 
         // Only poll "ActiveMonitor" if the GUI user actually has ACL rights for 'ActiveMonitor':
         if (in_array("serverShowActiveMonitor", $access)) {
@@ -812,20 +818,27 @@ class BxPage extends Controller {
             else {
                 // Fallback to slow method:
                 $activeMonitorObj = $this->cceClient->getObject("ActiveMonitor");
-                $AMnames = $this->cceClient->names($activeMonitorObj["OID"]);
-                $oid_list = '["' . $activeMonitorObj['OID'] . '"]';
-                $output = '';
-                $ret = $CI->serverScriptHelper->shell("/usr/sausalito/sbin/external_cce_get.pl --oid $oid_list", $output, 'root', $BX_SESSION['sessionId']);
-                if ($ret != 0) {
-                    // Failed!
-                    $ActiveMonitorData = array();
+                if (is_array($activeMonitorObj) && isset($activeMonitorObj["OID"])) {
+                    $AMnames = $this->cceClient->names($activeMonitorObj["OID"]);
+                    $oid_list = '["' . $activeMonitorObj['OID'] . '"]';
+                    $output = '';
+                    $ret = $CI->serverScriptHelper->shell("/usr/sausalito/sbin/external_cce_get.pl --oid $oid_list", $output, 'root', $BX_SESSION['sessionId']);
+                    if ($ret != 0) {
+                        // Failed!
+                        $ActiveMonitorData = array();
+                    }
+                    else {
+                        $JSON_AM = json_decode($output, true);
+                        $ActiveMonitorData = $JSON_AM[$activeMonitorObj['OID']];
+                    }
                 }
                 else {
-                    $JSON_AM = json_decode($output, true);
-                    $ActiveMonitorData = $JSON_AM[$activeMonitorObj['OID']];
+                    $activeMonitorObj = array(
+                        'enabled' => '0',
+                        'globalState' => 'G'
+                    );
                 }
             }
-
             foreach ($ActiveMonitorData as $key => $item) {
                 if (isset($item['NAMESPACE'])) {
                     if ((isset($item['monitor'])) && (isset($item['currentState']))) {

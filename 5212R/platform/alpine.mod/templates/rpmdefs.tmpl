@@ -194,6 +194,14 @@ fi
 
 <begin $CHANGELOG>
 
+* Mon Jul 13 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-34
+- Modified Libraries/CceClient.php to fix ActiveMonitor retrieval by using the API's
+  direct GETOBJECT path in API mode instead of resolving through FIND first.
+- Modified Libraries/BxPage.php to add null-safety so ActiveMonitor fallback logic
+  no longer dereferences a missing object and crashes.
+- Modified Libraries/BxPage.php to prevent 'Trying to access array offset on value
+  of type null' errors when ActiveMonitor data is unavailable or incomplete.
+
 * Mon Jun 22 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-33
 - Modified ci4/app/Controllers/BaseController.php to ignore CCEd-API restart.
 

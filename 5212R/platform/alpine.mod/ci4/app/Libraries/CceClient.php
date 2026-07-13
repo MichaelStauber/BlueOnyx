@@ -608,6 +608,20 @@ class CceClient {
 
     function getObject($class, $vars = [], $namespace = "") {
         if ($this->DEBUG) bx_error_log("Command: GetObject $class " . json_encode($vars));
+        if ($this->backend === self::BACKEND_API) {
+            $res = $this->getApiClient()->getObject($this->getUsername(), $this->getSessionId(), $class, $vars, $namespace);
+            if (is_array($res)) {
+                if (isset($res['oid'])) {
+                    $res['OID'] = $res['oid'];
+                    unset($res['oid']);
+                }
+                if (!isset($res['NAMESPACE'])) {
+                    $res['NAMESPACE'] = $namespace;
+                }
+                return $res;
+            }
+            return null;
+        }
         $oids = $this->find($class, $vars);
         return (isset($oids[0])) ? $this->get($oids[0], $namespace) : null;
     }

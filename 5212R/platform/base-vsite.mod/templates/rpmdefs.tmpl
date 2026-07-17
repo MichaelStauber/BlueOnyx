@@ -67,6 +67,7 @@ information for [VENDOR]-[SERVICE].
 %attr(0755,-,-) /usr/sausalito/sbin/update_vsite_templates.pl
 %attr(0755,-,-) /etc/cron.daily/jail_warden.pl
 %attr(0755,-,-) /usr/sausalito/sbin/update_vsite_templates.pl
+%attr(0755,-,-) /usr/sausalito/sbin/set_web_owner.pl
 
 <end glue>
 
@@ -159,6 +160,10 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+
+* Thu Jul 16 2026 Michael Stauber <mstauber@solarspeed.net> 4.8-17
+- Added /usr/sausalito/sbin/set_web_owner.pl to auto-assign a siteAdmin
+  as /web-owner on all Vsites
 
 * Wed Jun 03 2026 Michael Stauber <mstauber@solarspeed.net> 4.8-16
 - Modified ui/chorizo/web/Controllers/VsiteAdd.php to make sure that username

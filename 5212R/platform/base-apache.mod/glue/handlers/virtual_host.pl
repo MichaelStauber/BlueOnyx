@@ -819,12 +819,22 @@ sub edit_vhost
             $redirect_line = "RewriteOptions inherit\n";
             $redirect_line .= "ProxyRequests off\n";
             $redirect_line .= "SSLProxyEngine on\n";
-            $redirect_line .= "ProxyPreserveHost On\n";
+            $redirect_line .= "SSLProxyCheckPeerName off\n";
+            $redirect_line .= "SSLProxyCheckPeerCN off\n";
             $redirect_line .= "<Location />\n";
+            # ProxyPreserveHost must be set inside <Location> to override the
+            # global <Proxy *> ProxyPreserveHost On from z-push.conf, which
+            # sets it at the worker level and takes precedence over vhost-level
+            # settings. Without this, the proxy sends the Vsite's FQDN as the
+            # Host header to the backend, which typically doesn't recognise it
+            # and returns a default page instead of the proxied content.
+            $redirect_line .= "    ProxyPreserveHost off\n";
             $redirect_line .= "    ProxyPass " . $redirect->{target} . "\n";
             $redirect_line .= "    ProxyPassReverse " . $redirect->{target} . "\n";
-            $redirect_line .= "    Order allow,deny\n";
-            $redirect_line .= "    Allow from all\n";
+            (my $https_target = $redirect->{target}) =~ s/^http:/https:/;
+            $redirect_line .= "    ProxyPassReverse " . $https_target . "\n";
+            $redirect_line .= "    Require all granted\n";
+            $redirect_line .= "    DirectoryIndex disabled\n";
             $redirect_line .= "</Location>\n";
         }
         else {

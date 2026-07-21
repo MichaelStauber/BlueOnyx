@@ -253,6 +253,21 @@ fi
 
 <begin $CHANGELOG>
 
+* Mon Jul 20  2026 Michael Stauber <mstauber@solarspeed.net> 2.4.7-4
+- Modified glue/httpd/00-default-vsite.pl to not set /login if GUI_URLs is empty
+
+* Mon Jul 20 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.7-3
+- Modified glue/handlers/virtual_host.pl to fix Proxy to external resources.
+  ProxyPreserveHost must be set inside <Location> to override the global
+  <Proxy *> ProxyPreserveHost On from z-push.conf, which sets it at the worker
+  level and takes precedence over vhost-level settings. Without this, the
+  proxy sends the Vsite's FQDN as the Host header to the backend, which
+  typically doesn't recognise it and returns a default page instead of the
+  proxied content.
+- Also set SSLProxyCheckPeerName and SSLProxyCheckPeerCN to Off and turned
+  DirectoryIndex off inside the Location tag for similar reasons.
+- Changed Apache 2.2 style grants to proper Apache 2.4 style as well.
+
 * Fri Jul 10 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.7-2
 - Modified glue/httpd/security.conf to disallow directory listing for /.elm directory
 

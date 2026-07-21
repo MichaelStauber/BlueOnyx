@@ -117,10 +117,10 @@ foreach my $uri (@GUI_URLs) {
         $gui_url_rewrites .= '    RewriteCond %{HTTP_HOST}                ^([^:]+)' . "\n";
         $gui_url_rewrites .= '    RewriteRule ^/' . $uri . '/?$                  https://' . $System_FQDN . ':' . $GUI_PORT . '/login' . ' [L,R]' . "\n";
     }
-    else {
-        $gui_url_rewrites .= '    RewriteCond %{HTTP_HOST}                ^([^:]+)' . "\n";
-        $gui_url_rewrites .= '    RewriteRule ^/' . $uri . '/?$                  https://%1:' . $GUI_PORT . '/login' . ' [L,R]' . "\n";
-    }
+    #else {
+    #    $gui_url_rewrites .= '    RewriteCond %{HTTP_HOST}                ^([^:]+)' . "\n";
+    #    $gui_url_rewrites .= '    RewriteRule ^/' . $uri . '/?$                  https://%1:' . $GUI_PORT . '/login' . ' [L,R]' . "\n";
+    #}
 }
 
 # Bot protection and robots.txt handling:

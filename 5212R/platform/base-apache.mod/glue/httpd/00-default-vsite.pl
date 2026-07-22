@@ -108,19 +108,27 @@ $CipherLine .= "        SSLHonorCipherOrder On\n";
 # GUI may run on different ports and the admin URLs may be nonstandard. We pull them from CODB and use them:
 $GUI_PORT = $System->{'GUI_PORT'};
 @GUI_URLs = $cce->scalar_to_array($System->{'GUI_URLs'});
-$gui_url_rewrites = "    RewriteEngine On\n";
-$gui_url_rewrites .= '    RewriteCond %{HTTP_HOST}                ^([^:]+)' . "\n";
-$gui_url_rewrites .= '    RewriteCond %{DOCUMENT_ROOT}            !-d' . "\n";
-$gui_url_rewrites .= '    RewriteRule .*                          https://%1:' . $GUI_PORT . '/gui/Forbidden403 [L,R]' . "\n";
-foreach my $uri (@GUI_URLs) {
-    if ($System->{'GUIredirects'} eq '1') {
-        $gui_url_rewrites .= '    RewriteCond %{HTTP_HOST}                ^([^:]+)' . "\n";
-        $gui_url_rewrites .= '    RewriteRule ^/' . $uri . '/?$                  https://' . $System_FQDN . ':' . $GUI_PORT . '/login' . ' [L,R]' . "\n";
+
+$gui_url_rewrites = "RewriteEngine On\n";
+
+# Always add the forbidden rule (it doesn't depend on GUI_URLs)
+$gui_url_rewrites .= 'RewriteCond %{HTTP_HOST} ^([^:]+)' . "\n";
+$gui_url_rewrites .= 'RewriteCond %{DOCUMENT_ROOT} !-d' . "\n";
+$gui_url_rewrites .= 'RewriteRule .* https://%1:' . $GUI_PORT . '/gui/Forbidden403 [L,R]' . "\n";
+
+# Only add per-URI rules if we actually have entries
+if (@GUI_URLs) {
+    foreach my $uri (@GUI_URLs) {
+        next unless $uri;                    # skip empty strings
+        if ($System->{'GUIredirects'} eq '1') {
+            $gui_url_rewrites .= 'RewriteCond %{HTTP_HOST} ^([^:]+)' . "\n";
+            $gui_url_rewrites .= 'RewriteRule ^/' . $uri . '/?$ https://' . $System_FQDN . ':' . $GUI_PORT . '/login [L,R]' . "\n";
+        }
+        else {
+            $gui_url_rewrites .= 'RewriteCond %{HTTP_HOST} ^([^:]+)' . "\n";
+            $gui_url_rewrites .= 'RewriteRule ^/' . $uri . '/?$ https://%1:' . $GUI_PORT . '/login [L,R]' . "\n";
+        }
     }
-    #else {
-    #    $gui_url_rewrites .= '    RewriteCond %{HTTP_HOST}                ^([^:]+)' . "\n";
-    #    $gui_url_rewrites .= '    RewriteRule ^/' . $uri . '/?$                  https://%1:' . $GUI_PORT . '/login' . ' [L,R]' . "\n";
-    #}
 }
 
 # Bot protection and robots.txt handling:

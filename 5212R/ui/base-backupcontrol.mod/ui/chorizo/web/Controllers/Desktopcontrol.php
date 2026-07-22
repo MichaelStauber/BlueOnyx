@@ -293,13 +293,18 @@ class Desktopcontrol extends BaseController {
                         $GUI_URLs = preg_split('/\r\n|\r|\n/', $GUI_attribs['GUI_URLs']);
                         foreach ($GUI_URLs as $value) {
                             // Use trim to remove all types of whitespace characters from both ends
-                            $trimmed_URLs[] = trim($value);
+                            if (!empty($value)) {
+                                $trimmed_URLs[] = trim($value);
+                            }
                         }
 
                         if (count($trimmed_URLs) === 0) {
-                            $errors[] = ErrorMessage($i18n->get("[[base-backupcontrol.GUI_URLs_minimum_fail]]"), $type="alert_red", $icon="alert_2", TRUE);
+                            //$errors[] = ErrorMessage($i18n->get("[[base-backupcontrol.GUI_URLs_minimum_fail]]"), $type="alert_red", $icon="alert_2", TRUE);
+                            $GUI_attribs['GUI_URLs'] = '';
                         }
-                        $GUI_attribs['GUI_URLs'] = $CI->cceClient->array_to_scalar($trimmed_URLs);
+                        else {
+                            $GUI_attribs['GUI_URLs'] = $CI->cceClient->array_to_scalar($trimmed_URLs);
+                        }
                     }
 
                     if (count($errors) === 0) {
@@ -314,6 +319,9 @@ class Desktopcontrol extends BaseController {
 
                         // Pass on errors:
                         $BxPage->setErrors($errors);
+
+                        // Force another Apache restart:
+                        $CI->cceClient->setObject("System", array('reload' => time()), "Web");
 
                         // Perform the redirect
                         $gui_host = $_SERVER['HTTP_HOST'];
@@ -377,7 +385,7 @@ class Desktopcontrol extends BaseController {
 
         // GUI URLs:
         $GUI_URLs_Field = $factory->getTextBlock("GUI_URLs", $CI->cceClient->scalar_to_string($System["GUI_URLs"]), 'rw');
-        $GUI_URLs_Field->setOptional(FALSE);
+        $GUI_URLs_Field->setOptional(TRUE);
         $GUI_URLs_Field->setType('alphanum_plus_multiline');
         $block->addFormField(
             $GUI_URLs_Field,

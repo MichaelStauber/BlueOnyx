@@ -68,16 +68,16 @@ if ($custom_php_conf ne "1") {
   Sauce::Service::service_run_init('httpd', 'reload');
 }
 
-# Find out if we do have a CA-Cert:
-@ca_certs = $cce->scalar_to_array($objSSL->{caCerts});
-$CALine = '';
-if ( -f "/etc/admserv/certs/ca-certs") {
-    $check = `cat /etc/admserv/certs/ca-certs |grep 'BEGIN CERTIFICATE-'|wc -l`;
-    chomp($check);
-    if ($check eq "1") {
-        # We do have intermediate(s). Use it:
-        $CALine = 'SSLCACertificateFile  /etc/admserv/certs/ca-certs';
-    }    
+# Pick the best available certificate source for the default VirtualHost:
+$CertFile = '/etc/admserv/certs/certificate';
+$CALine   = '';
+if (-f '/etc/admserv/certs/nginx_cert_ca_combined') {
+    # Full chain (leaf + intermediates + root) — preferred:
+    $CertFile = '/etc/admserv/certs/nginx_cert_ca_combined';
+}
+elsif (-f '/etc/admserv/certs/ca-certs') {
+    # Legacy: leaf + separate CA file:
+    $CALine = 'SSLCACertificateFile  /etc/admserv/certs/ca-certs';
 }
 
 # Server-Name:
@@ -261,7 +261,7 @@ $CipherLine
 
         # Server Certificate:
         $CALine
-        SSLCertificateFile    /etc/admserv/certs/certificate
+        SSLCertificateFile    $CertFile
         SSLCertificateKeyFile /etc/admserv/certs/key
         ServerAdmin admin
         DocumentRoot /var/www/html
@@ -306,7 +306,7 @@ $CipherLine
 
         # Server Certificate:
         $CALine
-        SSLCertificateFile    /etc/admserv/certs/certificate
+        SSLCertificateFile    $CertFile
         SSLCertificateKeyFile /etc/admserv/certs/key
         ServerAdmin admin
         DocumentRoot /var/www/html
@@ -341,7 +341,7 @@ $CipherLine
 
         # Server Certificate:
         $CALine
-        SSLCertificateFile    /etc/admserv/certs/certificate
+        SSLCertificateFile    $CertFile
         SSLCertificateKeyFile /etc/admserv/certs/key
         ServerAdmin admin
         DocumentRoot /var/www/html
@@ -532,8 +532,8 @@ $cce->bye('SUCCESS');
 1;
 
 # 
-# Copyright (c) 2018-2025 Michael Stauber, SOLARSPEED.NET
-# Copyright (c) 2018-2025 Team BlueOnyx, BLUEONYX.IT
+# Copyright (c) 2018-2026 Michael Stauber, SOLARSPEED.NET
+# Copyright (c) 2018-2026 Team BlueOnyx, BLUEONYX.IT
 # All Rights Reserved.
 # 
 # 1. Redistributions of source code must retain the above copyright 

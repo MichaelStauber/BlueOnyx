@@ -8,7 +8,7 @@ auth        required      pam_deny.so
 
 account     required      pam_unix.so
 
-#password    required      pam_cracklib.so retry=3
+password    required      pam_cracklib.so retry=3
 password    sufficient    pam_unix.so nullok use_authtok md5 shadow
 password    required      pam_deny.so
 

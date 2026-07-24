@@ -83,6 +83,10 @@ information for [VENDOR]-[SERVICE].
 %attr(0644,-,-) /usr/sausalito/configs/pam.d/el9/proftpd
 %attr(0644,-,-) /usr/sausalito/configs/pam.d/el9/system-auth
 %attr(0644,-,-) /usr/sausalito/configs/pam.d/el9/system-auth-cce
+%attr(0644,-,-) /usr/sausalito/configs/pam.d/el10/password-auth
+%attr(0644,-,-) /usr/sausalito/configs/pam.d/el10/proftpd
+%attr(0644,-,-) /usr/sausalito/configs/pam.d/el10/system-auth
+%attr(0644,-,-) /usr/sausalito/configs/pam.d/el10/system-auth-cce
 <end glue>
 
 <begin ui>
@@ -148,6 +152,10 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+
+* Fri Jul 24 2026 Michael Stauber <mstauber@solarspeed.net> 2.3.2-1
+- Added glue/pam.d/el10
+- Modified constructor/import_pam_abl_settings.pl to roll out el10 pam configs
 
 * Mon Feb 19 2024 Michael Stauber <mstauber@solarspeed.net> 2.3.1-2
 - Version number bump for Elmer release

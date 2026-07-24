@@ -2,7 +2,7 @@
 # This file is auto-generated.
 # User changes will be destroyed the next time authconfig is run.
 auth        required      /lib/security/$ISA/pam_env.so
-#auth        required      /lib/security/pam_abl.so config=/etc/security/pam_abl.conf
+auth        required      /lib/security/pam_abl.so config=/etc/security/pam_abl.conf
 auth        sufficient    /lib/security/$ISA/pam_unix.so likeauth nullok
 auth        required      /lib/security/$ISA/pam_deny.so
 

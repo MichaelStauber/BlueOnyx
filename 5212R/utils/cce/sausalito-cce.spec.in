@@ -242,6 +242,11 @@ fi
 
 %changelog
 
+* Fri Jul 24 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-6
+- Added 5212R detection to SACPAM PAM config selection in server/Makefile
+- Enabled pam_abl in system-auth-cce.pam (all variants: default, 64-bit, 5209R)
+- Disabled pam_cracklib in system-auth-cce.pam.5209R (cracklib not available on el10)
+
 * Mon Jun 22 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-5
 - Modified ccewrap/cced_unstuck.sh to also restart CCEd-API
 

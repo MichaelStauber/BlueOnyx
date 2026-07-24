@@ -76,6 +76,19 @@ if ($model eq "5211R") {
         system("/bin/cp /usr/sausalito/configs/pam.d/el9/system-auth-cce /etc/pam.d/system-auth-cce");
     }
 }
+if ($model eq "5212R") {
+    if (-d "/usr/sausalito/configs/pam.d/el10") {
+        if ( -l '/etc/authselect/password-auth') {
+            system("/bin/cp /usr/sausalito/configs/pam.d/el10/password-auth /etc/authselect/password-auth");
+        }
+        else {
+            system("/bin/cp /usr/sausalito/configs/pam.d/el10/password-auth /etc/pam.d/password-auth");
+        }
+        system("/bin/cp /usr/sausalito/configs/pam.d/el10/proftpd /etc/pam.d/proftpd");
+        system("/bin/cp /usr/sausalito/configs/pam.d/el10/system-auth /etc/pam.d/system-auth");
+        system("/bin/cp /usr/sausalito/configs/pam.d/el10/system-auth-cce /etc/pam.d/system-auth-cce");
+    }
+}
 
 # Config file present?
 if (-f $pam_abl_conf) {

@@ -103,6 +103,10 @@ information for [VENDOR]-[SERVICE].
 
 <begin $CHANGELOG>
 
+* Mon Jul 27 2026 Michael Stauber <mstauber@solarspeed.net> 3.0.1-6
+- Modified constructor/serverNameGui.pl to only set 'GUI_URLs' if
+  'isLicenseAccepted' is still zero.
+
 * Sat May 09 2026 Michael Stauber <mstauber@solarspeed.net> 3.0.1-5
 - Switched _serialized_errors deserialization from unserialize() to
   safe_deserialize() in Wizard.php, WizardElmer.php and

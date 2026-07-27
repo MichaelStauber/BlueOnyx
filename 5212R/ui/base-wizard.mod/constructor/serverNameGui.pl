@@ -119,10 +119,12 @@ system("/usr/bin/systemctl reload admserv");
 &debug_msg("Length GUI_URLs: " . length($System->{GUI_URLs}));
 
 if (!length($System->{GUI_URLs}) || $System->{GUI_URLs} =~ /\&\&/) {
-  # Our 'GUI_URLs' is empty. Set it to the defaults:
-  $cce->set($System->{OID}, '', {'GUI_URLs' => '&login&'});
-  $System->{GUI_URLs} = '&login&';
-  &debug_msg("Empty GUI_URLs. Fixing that. \n");
+    # Our 'GUI_URLs' is empty. Set it to the defaults IF initial setup was never completed:
+    if ($System->{'isLicenseAccepted'} eq '0') {
+        $cce->set($System->{OID}, '', {'GUI_URLs' => '&login&'});
+        $System->{GUI_URLs} = '&login&';
+        &debug_msg("Empty GUI_URLs. Fixing that. \n");
+    }
 }
 
 if (-f $index_html) {
@@ -192,8 +194,8 @@ sub debug_msg {
 }
 
 # 
-# Copyright (c) 2008-2025 Michael Stauber, SOLARSPEED.NET
-# Copyright (c) 2008-2025 Team BlueOnyx, BLUEONYX.IT
+# Copyright (c) 2008-2026 Michael Stauber, SOLARSPEED.NET
+# Copyright (c) 2008-2026 Team BlueOnyx, BLUEONYX.IT
 # All Rights Reserved.
 # 
 # 1. Redistributions of source code must retain the above copyright 

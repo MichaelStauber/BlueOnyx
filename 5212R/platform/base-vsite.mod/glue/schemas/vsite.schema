@@ -195,6 +195,19 @@
         writeacl="ruleCapable(adminUser)" 
     /> 
 
+    <!--
+        webrootdir override for WHAM webapps that require a different
+        DocumentRoot (e.g. Symfony public/ directory). Set by
+        webapp_install.pl when a webrootdir app is installed. Cleared
+        on uninstall. Only one webrootdir app per Vsite enforced by
+        the webapp module. When non-empty, base-apache/virtual_host.pl
+        prepends this path to $vsite->{basedir} . '/wwwroot/web/'.
+    -->
+    <property 
+        name="webrootdir" type="scalar" default="" optional="yes"
+        writeacl="ruleCapable(adminUser)"
+    /> 
+
 </class>
 
 <!-- 

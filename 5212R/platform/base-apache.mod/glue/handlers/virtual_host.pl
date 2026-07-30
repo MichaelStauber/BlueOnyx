@@ -51,7 +51,13 @@ my ($ok, $vsite_disk) = $cce->get($void, "Disk");
 
 $vhost->{basedir} = $vsite->{basedir};
 # Please note: 'Vsite' has 'basedir', while 'VirtualHost' has 'documentRoot'. And 'documentRoot' is in /web:
-$vhost->{documentRoot} = $vsite->{basedir} . '/wwwroot/web';
+# If the Vsite has a webrootdir override (set by a WHAM webrootdir app), use it:
+if ($vsite->{webrootdir} && $vsite->{webrootdir} ne "") {
+    $vhost->{documentRoot} = $vsite->{basedir} . '/wwwroot/web/' . $vsite->{webrootdir};
+}
+else {
+    $vhost->{documentRoot} = $vsite->{basedir} . '/wwwroot/web';
+}
 my ($ok, $ssl) = $cce->get($void, 'SSL');
 $vhost->{ssl_expires} = $ssl->{expires};
 

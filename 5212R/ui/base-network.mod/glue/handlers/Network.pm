@@ -141,6 +141,12 @@ sub check_if_slave {
     # Fetch UUID for the device
     my $uuid = get_nmcli_uuid($interface);
 
+    # If no UUID exists (e.g. device has no NM connection profile), it's not a slave:
+    if ($uuid eq '') {
+        nm_debug_msg("check_if_slave(): No UUID found for $interface, assuming not a slave.\n");
+        return 0;
+    }
+
     my $output = `/usr/bin/nmcli con show uuid $uuid | grep 'connection.master'`;
     chomp($output);
 
@@ -715,7 +721,13 @@ sub check_dhcp {
     my ($device) = @_;
 
     my $uuid = get_nmcli_uuid($device);
-    
+
+    # If no UUID exists (e.g. device has no NM connection profile), it's not DHCP:
+    if ($uuid eq '') {
+        nm_debug_msg("check_dhcp(): No UUID found for $device, assuming no DHCP.\n");
+        return 0;
+    }
+
     # Get the ipv4.method and ipv6.method values
     my $ipv4_method = `LC_ALL=C /usr/bin/nmcli -g ipv4.method con show uuid $uuid`;
     chomp $ipv4_method;

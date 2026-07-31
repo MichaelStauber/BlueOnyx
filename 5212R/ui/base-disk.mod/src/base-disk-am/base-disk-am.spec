@@ -1,6 +1,6 @@
 Summary: Binaries and scripts used by Active Monitor for base-disk
 Name: base-disk-am
-Version: 1.4.3
+Version: 1.4.4
 Release: 1%{?dist}
 Vendor: %{vendor}
 License: Sun modified BSD
@@ -30,6 +30,9 @@ This package contains a number of binaries and scripts used by the Active
 Monitor subsystem to monitor services provided by the base-disk module.  
 
 %changelog
+
+* Fri Jul 31 2026 Michael Stauber <mstauber@solarspeed.net> 1.4.4-1
+- Modified am_disk.pl to gate daily near over-quota emails better.
 
 * Mon Jun 29 2026 Michael Stauber <mstauber@solarspeed.net> 1.4.3-1
 - Fixed XFS quota detection to use /usr/sbin/xfs_quota with an absolute path.

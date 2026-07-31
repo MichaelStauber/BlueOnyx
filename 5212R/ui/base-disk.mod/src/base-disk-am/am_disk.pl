@@ -296,9 +296,6 @@ foreach my $username (@users_over_quota) {
     ($user_ok, $disk) = $cce->get($oid, 'Disk');
     my $newly_over = !$disk->{over_quota};
 
-    # has it been over a day since we last mailed them?
-    my $send_mail = $disk->{lastmailed} < time - 3600*24;
-
     # Current usage for this user:
     my $used  = $USERQUOTA{$username}{BlockUsed}      || 0;
     my $quota = $USERQUOTA{$username}{BlockSoftLimit} || 0;
@@ -306,12 +303,16 @@ foreach my $username (@users_over_quota) {
     # Treat as mail-blocked if already flagged OR at/over 100% now
     my $mail_blocked = ($disk->{over_quota} || ($quota && $used >= $quota)) ? 1 : 0;
 
+    # Has it been over a day since we last mailed them?
+    my $send_mail = $disk->{lastmailed} < time - 3600*24;
+
     # Email users if necessary (but skip if mail would be blocked)
-    if ($am->{mail_user} && !$mail_blocked && ($newly_over || $send_mail)) {
+    if ($am->{mail_user} && !$mail_blocked && $send_mail) {
         next if $is_sysadmin; # Don't include sysadmins in admin’s over-quota user list!
         $DEBUG && print "Notifying the user $username about quota\n";
         $lastmailed_users{$username} = 1;
         $users_to_warn{$username} = $user->{site};
+        $disk->{lastmailed} = $now;
     }
     elsif ($mail_blocked) {
         $DEBUG && print "Skip user mail for $username: Quota enforcement active ($used/$quota)\n";
@@ -1221,8 +1222,8 @@ sub debug_msg {
 }
 
 # 
-# Copyright (c) 2008-2025 Michael Stauber, SOLARSPEED.NET
-# Copyright (c) 2008-2025 Team BlueOnyx, BLUEONYX.IT
+# Copyright (c) 2008-2026 Michael Stauber, SOLARSPEED.NET
+# Copyright (c) 2008-2026 Team BlueOnyx, BLUEONYX.IT
 # Copyright (c) 2003 Sun Microsystems, Inc. 
 # All Rights Reserved.
 # 

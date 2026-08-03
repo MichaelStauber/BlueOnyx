@@ -424,11 +424,19 @@ class LetsencryptCert extends BaseController {
                     // They're not empty either. See what we've got:
                     $webAliases = $CI->cceClient->scalar_to_array($vsiteObj['webAliases']);
 
+                    // Filtere Wildcard-Aliases aus der SSL-Auswahl heraus (LE HTTP-01 unterstützt keine Wildcards):
+                    $sslSafeAliases = array();
+                    foreach ($webAliases as $alias) {
+                        if (strpos($alias, '*.') !== 0) {
+                            $sslSafeAliases[] = $alias;
+                        }
+                    }
+
                     // If we have subdomains, then we merge them into the web aliases for this request:
                     if (count($SubdomainFQDNS) > '0') {
-                        $webAliases = array_merge($webAliases, $SubdomainFQDNS);
-                        $AggregatedWebAliases = $CI->cceClient->array_to_scalar($webAliases);
+                        $sslSafeAliases = array_merge($sslSafeAliases, $SubdomainFQDNS);
                     }
+                    $AggregatedWebAliases = $CI->cceClient->array_to_scalar($sslSafeAliases);
 
                     $LEwantedAliases = $CI->cceClient->scalar_to_array($CODBDATA['LEwantedAliases']);
 

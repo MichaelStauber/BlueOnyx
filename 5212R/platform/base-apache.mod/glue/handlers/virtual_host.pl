@@ -271,16 +271,21 @@ sub edit_vhost
         &debug_msg("ServerAlias: $ServerAlias\n");
     }
 
-
-
     if (($vsite->{webAliases}) && ($vsite->{webAliasRedirects} eq "0")) {
         &debug_msg("After trigger.\n");
         foreach $alias (@webAliases) {
             &debug_msg("Alias alt: $alias\n");
-            $alias =~ s/^\*/\\*/g;
-            &debug_msg("Alias neu: $alias\n");
-            $aliasRewrite .= "RewriteCond %{HTTP_HOST}                !^$alias(:$httpPort)?\$ [NC]\n";
-            $aliasRewriteSSL .= "RewriteCond %{HTTP_HOST}                !^$alias(:$sslPort)?\$ [NC]\n";
+            if ($alias =~ /^\*\.(.+)/) {
+                # Wildcard-Alias: Match any Subdomain
+                $aliasRewrite .= "RewriteCond %{HTTP_HOST}                !^.+\." . quotemeta($1) . "(:$httpPort)?\$ [NC]\n";
+                $aliasRewriteSSL .= "RewriteCond %{HTTP_HOST}                !^.+\." . quotemeta($1) . "(:$sslPort)?\$ [NC]\n";
+            }
+            else {
+                $alias =~ s/^\*/\\*/g;
+                &debug_msg("Alias neu: $alias\n");
+                $aliasRewrite .= "RewriteCond %{HTTP_HOST}                !^$alias(:$httpPort)?\$ [NC]\n";
+                $aliasRewriteSSL .= "RewriteCond %{HTTP_HOST}                !^$alias(:$sslPort)?\$ [NC]\n";
+            }
         }
     }
 

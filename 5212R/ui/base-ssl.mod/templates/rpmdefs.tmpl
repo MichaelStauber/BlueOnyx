@@ -167,6 +167,12 @@ fi
 
 <begin $CHANGELOG>
 
+* Thu Aug 03 2026 Michael Stauber <mstauber@solarspeed.net> 1.6.2-6
+- Modified ui/chorizo/web/Controllers/LetsencryptCert.php to exclude
+  wildcard webAliases (e.g. *.domain.com) from Let's Encrypt
+  certificate SAN selection, as LE HTTP-01 challenge does not support
+  wildcard certificates.
+
 * Sat May 09 2026 Michael Stauber <mstauber@solarspeed.net> 1.6.2-5
 - Added escapeshellarg() to user-supplied arguments in shell() calls for
   siteSSL.php, caManager.php and uploadCert.php.

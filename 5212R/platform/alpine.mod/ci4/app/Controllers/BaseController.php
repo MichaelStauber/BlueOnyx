@@ -805,7 +805,7 @@ abstract class BaseController extends Controller
         session()->set($data);
     }
 
-    public function getSystem() {
+    public function getSystem($forceReload = false) {
 
         // We want to know which URI caused this:
         $uri = $this->bx_get_gui_url();
@@ -819,7 +819,7 @@ abstract class BaseController extends Controller
             bx_error_log("BC.getSystem(): Unknown User " . '[' . $_SERVER['REMOTE_ADDR'] . ']' . " is accessing /" . $uri['actual'] . " with " . $this->request->getUserAgent());
         }
 
-        if (!empty($this->BX_System)) {
+        if (!empty($this->BX_System) && !$forceReload) {
             if ($this->getDebug()) {
                 bx_error_log("BC.getSystem(): Returning Known System object");
             }
@@ -861,14 +861,40 @@ abstract class BaseController extends Controller
             //$this->BX_System = $this->cceClient->getObject('System');
 
             $sys_key = 'admserv:cache:cce:System';
-            $sys = $this->rget($sys_key);
 
-            if (is_array($sys) && isset($sys['OID'])) {
-                $this->BX_System = $sys;
+            if (!$forceReload) {
+                $sys = $this->rget($sys_key);
+
+                // Cache must contain these mandatory keys; otherwise it's corrupt/stale:
+                $required_keys = array('OID', 'productName', 'productBuild', 'IPType', 'gateway', 'gateway_IPv6');
+                $cache_valid = is_array($sys);
+                if ($cache_valid) {
+                    foreach ($required_keys as $key) {
+                        if (!isset($sys[$key])) {
+                            $cache_valid = false;
+                            break;
+                        }
+                    }
+                }
+
+                if ($cache_valid) {
+                    $this->BX_System = $sys;
+                }
+                else {
+                    if ($this->getDebug()) {
+                        bx_error_log("BC.getSystem(): Cache entry for System object is incomplete or missing keys. Reloading from CCE.");
+                    }
+                    $this->BX_System = $this->cceClient->getObject('System');
+                    $this->rset($sys_key, $this->BX_System, 15); // 15s is safe
+                }
             }
             else {
+                // Force reload from CCE, bypass Redis cache:
+                if ($this->getDebug()) {
+                    bx_error_log("BC.getSystem(): Force-reloading System object from CCE (bypassing cache)");
+                }
                 $this->BX_System = $this->cceClient->getObject('System');
-                $this->rset($sys_key, $this->BX_System, 15); // 15s is safe
+                $this->rset($sys_key, $this->BX_System, 15);
             }
 
             timer('BaseController_get_System_Object');

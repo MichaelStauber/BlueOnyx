@@ -194,6 +194,14 @@ fi
 
 <begin $CHANGELOG>
 
+* Thu Aug 06 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-35
+- Modified ci4/app/Controllers/BaseController.php to add strict cache 
+  validation for the System object. If the Redis cache entry is missing 
+  any of the mandatory keys (OID, productName, productBuild, IPType, 
+  gateway, gateway_IPv6), the cache is discarded and the object is 
+  force-reloaded from CCE. This prevents sporadic 'Undefined array key 
+  gateway' errors caused by incomplete stale cache entries.
+
 * Mon Jul 13 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-34
 - Modified Libraries/CceClient.php to fix ActiveMonitor retrieval by using the API's
   direct GETOBJECT path in API mode instead of resolving through FIND first.

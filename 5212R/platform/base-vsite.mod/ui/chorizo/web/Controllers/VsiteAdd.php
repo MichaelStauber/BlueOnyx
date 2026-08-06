@@ -44,6 +44,15 @@ class VsiteAdd extends BaseController {
         $all_System_data = $CI->cceClient->getAll("System", array());
         $all_System_data = reset($all_System_data);
         $System = $all_System_data['OBJECT'];
+
+        // Defensive: if critical network keys are missing or empty,
+        // force-reload System directly from CCE (bypass any cache):
+        if (!isset($System['IPType']) || $System['IPType'] === ''
+            || !isset($System['gateway']) || $System['gateway'] === ''
+            || !isset($System['gateway_IPv6']) || $System['gateway_IPv6'] === '') {
+            $System = $CI->getSystem(true);
+        }
+
         $CI->cceClient->set($System['OID'], "PHP_mgmt", array('version_update' => time()));
         $vsiteDefaults = $all_System_data['VsiteDefaults'];
 

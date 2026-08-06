@@ -31,6 +31,14 @@ class VsiteMod extends BaseController {
         $BX_SESSION = $CI->getBX_SESSION();
         $System = $CI->getSystem();
 
+        // Defensive: if critical network keys are missing or empty,
+        // force-reload System directly from CCE (bypass Redis cache):
+        if (!isset($System['IPType']) || $System['IPType'] === ''
+            || !isset($System['gateway']) || $System['gateway'] === ''
+            || !isset($System['gateway_IPv6']) || $System['gateway_IPv6'] === '') {
+            $System = $CI->getSystem(true);
+        }
+
         //
         //-- Prepare Page:
         //

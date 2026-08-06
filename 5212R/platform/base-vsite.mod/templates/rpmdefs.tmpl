@@ -161,6 +161,14 @@ fi
 
 <begin $CHANGELOG>
 
+* Thu Aug 06 2026 Michael Stauber <mstauber@solarspeed.net> 4.9-2
+- Modified ui/chorizo/web/Controllers/VsiteMod.php and VsiteAdd.php to 
+  add defensive checks for critical System object keys (IPType, gateway, 
+  gateway_IPv6). If any are missing or empty, getSystem(true) is called 
+  to force-reload the object directly from CCE, bypassing the Redis 
+  cache. This prevents sporadic 'Undefined array key gateway' 500 errors 
+  when the cache contains incomplete data.
+
 * Thu Jul 30 2026 Greg Kuhnert <blueonyx@gregkuhnert.com> 4.9-1
 - Added webrootdir scalar property to Vsite schema for WHAM webapp DocumentRoot override
 - Allows framework apps (Symfony, Contao, Magento) to serve from public/ or pub/ directories

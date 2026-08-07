@@ -1,0 +1,54 @@
+#!/bin/bash
+# ai-memory-info -- Report memory and swap usage in human-readable format.
+# Runs as blueonyx_ai via passwordless sudo for safe read-only reporting.
+
+# Use free(1) if available; fall back to /proc/meminfo parsing.
+if command -v free >/dev/null 2>&1; then
+    exec free -h
+else
+    # Parse /proc/meminfo into MiB / GiB
+    awk '
+        /^MemTotal:/     { total_kb = $2 }
+        /^MemFree:/      { free_kb = $2 }
+        /^MemAvailable:/ { avail_kb = $2; has_avail = 1 }
+        /^Buffers:/      { buffers_kb = $2 }
+        /^Cached:/        { cached_kb = $2 }
+        /^SwapTotal:/    { swap_total_kb = $2 }
+        /^SwapFree:/     { swap_free_kb = $2 }
+        END {
+            fmt = "%.2f %s"
+            if (total_kb >= 1048576) {
+                total = total_kb / 1048576; unit = "Gi"
+            } else {
+                total = total_kb / 1024; unit = "Mi"
+            }
+            if (has_avail) { used = total_kb - avail_kb }
+            else { used = total_kb - free_kb - buffers_kb - cached_kb }
+            if (used < 0) used = 0
+
+            if (used >= 1048576) { u = used/1048576; uu = "Gi" }
+            else { u = used/1024; uu = "Mi" }
+
+            if (free_kb >= 1048576) { f = free_kb/1048576; fu = "Gi" }
+            else { f = free_kb/1024; fu = "Mi" }
+
+            if (avail_kb >= 1048576) { a = avail_kb/1048576; au = "Gi" }
+            else if (avail_kb > 0) { a = avail_kb/1024; au = "Mi" }
+            else { a = 0; au = "Mi" }
+
+            printf "              total        used        free      shared  buff/cache   available\n"
+            printf "Mem:   %9.2f%s %9.2f%s %9.2f%s %9.2f%s %9.2f%s %9.2f%s\n", total, unit, u, uu, f, fu, 0, "Mi", (buffers_kb+cached_kb)/1024, "Mi", a, au
+
+            if (swap_total_kb > 0) {
+                su = swap_total_kb - swap_free_kb
+                if (su >= 1048576) { s_u = su/1048576; s_uu = "Gi" }
+                else { s_u = su/1024; s_uu = "Mi" }
+                if (swap_free_kb >= 1048576) { s_f = swap_free_kb/1048576; s_fu = "Gi" }
+                else { s_f = swap_free_kb/1024; s_fu = "Mi" }
+                if (swap_total_kb >= 1048576) { s_t = swap_total_kb/1048576; s_tu = "Gi" }
+                else { s_t = swap_total_kb/1024; s_tu = "Mi" }
+                printf "Swap:  %9.2f%s %9.2f%s %9.2f%s\n", s_t, s_tu, s_u, s_uu, s_f, s_fu
+            }
+        }
+    ' /proc/meminfo
+fi

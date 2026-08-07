@@ -1,0 +1,11 @@
+<item 
+    id="base_admin_ai" 
+    label="[[base-ai.ai]]" 
+    description="[[base-ai.aiDescription]]" 
+    url="/ai/chat"
+    module="server"
+>
+    <parent id="base_programs" order="90">
+        <access require="admin"/>
+    </parent>
+</item>

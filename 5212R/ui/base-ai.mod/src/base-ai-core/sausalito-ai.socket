@@ -1,0 +1,14 @@
+[Unit]
+Description=BlueOnyx AI Agent Socket
+# Socket activation disabled - using idle timeout in service instead
+# This file is kept for reference but not used
+
+[Socket]
+ListenStream=127.0.0.1:1972
+SocketUser=blueonyx_ai
+SocketGroup=blueonyx_ai
+SocketMode=0660
+Accept=no
+
+[Install]
+WantedBy=sockets.target

@@ -1,0 +1,234 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"PO-Revision-Date: 2026-05-14 00:00+0000\n"
+"Last-Translator: Michael Stauber <mstauber@blueonyx.it>\n"
+"Language-Team: Team blueonyx\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+# Menu items
+msgid "ai"
+msgstr "Assistente de IA"
+
+msgid "aiDescription"
+msgstr "Assistente de servidor com IA para análise de registos e administração do sistema."
+
+# Chat
+msgid "chat_title"
+msgstr "Assistente de IA"
+
+msgid "chat_welcome"
+msgstr "Bem-vindo ao Assistente de IA. Posso ajudar a analisar registos, verificar o estado do sistema e gerir o servidor. O que pretende saber?"
+
+msgid "chat_placeholder"
+msgstr "Escreva a sua pergunta aqui..."
+
+msgid "chat_send"
+msgstr "Enviar"
+
+msgid "chat_typing"
+msgstr "A IA está a pensar..."
+
+msgid "chat_no_response"
+msgstr "Não foi recebida resposta do serviço de IA. Verifique as definições de IA."
+
+msgid "chat_connection_error"
+msgstr "Não foi possível ligar ao serviço de IA. Verifique se o serviço está em execução e configurado corretamente."
+
+# Settings
+msgid "settings_title"
+msgstr "Definições de IA"
+
+msgid "settings_save"
+msgstr "Guardar definições"
+
+msgid "save_success"
+msgstr "As definições de IA foram guardadas com sucesso."
+
+msgid "save_error"
+msgstr "Falha ao guardar as definições de IA. Tente novamente."
+
+msgid "DIVIDER_PROVIDER"
+msgstr "Configuração do fornecedor de IA"
+
+msgid "enabled"
+msgstr "Ativar assistente de IA"
+
+msgid "enabled_help"
+msgstr "Ativar ou desativar o serviço do assistente de IA. Quando desativado, os endpoints de chat e API devolvem um erro de serviço indisponível."
+
+msgid "provider"
+msgstr "Fornecedor de IA"
+
+msgid "provider_help"
+msgstr "Selecione o fornecedor de IA a utilizar. OpenAI, OpenRouter ou um endpoint personalizado compatível com OpenAI."
+
+msgid "model"
+msgstr "Nome do modelo"
+
+msgid "model_help"
+msgstr "O identificador do modelo a utilizar (por exemplo, gpt-4, claude-3-opus ou um nome de modelo personalizado suportado pelo seu fornecedor)."
+
+msgid "custom_endpoint"
+msgstr "Endpoint da API"
+
+msgid "custom_endpoint_help"
+msgstr "O URL do endpoint da API. Para OpenAI: https://api.openai.com/v1. Para OpenRouter: https://openrouter.ai/api/v1. Para fornecedores personalizados, introduza o seu endpoint."
+
+msgid "idle_timeout"
+msgstr "Tempo limite de inatividade (minutos)"
+
+msgid "idle_timeout_help"
+msgstr "Durante quanto tempo o serviço backend de IA permanece em execução após o último pedido antes de encerrar para poupar recursos."
+
+msgid "DIVIDER_PROMPT"
+msgstr "Prompt do sistema"
+
+msgid "system_prompt"
+msgstr "Prompt do sistema"
+
+msgid "system_prompt_help"
+msgstr "O prompt do sistema que define o comportamento do assistente de IA, as ferramentas disponíveis e as restrições. É enviado com cada pedido ao fornecedor de IA."
+
+# Error messages
+msgid "must_enable_service"
+msgstr "O serviço do Assistente de IA está atualmente desativado. Ative-o nas definições de IA para usar o chat."
+
+msgid "service_unavailable"
+msgstr "O serviço de IA está atualmente indisponível. Verifique a página de definições de IA para garantir que o serviço está ativado e configurado."
+
+msgid "invalid_session"
+msgstr "Sessão de IA inválida ou expirada. Inicie uma nova conversa."
+
+msgid "provider_error"
+msgstr "O fornecedor de IA devolveu um erro. Verifique a sua chave API e a configuração do modelo."
+
+msgid "rate_limited"
+msgstr "Demasiados pedidos. Aguarde um momento antes de enviar outra mensagem."
+
+msgid "function_not_found"
+msgstr "A função de IA solicitada não existe."
+
+msgid "chat_html"
+msgstr ""
+
+msgid "chat_html_help"
+msgstr ""
+
+msgid "provider_openai"
+msgstr "OpenAI"
+
+msgid "provider_openrouter"
+msgstr "Openrouter"
+
+msgid "provider_ollama"
+msgstr "Ollama Cloud"
+
+msgid "provider_anthropic"
+msgstr "Anthropic"
+
+msgid "provider_custom"
+msgstr "Custom Provider"
+
+msgid "provider_local"
+msgstr "Local Provider"
+
+####
+
+msgid "DIVIDER_API_KEYS"
+msgstr "Chaves API do fornecedor"
+
+msgid "openai_api_key"
+msgstr "Chave API OpenAI"
+
+msgid "openai_api_key_help"
+msgstr "A chave API para o fornecedor selecionado. Deixe em branco para manter a chave existente."
+
+msgid "openrouter_api_key"
+msgstr "Chave API OpenRouter"
+
+msgid "openrouter_api_key_help"
+msgstr "A chave API para o fornecedor selecionado. Deixe em branco para manter a chave existente."
+
+msgid "ollama_api_key"
+msgstr "Chave API Ollama Cloud"
+
+msgid "ollama_api_key_help"
+msgstr "A chave API para o fornecedor selecionado. Deixe em branco para manter a chave existente."
+
+msgid "custom_api_key"
+msgstr "Chave API personalizada"
+
+msgid "custom_api_key_help"
+msgstr "A chave API para o fornecedor selecionado. Deixe em branco para manter a chave existente."
+
+msgid "EXEC_DIVIDER_PROMPT"
+msgstr "Comando privilegiado genérico (Avançado)"
+
+msgid "priv_tools_available"
+msgstr "Lista branca de scripts wrapper"
+
+msgid "priv_tools_available_help"
+msgstr "Apenas scripts wrapper aprovados. O assistente pode executar comandos desta lista quando os comandos privilegiados genéricos estiverem ativados."
+
+msgid "tools_enabled"
+msgstr "Ferramentas de IA ativadas"
+
+msgid "tools_enabled_help"
+msgstr "Permitir que o assistente utilize as ferramentas de IA configuradas."
+
+msgid "allow_generic_privileged_command"
+msgstr "Ativar comandos privilegiados genéricos"
+
+msgid "allow_generic_privileged_command_help"
+msgstr "Opção avançada. Permitir que o assistente utilize a ferramenta de comando privilegiado genérico com a lista branca de wrappers abaixo."
+
+msgid "no_key_stored"
+msgstr "Nenhuma chave guardada"
+
+msgid "key_stored"
+msgstr "Guardada: ****"
+
+msgid "exit_fullscreen"
+msgstr "Sair do ecrã inteiro"
+
+msgid "read_only_tools_enabled"
+msgstr "Ferramentas só de leitura ativadas"
+
+msgid "read_only_tools_enabled_help"
+msgstr "Permitir que o assistente utilize ferramentas seguras só de leitura para registos, ficheiros, listagens de diretórios, pesquisa e verificação de hashes."
+
+msgid "diagnostics_tools_enabled"
+msgstr "Ferramentas de diagnóstico ativadas"
+
+msgid "diagnostics_tools_enabled_help"
+msgstr "Permitir que o assistente utilize ferramentas de informação do sistema como uname, estado dos serviços e consultas ao journal."
+
+msgid "actions_tools_enabled"
+msgstr "Ferramentas de ação ativadas"
+
+msgid "actions_tools_enabled_help"
+msgstr "Permitir que o assistente utilize ferramentas de ação sujeitas a confirmação, como reinícios de serviços e gravação de ficheiros."
+
+msgid "no_models_available"
+msgstr "Nenhum modelo disponível"
+
+msgid "local_provider_status"
+msgstr "Local inference status"
+
+msgid "local_provider_status_ok"
+msgstr "Local inference is available. CPU backend:"
+
+msgid "local_provider_unavailable"
+msgstr "Local inference cannot be enabled:"
+
+msgid "local_provider_unavailable_short"
+msgstr "Unavailable"
+
+msgid "local_provider_unknown_error"
+msgstr "The capability check did not report a reason."
+
+msgid "no_provider_specified"
+msgstr "Nenhum fornecedor especificado"

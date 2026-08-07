@@ -1,0 +1,234 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"PO-Revision-Date: 2026-05-14 00:00+0000\n"
+"Last-Translator: Michael Stauber <mstauber@blueonyx.it>\n"
+"Language-Team: Team blueonyx\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+# Menu items
+msgid "ai"
+msgstr "AI-assistent"
+
+msgid "aiDescription"
+msgstr "Op AI gebaseerde serverassistent voor loganalyse en systeembeheer."
+
+# Chat
+msgid "chat_title"
+msgstr "AI-assistent"
+
+msgid "chat_welcome"
+msgstr "Welkom bij de AI-assistent. Ik kan helpen met loganalyse, systeemstatus en serverbeheer. Wat wilt u weten?"
+
+msgid "chat_placeholder"
+msgstr "Typ hier uw vraag..."
+
+msgid "chat_send"
+msgstr "Verstuur"
+
+msgid "chat_typing"
+msgstr "AI denkt na..."
+
+msgid "chat_no_response"
+msgstr "Geen antwoord ontvangen van de AI-service. Controleer de AI-instellingen."
+
+msgid "chat_connection_error"
+msgstr "Kan geen verbinding maken met de AI-service. Controleer of de service draait en correct is geconfigureerd."
+
+# Settings
+msgid "settings_title"
+msgstr "AI-instellingen"
+
+msgid "settings_save"
+msgstr "Instellingen opslaan"
+
+msgid "save_success"
+msgstr "De AI-instellingen zijn succesvol opgeslagen."
+
+msgid "save_error"
+msgstr "Opslaan van AI-instellingen mislukt. Probeer het opnieuw."
+
+msgid "DIVIDER_PROVIDER"
+msgstr "AI-providerconfiguratie"
+
+msgid "enabled"
+msgstr "AI-assistent inschakelen"
+
+msgid "enabled_help"
+msgstr "De AI-assistentservice in- of uitschakelen. Wanneer uitgeschakeld geven chat- en API-eindpunten een foutmelding dat de service niet beschikbaar is."
+
+msgid "provider"
+msgstr "AI-provider"
+
+msgid "provider_help"
+msgstr "Selecteer de AI-provider die u wilt gebruiken. OpenAI, OpenRouter of een aangepaste OpenAI-compatibele endpoint."
+
+msgid "model"
+msgstr "Modelnaam"
+
+msgid "model_help"
+msgstr "De modelidentifier om te gebruiken (bijv. gpt-4, claude-3-opus of een door uw provider ondersteunde aangepaste modelnaam)."
+
+msgid "custom_endpoint"
+msgstr "API-eindpunt"
+
+msgid "custom_endpoint_help"
+msgstr "De URL van het API-eindpunt. Voor OpenAI: https://api.openai.com/v1. Voor OpenRouter: https://openrouter.ai/api/v1. Voor aangepaste providers voert u uw endpoint in."
+
+msgid "idle_timeout"
+msgstr "Inactiviteitstime-out (minuten)"
+
+msgid "idle_timeout_help"
+msgstr "Hoe lang de AI-backendservice na de laatste aanvraag blijft draaien voordat deze wordt afgesloten om bronnen te besparen."
+
+msgid "DIVIDER_PROMPT"
+msgstr "Systeemprompt"
+
+msgid "system_prompt"
+msgstr "Systeemprompt"
+
+msgid "system_prompt_help"
+msgstr "De systeemprompt die het gedrag van de AI-assistent, beschikbare tools en beperkingen definieert. Deze wordt bij elke aanvraag naar de AI-provider verzonden."
+
+# Error messages
+msgid "must_enable_service"
+msgstr "De AI-assistentservice is momenteel uitgeschakeld. Schakel deze in bij de AI-instellingen om de chat te gebruiken."
+
+msgid "service_unavailable"
+msgstr "De AI-service is momenteel niet beschikbaar. Controleer de AI-instellingen om te zorgen dat de service is ingeschakeld en correct geconfigureerd."
+
+msgid "invalid_session"
+msgstr "Ongeldige of verlopen AI-sessie. Start een nieuwe conversatie."
+
+msgid "provider_error"
+msgstr "De AI-provider heeft een fout geretourneerd. Controleer uw API-sleutel en modelconfiguratie."
+
+msgid "rate_limited"
+msgstr "Te veel verzoeken. Wacht even voordat u nog een bericht verzendt."
+
+msgid "function_not_found"
+msgstr "De gevraagde AI-functie bestaat niet."
+
+msgid "chat_html"
+msgstr ""
+
+msgid "chat_html_help"
+msgstr ""
+
+msgid "provider_openai"
+msgstr "OpenAI"
+
+msgid "provider_openrouter"
+msgstr "Openrouter"
+
+msgid "provider_ollama"
+msgstr "Ollama Cloud"
+
+msgid "provider_anthropic"
+msgstr "Anthropic"
+
+msgid "provider_custom"
+msgstr "Custom Provider"
+
+msgid "provider_local"
+msgstr "Local Provider"
+
+####
+
+msgid "DIVIDER_API_KEYS"
+msgstr "API-sleutels van provider"
+
+msgid "openai_api_key"
+msgstr "OpenAI API-sleutel"
+
+msgid "openai_api_key_help"
+msgstr "De API-sleutel voor de geselecteerde provider. Laat leeg om de bestaande sleutel te behouden."
+
+msgid "openrouter_api_key"
+msgstr "OpenRouter API-sleutel"
+
+msgid "openrouter_api_key_help"
+msgstr "De API-sleutel voor de geselecteerde provider. Laat leeg om de bestaande sleutel te behouden."
+
+msgid "ollama_api_key"
+msgstr "Ollama Cloud API-sleutel"
+
+msgid "ollama_api_key_help"
+msgstr "De API-sleutel voor de geselecteerde provider. Laat leeg om de bestaande sleutel te behouden."
+
+msgid "custom_api_key"
+msgstr "Aangepaste API-sleutel"
+
+msgid "custom_api_key_help"
+msgstr "De API-sleutel voor de geselecteerde provider. Laat leeg om de bestaande sleutel te behouden."
+
+msgid "EXEC_DIVIDER_PROMPT"
+msgstr "Generieke geprivilegieerde opdracht (Geavanceerd)"
+
+msgid "priv_tools_available"
+msgstr "Whitelist voor wrapper-scripts"
+
+msgid "priv_tools_available_help"
+msgstr "Alleen goedgekeurde wrapper-scripts. De assistent mag opdrachten uit deze lijst uitvoeren wanneer generieke geprivilegieerde opdrachten zijn ingeschakeld."
+
+msgid "tools_enabled"
+msgstr "AI-tools ingeschakeld"
+
+msgid "tools_enabled_help"
+msgstr "De assistent toestaan de geconfigureerde AI-tools te gebruiken."
+
+msgid "allow_generic_privileged_command"
+msgstr "Generieke geprivilegieerde opdrachten inschakelen"
+
+msgid "allow_generic_privileged_command_help"
+msgstr "Geavanceerde optie. De assistent toestaan de generieke geprivilegieerde opdrachttool te gebruiken met de onderstaande wrapper-whitelist."
+
+msgid "no_key_stored"
+msgstr "Geen sleutel opgeslagen"
+
+msgid "key_stored"
+msgstr "Opgeslagen: ****"
+
+msgid "exit_fullscreen"
+msgstr "Volledig scherm sluiten"
+
+msgid "read_only_tools_enabled"
+msgstr "Alleen-lezen tools ingeschakeld"
+
+msgid "read_only_tools_enabled_help"
+msgstr "De assistent toestaan veilige alleen-lezen tools te gebruiken voor logs, bestanden, directorylijsten, zoeken en hash-controles."
+
+msgid "diagnostics_tools_enabled"
+msgstr "Diagnostische tools ingeschakeld"
+
+msgid "diagnostics_tools_enabled_help"
+msgstr "De assistent toestaan systeeminformatie-tools zoals uname, servicestatus en journal-opdrachten te gebruiken."
+
+msgid "actions_tools_enabled"
+msgstr "Actietools ingeschakeld"
+
+msgid "actions_tools_enabled_help"
+msgstr "De assistent toestaan bevestigingsgebonden actietools te gebruiken zoals serviceherstarts en het schrijven van bestanden."
+
+msgid "no_models_available"
+msgstr "Geen modellen beschikbaar"
+
+msgid "local_provider_status"
+msgstr "Local inference status"
+
+msgid "local_provider_status_ok"
+msgstr "Local inference is available. CPU backend:"
+
+msgid "local_provider_unavailable"
+msgstr "Local inference cannot be enabled:"
+
+msgid "local_provider_unavailable_short"
+msgstr "Unavailable"
+
+msgid "local_provider_unknown_error"
+msgstr "The capability check did not report a reason."
+
+msgid "no_provider_specified"
+msgstr "Geen provider opgegeven"

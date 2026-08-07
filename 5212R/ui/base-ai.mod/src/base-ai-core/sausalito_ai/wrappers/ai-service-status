@@ -1,0 +1,142 @@
+#!/bin/bash
+#
+# ai-service-status -- Check systemd service health and return JSON.
+# Used by the BlueOnyx AI agent via sudo to inspect services.
+#
+set -e
+
+PATH=/bin:/usr/bin:/usr/local/bin
+
+# --- Help / usage -----------------------------------------------------------
+usage() {
+    echo "Usage: $(basename "$0") <service-name>" >&2
+    exit 1
+}
+
+# --- Argument validation ----------------------------------------------------
+if [ $# -ne 1 ]; then
+    echo "ERROR: Exactly one argument required (service name)." >&2
+    usage
+fi
+
+SERVICE="$1"
+
+# --- Check if service exists ------------------------------------------------
+if ! systemctl list-units --type=service --all --quiet 2>/dev/null \
+    | grep -qF "${SERVICE}.service"; then
+    # Also check if the unit file exists on disk
+    if ! systemctl list-unit-files --quiet "${SERVICE}.service" 2>/dev/null; then
+        cat <<EOF
+{
+  "service": $(python3 -c "import json; print(json.dumps('$SERVICE'))"),
+  "error": "Service not found",
+  "exists": false
+}
+EOF
+        exit 1
+    fi
+fi
+
+# --- Gather service properties via systemctl show ---------------------------
+SHOW=$(systemctl show "${SERVICE}.service" 2>/dev/null) || {
+    cat <<EOF
+{
+  "service": $(python3 -c "import json; print(json.dumps('$SERVICE'))"),
+  "error": "Failed to query service",
+  "exists": false
+}
+EOF
+    exit 1
+}
+
+# Extract fields
+ACTIVE_STATE=$(echo "$SHOW" | sed -n 's/^ActiveState=//p')
+SUB_STATE=$(echo "$SHOW" | sed -n 's/^SubState=//p')
+PID=$(echo "$SHOW" | sed -n 's/^MainPID=//p')
+MEMORY=$(echo "$SHOW" | sed -n 's/^MemoryCurrent=//p')
+ACTIVE_ENTER=$(echo "$SHOW" | sed -n 's/^ActiveEnterTimestamp=//p')
+ACTIVE_EXIT=$(echo "$SHOW" | sed -n 's/^ActiveExitTimestampMonotonic=//p')
+
+# Determine overall status
+if [ "$ACTIVE_STATE" = "active" ] && [ "$SUB_STATE" != "exited" ]; then
+    STATUS="active"
+elif [ "$ACTIVE_STATE" = "inactive" ] || [ "$ACTIVE_STATE" = "dead" ]; then
+    STATUS="inactive"
+else
+    STATUS="$ACTIVE_STATE"
+fi
+
+# PID: if 0, no main PID
+if [ "$PID" = "0" ]; then
+    PID_JSON=null
+else
+    PID_JSON=$PID
+fi
+
+# Memory: empty or 0 -> null
+if [ -z "$MEMORY" ] || [ "$MEMORY" = "0" ]; then
+    MEMORY_JSON=null
+else
+    MEMORY_JSON=$(python3 -c "import json; print(json.dumps('$MEMORY'))")
+fi
+
+# active_since
+if [ -n "$ACTIVE_ENTER" ]; then
+    ACTIVE_SINCE_JSON=$(python3 -c "import json; print(json.dumps('$ACTIVE_ENTER'))")
+else
+    ACTIVE_SINCE_JSON=null
+fi
+
+# --- Build JSON output -----------------------------------------------------
+SERVICE_JSON=$(python3 -c "import json; print(json.dumps('$SERVICE'))")
+STATUS_JSON=$(python3 -c "import json; print(json.dumps('$STATUS'))")
+
+cat <<EOF
+{
+  "service": $SERVICE_JSON,
+  "status": $STATUS_JSON,
+  "active_state": $(python3 -c "import json; print(json.dumps('$ACTIVE_STATE'))"),
+  "sub_state": $(python3 -c "import json; print(json.dumps('$SUB_STATE'))"),
+  "pid": $PID_JSON,
+  "memory": $MEMORY_JSON,
+  "active_since": $ACTIVE_SINCE_JSON,
+  "exists": true
+}
+EOF
+
+exit 0
+
+# 
+# Copyright (c) 2008-2026 Michael Stauber, SOLARSPEED.NET
+# Copyright (c) 2008-2026 Team BlueOnyx, BLUEONYX.IT
+# All Rights Reserved.
+# 
+# 1. Redistributions of source code must retain the above copyright 
+#    notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+#    notice, this list of conditions and the following disclaimer in 
+#    the documentation and/or other materials provided with the 
+#    distribution.
+# 
+# 3. Neither the name of the copyright holder nor the names of its 
+#    contributors may be used to endorse or promote products derived 
+#    from this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
+# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+# POSSIBILITY OF SUCH DAMAGE.
+# 
+# You acknowledge that this software is not designed or intended for 
+# use in the design, construction, operation or maintenance of any 
+# nuclear facility.
+# 

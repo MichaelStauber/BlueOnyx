@@ -1,0 +1,29 @@
+[Unit]
+Description=llama.cpp inference server for BlueOnyx AI
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=blueonyx_ai
+Group=blueonyx_ai
+WorkingDirectory=/home/ai/models
+TasksMax=128
+Environment="LD_LIBRARY_PATH=/home/ai/bin"
+ExecStartPre=/home/ai/bin/blueonyx-llama-check --quiet
+ExecStart=/home/ai/bin/llama-server \
+    -m /home/ai/models/default.gguf \
+    --host 127.0.0.1 \
+    --port 8081 \
+    --ctx-size 4096 \
+    --threads 4
+Restart=no
+KillSignal=SIGINT
+TimeoutStopSec=30
+
+# Resource limits
+LimitNOFILE=65536
+MemoryHigh=8G
+
+[Install]
+WantedBy=multi-user.target

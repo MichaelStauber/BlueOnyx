@@ -1,0 +1,23 @@
+# Sudo rules for BlueOnyx AI Agent
+# blueonyx_ai runs as unprivileged; uses sudo for specific tasks
+
+# Read-only operations (NOPASSWD)
+blueonyx_ai ALL=(root) NOPASSWD: /usr/sbin/cce-get-system-ai
+blueonyx_ai ALL=(root) NOPASSWD: /usr/sausalito/sbin/ai-active-monitor-status.pl
+blueonyx_ai ALL=(root) NOPASSWD: /usr/sausalito/sbin/get_quotas.pl --users
+blueonyx_ai ALL=(root) NOPASSWD: /usr/sausalito/sbin/get_quotas.pl --sites
+blueonyx_ai ALL=(root) NOPASSWD: /usr/sausalito/sbin/vsite_list.pl
+blueonyx_ai ALL=(root) NOPASSWD: /usr/sausalito/sbin/ssl_get.pl
+blueonyx_ai ALL=(root) NOPASSWD: /usr/sausalito/sbin/ai-ssl-health.py
+blueonyx_ai ALL=(root) NOPASSWD: /usr/sausalito/sbin/ai-php-fpm-health.py
+blueonyx_ai ALL=(root) NOPASSWD: /home/ai/wrappers/ai-read-log *
+blueonyx_ai ALL=(root) NOPASSWD: /home/ai/wrappers/ai-search-logs *
+blueonyx_ai ALL=(root) NOPASSWD: /home/ai/wrappers/ai-mail-stats *
+blueonyx_ai ALL=(root) NOPASSWD: /home/ai/wrappers/ai-journalctl *
+blueonyx_ai ALL=(root) NOPASSWD: /home/ai/wrappers/ai-system-info
+blueonyx_ai ALL=(root) NOPASSWD: /home/ai/wrappers/ai-memory-info
+blueonyx_ai ALL=(root) NOPASSWD: /home/ai/wrappers/ai-uname
+blueonyx_ai ALL=(root) NOPASSWD: /home/ai/wrappers/ai-service-status *
+
+# Write operations (service action -- systemctl call is validated inside the wrapper)
+blueonyx_ai ALL=(root) NOPASSWD: /home/ai/wrappers/ai-service-action *

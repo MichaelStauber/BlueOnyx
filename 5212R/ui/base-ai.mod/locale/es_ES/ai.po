@@ -1,0 +1,234 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"PO-Revision-Date: 2026-05-14 00:00+0000\n"
+"Last-Translator: Michael Stauber <mstauber@blueonyx.it>\n"
+"Language-Team: Team blueonyx\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+# Menu items
+msgid "ai"
+msgstr "Asistente de IA"
+
+msgid "aiDescription"
+msgstr "Asistente de servidor con IA para análisis de registros y administración del sistema."
+
+# Chat
+msgid "chat_title"
+msgstr "Asistente de IA"
+
+msgid "chat_welcome"
+msgstr "Bienvenido al Asistente de IA. Puedo ayudarle a analizar registros, comprobar el estado del sistema y administrar su servidor. ¿Qué desea saber?"
+
+msgid "chat_placeholder"
+msgstr "Escriba su pregunta aquí..."
+
+msgid "chat_send"
+msgstr "Enviar"
+
+msgid "chat_typing"
+msgstr "La IA está pensando..."
+
+msgid "chat_no_response"
+msgstr "No se recibió respuesta del servicio de IA. Revise la configuración de IA."
+
+msgid "chat_connection_error"
+msgstr "No se pudo conectar al servicio de IA. Verifique que el servicio esté en ejecución y correctamente configurado."
+
+# Settings
+msgid "settings_title"
+msgstr "Configuración de IA"
+
+msgid "settings_save"
+msgstr "Guardar configuración"
+
+msgid "save_success"
+msgstr "La configuración de IA se ha guardado correctamente."
+
+msgid "save_error"
+msgstr "No se pudo guardar la configuración de IA. Inténtelo de nuevo."
+
+msgid "DIVIDER_PROVIDER"
+msgstr "Configuración del proveedor de IA"
+
+msgid "enabled"
+msgstr "Activar asistente de IA"
+
+msgid "enabled_help"
+msgstr "Activar o desactivar el servicio del asistente de IA. Cuando está desactivado, los puntos finales de chat y API devuelven un error de servicio no disponible."
+
+msgid "provider"
+msgstr "Proveedor de IA"
+
+msgid "provider_help"
+msgstr "Seleccione el proveedor de IA a usar. OpenAI, OpenRouter o un punto final personalizado compatible con OpenAI."
+
+msgid "model"
+msgstr "Nombre del modelo"
+
+msgid "model_help"
+msgstr "El identificador del modelo a usar (por ejemplo, gpt-4, claude-3-opus o un nombre de modelo personalizado admitido por su proveedor)."
+
+msgid "custom_endpoint"
+msgstr "Punto final de API"
+
+msgid "custom_endpoint_help"
+msgstr "La URL del punto final de API. Para OpenAI: https://api.openai.com/v1. Para OpenRouter: https://openrouter.ai/api/v1. Para proveedores personalizados, introduzca su punto final."
+
+msgid "idle_timeout"
+msgstr "Tiempo de inactividad (minutos)"
+
+msgid "idle_timeout_help"
+msgstr "Cuánto tiempo permanece en ejecución el servicio backend de IA después de la última solicitud antes de apagarse para ahorrar recursos."
+
+msgid "DIVIDER_PROMPT"
+msgstr "Prompt del sistema"
+
+msgid "system_prompt"
+msgstr "Prompt del sistema"
+
+msgid "system_prompt_help"
+msgstr "El prompt del sistema que define el comportamiento del asistente de IA, las herramientas disponibles y las restricciones. Se envía con cada solicitud al proveedor de IA."
+
+# Error messages
+msgid "must_enable_service"
+msgstr "El servicio del Asistente de IA está desactivado actualmente. Active el servicio en la configuración de IA para usar el chat."
+
+msgid "service_unavailable"
+msgstr "El servicio de IA no está disponible actualmente. Revise la página de configuración de IA para asegurarse de que el servicio esté activado y configurado."
+
+msgid "invalid_session"
+msgstr "Sesión de IA no válida o caducada. Inicie una nueva conversación."
+
+msgid "provider_error"
+msgstr "El proveedor de IA devolvió un error. Revise su clave API y la configuración del modelo."
+
+msgid "rate_limited"
+msgstr "Demasiadas solicitudes. Espere un momento antes de enviar otro mensaje."
+
+msgid "function_not_found"
+msgstr "La función de IA solicitada no existe."
+
+msgid "chat_html"
+msgstr ""
+
+msgid "chat_html_help"
+msgstr ""
+
+msgid "provider_openai"
+msgstr "OpenAI"
+
+msgid "provider_openrouter"
+msgstr "Openrouter"
+
+msgid "provider_ollama"
+msgstr "Ollama Cloud"
+
+msgid "provider_anthropic"
+msgstr "Anthropic"
+
+msgid "provider_custom"
+msgstr "Custom Provider"
+
+msgid "provider_local"
+msgstr "Local Provider"
+
+####
+
+msgid "DIVIDER_API_KEYS"
+msgstr "Claves API del proveedor"
+
+msgid "openai_api_key"
+msgstr "Clave API de OpenAI"
+
+msgid "openai_api_key_help"
+msgstr "La clave API para el proveedor seleccionado. Déjela vacía para conservar la clave existente."
+
+msgid "openrouter_api_key"
+msgstr "Clave API de OpenRouter"
+
+msgid "openrouter_api_key_help"
+msgstr "La clave API para el proveedor seleccionado. Déjela vacía para conservar la clave existente."
+
+msgid "ollama_api_key"
+msgstr "Clave API de Ollama Cloud"
+
+msgid "ollama_api_key_help"
+msgstr "La clave API para el proveedor seleccionado. Déjela vacía para conservar la clave existente."
+
+msgid "custom_api_key"
+msgstr "Clave API personalizada"
+
+msgid "custom_api_key_help"
+msgstr "La clave API para el proveedor seleccionado. Déjela vacía para conservar la clave existente."
+
+msgid "EXEC_DIVIDER_PROMPT"
+msgstr "Comando privilegiado genérico (Avanzado)"
+
+msgid "priv_tools_available"
+msgstr "Lista blanca de scripts wrapper"
+
+msgid "priv_tools_available_help"
+msgstr "Solo scripts wrapper aprobados. El asistente puede ejecutar comandos de esta lista cuando los comandos privilegiados genéricos estén habilitados."
+
+msgid "tools_enabled"
+msgstr "Herramientas de IA activadas"
+
+msgid "tools_enabled_help"
+msgstr "Permitir que el asistente use las herramientas de IA configuradas."
+
+msgid "allow_generic_privileged_command"
+msgstr "Activar comandos privilegiados genéricos"
+
+msgid "allow_generic_privileged_command_help"
+msgstr "Opción avanzada. Permita que el asistente use la herramienta de comando privilegiado genérico con la lista blanca de wrappers de abajo."
+
+msgid "no_key_stored"
+msgstr "No hay clave guardada"
+
+msgid "key_stored"
+msgstr "Guardada: ****"
+
+msgid "exit_fullscreen"
+msgstr "Salir de pantalla completa"
+
+msgid "read_only_tools_enabled"
+msgstr "Herramientas de solo lectura activadas"
+
+msgid "read_only_tools_enabled_help"
+msgstr "Permitir que el asistente use herramientas seguras de solo lectura para registros, archivos, listados de directorios, búsqueda y comprobación de hashes."
+
+msgid "diagnostics_tools_enabled"
+msgstr "Herramientas de diagnóstico activadas"
+
+msgid "diagnostics_tools_enabled_help"
+msgstr "Permitir que el asistente use herramientas de información del sistema como uname, estado de servicios y consultas de journal."
+
+msgid "actions_tools_enabled"
+msgstr "Herramientas de acciones activadas"
+
+msgid "actions_tools_enabled_help"
+msgstr "Permitir que el asistente use herramientas de acción con confirmación como reinicios de servicios y escritura de archivos."
+
+msgid "no_models_available"
+msgstr "No hay modelos disponibles"
+
+msgid "local_provider_status"
+msgstr "Local inference status"
+
+msgid "local_provider_status_ok"
+msgstr "Local inference is available. CPU backend:"
+
+msgid "local_provider_unavailable"
+msgstr "Local inference cannot be enabled:"
+
+msgid "local_provider_unavailable_short"
+msgstr "Unavailable"
+
+msgid "local_provider_unknown_error"
+msgstr "The capability check did not report a reason."
+
+msgid "no_provider_specified"
+msgstr "No se especificó proveedor"

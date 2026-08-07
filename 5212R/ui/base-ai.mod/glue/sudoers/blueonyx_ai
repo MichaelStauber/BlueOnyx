@@ -1,0 +1,1 @@
+blueonyx_ai ALL=(root) NOPASSWD: /usr/sausalito/sbin/ai_helper.pl

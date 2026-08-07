@@ -1,0 +1,571 @@
+{
+  "registry_version": "0.2.0",
+  "purpose": "Canonical BlueOnyx truth registry for the base-ai assistant.",
+  "default_rules": [
+    "Prefer live tools for current state.",
+    "Never guess BlueOnyx-specific paths, commands, or behaviors.",
+    "Use the knowledge tool or registry before hallucinating.",
+    "Keep answers concise and evidence-based.",
+    "For configuration changes, require confirmation."
+  ],
+  "entries": [
+    {
+      "id": "blueonyx",
+      "canonical_name": "BlueOnyx",
+      "aliases": ["BlueOnyx", "BlueOnyx server platform", "BlueQuartz successor", "5210R", "5211R", "5212R"],
+      "category": "core",
+      "summary": "BlueOnyx is a Linux server management platform built on the Sausalito framework and the CCE/CODB configuration stack.",
+      "authoritative_tools": ["search_blueonyx_knowledge"],
+      "safe_answer_template": "BlueOnyx is a Linux server management platform built on the Sausalito framework and the CCE/CODB configuration stack."
+    },
+    {
+      "id": "sausalito",
+      "canonical_name": "Sausalito",
+      "aliases": ["Sausalito framework", "BlueOnyx framework"],
+      "category": "core",
+      "summary": "Sausalito is the BlueOnyx GUI, schema, handler, constructor, and configuration framework.",
+      "authoritative_tools": ["search_blueonyx_knowledge"],
+      "safe_answer_template": "Sausalito is the BlueOnyx GUI, schema, handler, constructor, and configuration framework."
+    },
+    {
+      "id": "cce",
+      "canonical_name": "CCE",
+      "aliases": ["CCEd", "Cobalt Configuration Engine", "configuration engine"],
+      "category": "core",
+      "summary": "CCE stores BlueOnyx configuration objects and triggers handlers when GUI changes are committed.",
+      "authoritative_tools": ["search_admin_logs"],
+      "safe_answer_template": "CCE stores BlueOnyx configuration objects and triggers handlers when GUI changes are committed."
+    },
+    {
+      "id": "codb",
+      "canonical_name": "CODB",
+      "aliases": ["Cobalt Object Database", "object database"],
+      "category": "core",
+      "summary": "CODB is the object store behind CCE.",
+      "authoritative_tools": ["search_admin_logs"],
+      "safe_answer_template": "CODB is the object store behind CCE."
+    },
+    {
+      "id": "cce_transaction",
+      "canonical_name": "CCE transaction",
+      "aliases": ["CREATE", "SET", "FIND", "DESTROY"],
+      "category": "core",
+      "summary": "CCE transactions describe object changes; failed transactions in /var/log/messages often point to the real handler or constructor problem.",
+      "authoritative_tools": ["search_admin_logs"],
+      "safe_answer_template": "Failed CCE transactions in /var/log/messages often point to the real handler or constructor problem."
+    },
+    {
+      "id": "schemas",
+      "canonical_name": "Schemas",
+      "aliases": ["CCE schemas", "schema files"],
+      "category": "core",
+      "summary": "Schemas define classes, properties, validation, access rules, and handler triggers.",
+      "authoritative_tools": ["search_blueonyx_knowledge"],
+      "safe_answer_template": "Schemas define classes, properties, validation, access rules, and handler triggers."
+    },
+    {
+      "id": "handlers",
+      "canonical_name": "Handlers",
+      "aliases": ["CCE handlers", "glue handlers"],
+      "category": "core",
+      "summary": "Handlers apply validated GUI changes to the underlying system and write the live config files or service settings.",
+      "authoritative_tools": ["search_admin_logs"],
+      "safe_answer_template": "Handlers apply validated GUI changes to the underlying system and write the live config files or service settings."
+    },
+    {
+      "id": "constructors",
+      "canonical_name": "Constructors",
+      "aliases": ["constructor scripts", "bootstrap scripts"],
+      "category": "core",
+      "summary": "Constructors seed defaults during package install or startup.",
+      "authoritative_tools": ["search_blueonyx_knowledge"],
+      "safe_answer_template": "Constructors seed defaults during package install or startup."
+    },
+    {
+      "id": "vsite",
+      "canonical_name": "Vsite",
+      "aliases": ["Virtual Site", "site", "hosted domain"],
+      "category": "hosting",
+      "summary": "A Vsite is a hosted domain object with its own quota, users, webroot, logs, and service settings.",
+      "authoritative_tools": ["vsite_list", "get_quotas_sites"],
+      "safe_answer_template": "A Vsite is a hosted domain object with its own quota, users, webroot, logs, and service settings."
+    },
+    {
+      "id": "vsite_resolution",
+      "canonical_name": "Vsite resolution",
+      "aliases": ["vsite_list.pl", "site group name", "internal Vsite name"],
+      "category": "hosting",
+      "summary": "Resolve the public Vsite FQDN to its internal site group name before using quota or path data.",
+      "authoritative_tools": ["vsite_list"],
+      "safe_answer_template": "Resolve the public Vsite FQDN to its internal site group name before using quota or path data."
+    },
+    {
+      "id": "vsite_add",
+      "canonical_name": "Vsite creation",
+      "aliases": ["create a vsite", "add a vsite", "new vsite"],
+      "category": "hosting",
+      "summary": "Vsite creation is done in the BlueOnyx GUI under Site Management via the + Add button. If creation is denied, check manageSite capability and quota/limit checks such as maxVsite.",
+      "authoritative_tools": ["search_blueonyx_knowledge", "search_admin_logs"],
+      "safe_answer_template": "Vsite creation is done in the BlueOnyx GUI under Site Management via the + Add button. If creation is denied, check manageSite capability and quota/limit checks such as maxVsite."
+    },
+    {
+      "id": "webroot",
+      "canonical_name": "Vsite webroot",
+      "aliases": ["document root", "wwwroot", "web directory"],
+      "category": "hosting",
+      "summary": "The canonical Vsite webroot lives under /home/sites/<site>/wwwroot/web/ after resolving the internal site group name.",
+      "authoritative_tools": ["list_directory", "stat_path"],
+      "safe_answer_template": "The canonical Vsite webroot lives under /home/sites/<site>/wwwroot/web/ after resolving the internal site group name."
+    },
+    {
+      "id": "web_owner",
+      "canonical_name": "Vsite web owner",
+      "aliases": ["web owner", "web ownership", "valid /web owner"],
+      "category": "hosting",
+      "summary": "A small number of bad Vsite /web owners should be corrected per site in the GUI at Site Management / <Vsite> / Services / Web Ownership by setting a real PHP preferred site admin; set_web_owner.pl is the bulk repair path when ownership drift is systemic.",
+      "authoritative_tools": ["web_owner_health", "search_blueonyx_knowledge"],
+      "safe_answer_template": "A small number of bad Vsite /web owners should be corrected per site in the GUI at Site Management / <Vsite> / Services / Web Ownership by setting a real PHP preferred site admin; set_web_owner.pl is the bulk repair path when ownership drift is systemic."
+    },
+    {
+      "id": "web_logs",
+      "canonical_name": "Vsite web logs",
+      "aliases": ["error log", "access log", "site logs"],
+      "category": "hosting",
+      "summary": "Per-Vsite logs live under /home/sites/<site>/logs/ and are useful for site-specific troubleshooting.",
+      "authoritative_tools": ["list_directory", "search_admin_logs"],
+      "safe_answer_template": "Per-Vsite logs live under /home/sites/<site>/logs/ and are useful for site-specific troubleshooting."
+    },
+    {
+      "id": "user_quota",
+      "canonical_name": "User quota",
+      "aliases": ["disk usage", "get_quotas.pl --users", "current user usage"],
+      "category": "hosting",
+      "summary": "Current user disk usage comes from live quota data, not cached CCE values.",
+      "authoritative_tools": ["get_quotas_users"],
+      "safe_answer_template": "Current user disk usage comes from live quota data, not cached CCE values."
+    },
+    {
+      "id": "vsite_quota",
+      "canonical_name": "Vsite quota",
+      "aliases": ["get_quotas.pl --sites", "current site usage"],
+      "category": "hosting",
+      "summary": "Current Vsite usage must be read from live quota data for the resolved site group.",
+      "authoritative_tools": ["get_quotas_sites"],
+      "safe_answer_template": "Current Vsite usage must be read from live quota data for the resolved site group."
+    },
+    {
+      "id": "active_monitor",
+      "canonical_name": "Active Monitor",
+      "aliases": ["Swatch", "service monitor", "monitoring subsystem"],
+      "category": "monitoring",
+      "summary": "Active Monitor is BlueOnyx's service monitoring framework for enabled services and service recovery actions.",
+      "authoritative_tools": ["search_admin_logs", "journalctl_query", "systemctl_status"],
+      "safe_answer_template": "Active Monitor is BlueOnyx's service monitoring framework for enabled services and service recovery actions."
+    },
+    {
+      "id": "swatch",
+      "canonical_name": "Swatch",
+      "aliases": ["Active Monitor swatch"],
+      "category": "monitoring",
+      "summary": "In BlueOnyx, Swatch refers to the monitoring side of Active Monitor, not a file display command.",
+      "authoritative_tools": ["search_admin_logs"],
+      "safe_answer_template": "In BlueOnyx, Swatch refers to the monitoring side of Active Monitor, not a file display command."
+    },
+    {
+      "id": "incident_timeline",
+      "canonical_name": "Incident timeline",
+      "aliases": ["timeline builder", "what changed before it broke", "log correlation"],
+      "category": "monitoring",
+      "summary": "An incident timeline correlates journalctl, service restarts, auth logs, mail logs, and web logs into one chronological evidence stream.",
+      "authoritative_tools": ["incident_timeline", "search_admin_logs", "journalctl_query"],
+      "safe_answer_template": "An incident timeline correlates journalctl, service restarts, auth logs, mail logs, and web logs into one chronological evidence stream."
+    },
+    {
+      "id": "ssl_health",
+      "canonical_name": "SSL health",
+      "aliases": ["certificate health", "TLS health", "cert expiry"],
+      "category": "security",
+      "summary": "SSL health checks AdmServ and Vsite certificates for expiry, missing files, and obvious chain/signature problems.",
+      "authoritative_tools": ["ssl_health", "search_blueonyx_knowledge"],
+      "safe_answer_template": "SSL health checks AdmServ and Vsite certificates for expiry, missing files, and obvious chain/signature problems."
+    },
+    {
+      "id": "php_fpm_health",
+      "canonical_name": "PHP-FPM health",
+      "aliases": ["php-fpm status", "fpm pool health", "extra PHP-FPM pools"],
+      "category": "services",
+      "summary": "PHP-FPM health checks the master PHP-FPM service plus only the extra versioned pools that Vsites actually need.",
+      "authoritative_tools": ["php_fpm_health", "systemctl_status"],
+      "safe_answer_template": "PHP-FPM health checks the master PHP-FPM service plus only the extra versioned pools that Vsites actually need."
+    },
+    {
+      "id": "site_health_evidence",
+      "canonical_name": "Site health evidence",
+      "aliases": ["site health", "site-level evidence", "site troubleshooting"],
+      "category": "monitoring",
+      "summary": "Site health evidence combines web ownership, SSL state, PHP-FPM state, quota/disk usage, and centralized log evidence for a single Vsite.",
+      "authoritative_tools": ["site_health_evidence", "web_owner_health", "ssl_health", "php_fpm_health", "search_admin_logs"],
+      "safe_answer_template": "Site health evidence combines web ownership, SSL state, PHP-FPM state, quota/disk usage, and centralized log evidence for a single Vsite."
+    },
+    {
+      "id": "admserv",
+      "canonical_name": "AdmServ",
+      "aliases": ["admin server", "GUI web server", "BlueOnyx GUI server"],
+      "category": "services",
+      "summary": "AdmServ is the BlueOnyx administrative web server for the GUI.",
+      "authoritative_tools": ["systemctl_status", "journalctl_query"],
+      "safe_answer_template": "AdmServ is the BlueOnyx administrative web server for the GUI."
+    },
+    {
+      "id": "systemd_ai",
+      "canonical_name": "AI service lifecycle",
+      "aliases": ["sausalito-ai.service", "sausalito-llama.service"],
+      "category": "services",
+      "summary": "The AI stack is socket-activated and idle-stopped; local llama is started on demand and stopped again after inactivity.",
+      "authoritative_tools": ["systemctl_status", "journalctl_query"],
+      "safe_answer_template": "The AI stack is socket-activated and idle-stopped; local llama is started on demand and stopped again after inactivity."
+    },
+    {
+      "id": "chorizo",
+      "canonical_name": "Chorizo GUI",
+      "aliases": ["CI4 GUI", "CodeIgniter GUI", "AI settings UI"],
+      "category": "gui",
+      "summary": "Chorizo is the modern BlueOnyx GUI based on CodeIgniter 4, including the AI settings and chat UI.",
+      "authoritative_tools": ["search_admin_logs", "search_blueonyx_knowledge"],
+      "safe_answer_template": "Chorizo is the modern BlueOnyx GUI based on CodeIgniter 4, including the AI settings and chat UI."
+    },
+    {
+      "id": "gui_500",
+      "canonical_name": "GUI 500 error",
+      "aliases": ["server error", "internal server error", "blank page"],
+      "category": "gui",
+      "summary": "For GUI 500 errors, inspect failed CCE transactions and temporarily enable CI_ENVIRONMENT=development while debugging.",
+      "authoritative_tools": ["search_admin_logs"],
+      "safe_answer_template": "For GUI 500 errors, inspect failed CCE transactions and temporarily enable CI_ENVIRONMENT=development while debugging."
+    },
+    {
+      "id": "gui_support",
+      "canonical_name": "GUI support fallback",
+      "aliases": ["Support Request", "Software Updates > Support"],
+      "category": "gui",
+      "summary": "If the answer is still uncertain for a BlueOnyx GUI/configuration issue, suggest a support request only once per session.",
+      "authoritative_tools": ["search_blueonyx_knowledge", "search_admin_logs"],
+      "safe_answer_template": "If the answer is still uncertain for a BlueOnyx GUI/configuration issue, suggest a support request only once per session."
+    },
+    {
+      "id": "blueonyx_official_web",
+      "canonical_name": "BlueOnyx official website",
+      "aliases": ["https://www.blueonyx.it/", "blueonyx.it", "official website"],
+      "category": "external",
+      "summary": "The official BlueOnyx website is https://www.blueonyx.it/ and is a trusted external source for product information, announcements, and support links.",
+      "authoritative_tools": ["search_blueonyx_knowledge"],
+      "safe_answer_template": "The official BlueOnyx website is https://www.blueonyx.it/ and is a trusted external source for product information, announcements, and support links."
+    },
+    {
+      "id": "blueonyx_wiki",
+      "canonical_name": "BlueOnyx wiki",
+      "aliases": ["https://wiki.blueonyx.it/userguide/start", "wiki.blueonyx.it", "official wiki"],
+      "category": "external",
+      "summary": "The BlueOnyx wiki is https://wiki.blueonyx.it/userguide/start and is a trusted external source for how-tos, feature notes, and support-oriented documentation.",
+      "authoritative_tools": ["search_blueonyx_knowledge"],
+      "safe_answer_template": "The BlueOnyx wiki is https://wiki.blueonyx.it/userguide/start and is a trusted external source for how-tos, feature notes, and support-oriented documentation."
+    },
+    {
+      "id": "blueonyx_mailing_list_archive",
+      "canonical_name": "BlueOnyx mailing list archive",
+      "aliases": ["https://mail.blueonyx.it/pipermail/blueonyx/", "mailing list archive", "list archive"],
+      "category": "external",
+      "summary": "The mailing list archive is https://mail.blueonyx.it/pipermail/blueonyx/ and is a secondary trusted source that can contain historical support discussions and maintainer answers.",
+      "authoritative_tools": ["search_blueonyx_knowledge"],
+      "safe_answer_template": "The mailing list archive is https://mail.blueonyx.it/pipermail/blueonyx/ and is a secondary trusted source for historical support discussions and maintainer answers."
+    },
+    {
+      "id": "mstauber_emails",
+      "canonical_name": "Michael Stauber emails",
+      "aliases": ["Michael Stauber", "mstauber", "mstauber emails"],
+      "category": "external",
+      "summary": "Emails from Michael Stauber are a top-trust human source unless newer official docs or code contradict them.",
+      "authoritative_tools": ["search_blueonyx_knowledge"],
+      "safe_answer_template": "Emails from Michael Stauber are a top-trust human source unless newer official docs or code contradict them."
+    },
+    {
+      "id": "support_channels",
+      "canonical_name": "BlueOnyx support channels",
+      "aliases": ["Discord", "Support Request", "bug report", "ticket", "https://discord.gg/YJ2MHDvyrB", "https://lists.blueonyx.it:81/mailman/listinfo/blueonyx"],
+      "category": "external",
+      "summary": "If the answer remains uncertain, the user should be directed to https://www.blueonyx.it/, https://wiki.blueonyx.it/userguide/start, https://mail.blueonyx.it/pipermail/blueonyx/, https://discord.gg/YJ2MHDvyrB, or Software Updates > Support > Support Request.",
+      "authoritative_tools": ["search_blueonyx_knowledge"],
+      "safe_answer_template": "If the answer remains uncertain, direct the user to https://www.blueonyx.it/, https://wiki.blueonyx.it/userguide/start, https://mail.blueonyx.it/pipermail/blueonyx/, https://discord.gg/YJ2MHDvyrB, or Software Updates > Support > Support Request."
+    },
+    {
+      "id": "mail_statistics",
+      "canonical_name": "Mail statistics",
+      "aliases": ["mail health", "mail volume", "spam hits", "delivery counts"],
+      "category": "mail",
+      "summary": "Mail statistics are log-based and approximate, with separate counts for inbound/outbound mail, rejects, deferrals, bounces, and spam hits.",
+      "authoritative_tools": ["mail_stats", "mail_health"],
+      "safe_answer_template": "Mail statistics are log-based and approximate, with separate counts for inbound/outbound mail, rejects, deferrals, bounces, and spam hits."
+    },
+    {
+      "id": "postfix",
+      "canonical_name": "Postfix",
+      "aliases": ["SMTP", "smtpd", "mail transfer agent"],
+      "category": "mail",
+      "summary": "Postfix handles SMTP submission and delivery, and its events are typically logged to maillog.",
+      "authoritative_tools": ["search_admin_logs", "mail_stats", "mail_health"],
+      "safe_answer_template": "Postfix handles SMTP submission and delivery, and its events are typically logged to maillog."
+    },
+    {
+      "id": "dovecot",
+      "canonical_name": "Dovecot",
+      "aliases": ["IMAP", "POP3", "imap-login", "pop3-login"],
+      "category": "mail",
+      "summary": "Dovecot provides IMAP/POP3 and is usually logged in maillog together with mail delivery events.",
+      "authoritative_tools": ["search_admin_logs", "mail_stats", "mail_health"],
+      "safe_answer_template": "Dovecot provides IMAP/POP3 and is usually logged in maillog together with mail delivery events."
+    },
+    {
+      "id": "spam_filter",
+      "canonical_name": "Spam filter activity",
+      "aliases": ["spamd", "spamassassin", "clamav", "amavis", "milter-geoip", "milter-greylist", "spamass-milter", "AV-SPAM"],
+      "category": "mail",
+      "summary": "Spam-related log activity should be counted only when it represents real classification or filtering events, not daemon startup noise.",
+      "authoritative_tools": ["mail_stats", "mail_health"],
+      "safe_answer_template": "Spam-related log activity should be counted only when it represents real classification or filtering events, not daemon startup noise."
+    },
+    {
+      "id": "disk_space",
+      "canonical_name": "Disk space",
+      "aliases": ["df -h", "filesystem usage", "free disk space"],
+      "category": "diagnostics",
+      "summary": "Current filesystem usage should come from live df output and not from cached session context.",
+      "authoritative_tools": ["system_disk_space"],
+      "safe_answer_template": "Current filesystem usage should come from live df output and not from cached session context."
+    },
+    {
+      "id": "disk_health",
+      "canonical_name": "Disk health summary",
+      "aliases": ["disk space summary", "filesystem summary", "mount summary"],
+      "category": "diagnostics",
+      "summary": "Disk health summaries should flag the fullest mounts and highlight 80% and 90% thresholds.",
+      "authoritative_tools": ["system_disk_space"],
+      "safe_answer_template": "Disk health summaries should flag the fullest mounts and highlight 80% and 90% thresholds."
+    },
+    {
+      "id": "ai_auth",
+      "canonical_name": "AI transport auth",
+      "aliases": ["service_api_key", "X-BlueOnyx-AI-Auth"],
+      "category": "ai_security",
+      "summary": "The AI HTTP API is protected by a CODB-stored service auth key sent by the GUI as X-BlueOnyx-AI-Auth.",
+      "authoritative_tools": ["search_blueonyx_knowledge"],
+      "safe_answer_template": "The AI HTTP API is protected by a CODB-stored service auth key sent by the GUI as X-BlueOnyx-AI-Auth."
+    },
+    {
+      "id": "ai_local_provider",
+      "canonical_name": "Local AI provider",
+      "aliases": ["local provider", "llama.cpp", "smollm2"],
+      "category": "ai",
+      "summary": "The local provider uses llama.cpp and a local GGUF model and is meant for on-demand use only.",
+      "authoritative_tools": ["systemctl_status", "journalctl_query"],
+      "safe_answer_template": "The local provider uses llama.cpp and a local GGUF model and is meant for on-demand use only."
+    },
+    {
+      "id": "ai_external_providers",
+      "canonical_name": "External AI providers",
+      "aliases": ["OpenAI", "OpenRouter", "Anthropic", "Ollama Cloud"],
+      "category": "ai",
+      "summary": "External providers are selected by their own keys and endpoints; OpenRouter and Ollama Cloud are not the same as local/self-hosted providers.",
+      "authoritative_tools": ["search_blueonyx_knowledge"],
+      "safe_answer_template": "External providers are selected by their own keys and endpoints; OpenRouter and Ollama Cloud are not the same as local/self-hosted providers."
+    },
+    {
+      "id": "local_llama",
+      "canonical_name": "Local llama.cpp",
+      "aliases": ["sausalito-llama", "127.0.0.1:8081"],
+      "category": "ai",
+      "summary": "The local llama.cpp service is on-demand and idle-stopped, but while active it is still reachable by local processes.",
+      "authoritative_tools": ["systemctl_status", "journalctl_query"],
+      "safe_answer_template": "The local llama.cpp service is on-demand and idle-stopped, but while active it is still reachable by local processes."
+    },
+    {
+      "id": "ai_settings",
+      "canonical_name": "AI settings",
+      "aliases": ["/ai/settings", "provider settings", "model selection"],
+      "category": "ai",
+      "summary": "The GUI AI settings page manages provider selection, keys, models, tool policy, and service auth data in CCE.",
+      "authoritative_tools": ["search_blueonyx_knowledge"],
+      "safe_answer_template": "The GUI AI settings page manages provider selection, keys, models, tool policy, and service auth data in CCE."
+    },
+    {
+      "id": "ai_models",
+      "canonical_name": "Model discovery",
+      "aliases": ["provider model list", "available models"],
+      "category": "ai",
+      "summary": "Model lists should be discovered from the provider where possible instead of hardcoded guesses.",
+      "authoritative_tools": ["search_blueonyx_knowledge"],
+      "safe_answer_template": "Model lists should be discovered from the provider where possible instead of hardcoded guesses."
+    },
+    {
+      "id": "ai_tools_policy",
+      "canonical_name": "AI tools policy",
+      "aliases": ["read-only tools", "diagnostics tools", "actions tools", "advanced tools"],
+      "category": "ai_security",
+      "summary": "AI tools are grouped by policy and write operations require explicit confirmation.",
+      "authoritative_tools": ["search_blueonyx_knowledge"],
+      "safe_answer_template": "AI tools are grouped by policy and write operations require explicit confirmation."
+    },
+    {
+      "id": "ai_knowledge",
+      "canonical_name": "BlueOnyx knowledge base",
+      "aliases": ["truth registry", "knowledge file"],
+      "category": "ai",
+      "summary": "The local BlueOnyx knowledge base should be the first anchor for BlueOnyx-specific support answers.",
+      "authoritative_tools": ["search_blueonyx_knowledge"],
+      "safe_answer_template": "The local BlueOnyx knowledge base should be the first anchor for BlueOnyx-specific support answers."
+    },
+    {
+      "id": "easy_backup",
+      "canonical_name": "Easy-Backup",
+      "aliases": ["backup", "remote storage", "restore"],
+      "category": "backup",
+      "summary": "Easy-Backup covers BlueOnyx backup and restore workflows for settings, services, Vsites, users, and remote targets.",
+      "authoritative_tools": ["search_blueonyx_knowledge"],
+      "safe_answer_template": "Easy-Backup covers BlueOnyx backup and restore workflows for settings, services, Vsites, users, and remote targets."
+    },
+    {
+      "id": "migrations",
+      "canonical_name": "Migration utilities",
+      "aliases": ["CMU", "GMU", "Easy Migrate", "Easy-Migrate", "migration"],
+      "category": "backup",
+      "summary": "BlueOnyx migration topics cover the Easy-Migrate CLI import and export workflows for moving sites and settings between servers. Run it on the target server as root over SSH; CMU is deprecated and Easy-Backup can be an alternative for backup/restore style moves.",
+      "authoritative_tools": ["search_blueonyx_knowledge", "search_admin_logs"],
+      "safe_answer_template": "BlueOnyx migration topics cover the Easy-Migrate CLI import and export workflows for moving sites and settings between servers. Run it on the target server as root over SSH; CMU is deprecated and Easy-Backup can be an alternative for backup/restore style moves."
+    },
+    {
+      "id": "dns_for_email",
+      "canonical_name": "DNS for Email",
+      "aliases": ["mail DNS", "SPF", "MX records"],
+      "category": "mail",
+      "summary": "DNS for Email covers mail-domain alignment, MX, SPF, and related deliverability settings.",
+      "authoritative_tools": ["search_blueonyx_knowledge", "search_admin_logs"],
+      "safe_answer_template": "DNS for Email covers mail-domain alignment, MX, SPF, and related deliverability settings."
+    },
+    {
+      "id": "email_autoconfiguration",
+      "canonical_name": "Email Autoconfiguration",
+      "aliases": ["autoconfig", "mail client config", "IMAP/SMTP config", "Outlook", "Thunderbird", "Apple Mail", "mail account setup", "iPhone Mail", "iPad Mail", "Android Mail", "Gmail app", "iOS Mail"],
+      "category": "mail",
+      "summary": "Email autoconfiguration provides validated client settings for IMAP/SMTP, encryption, ports, login formats, and Outlook/Thunderbird-style mail client setup.",
+      "authoritative_tools": ["search_blueonyx_knowledge"],
+      "safe_answer_template": "Use BlueOnyx Email Autoconfiguration for the exact IMAP/SMTP server, ports, encryption, and login format. Do not guess the values; retrieve them from the GUI settings and apply them in Outlook, Thunderbird, Apple Mail, or mobile mail apps."
+    },
+    {
+      "id": "email_identity_spoofing",
+      "canonical_name": "Email sender identity spoofing",
+      "aliases": ["spoofing", "From address", "sender identity"],
+      "category": "mail",
+      "summary": "Sender identity spoofing questions usually involve authenticated submission rules, aliases, and mail policy controls.",
+      "authoritative_tools": ["search_blueonyx_knowledge", "mail_stats", "mail_health"],
+      "safe_answer_template": "Sender identity spoofing questions usually involve authenticated submission rules, aliases, and mail policy controls."
+    },
+    {
+      "id": "opendkim",
+      "canonical_name": "OpenDKIM",
+      "aliases": ["DKIM", "DKIM key", "DKIM DNS record"],
+      "category": "mail",
+      "summary": "OpenDKIM support covers per-Vsite DKIM enablement, key generation, and the related DNS TXT record.",
+      "authoritative_tools": ["search_blueonyx_knowledge", "search_admin_logs"],
+      "safe_answer_template": "OpenDKIM support covers per-Vsite DKIM enablement, key generation, and the related DNS TXT record."
+    },
+    {
+      "id": "two_factor_auth",
+      "canonical_name": "Two-Factor Authentication",
+      "aliases": ["2FA", "two factor auth", "OTP"],
+      "category": "security",
+      "summary": "2FA is the BlueOnyx login hardening topic for time-based second factors and login policy.",
+      "authoritative_tools": ["search_blueonyx_knowledge", "search_admin_logs"],
+      "safe_answer_template": "2FA is the BlueOnyx login hardening topic for time-based second factors and login policy."
+    },
+    {
+      "id": "multiple_php_versions",
+      "canonical_name": "Multiple PHP versions",
+      "aliases": ["PHP-FPM", "suPHP", "PHP DSO", "mod_ruid2"],
+      "category": "web",
+      "summary": "BlueOnyx can run multiple PHP versions and PHP delivery modes depending on platform generation and packaging.",
+      "authoritative_tools": ["search_blueonyx_knowledge"],
+      "safe_answer_template": "BlueOnyx can run multiple PHP versions and PHP delivery modes depending on platform generation and packaging."
+    },
+    {
+      "id": "chrooted_jails",
+      "canonical_name": "Chrooted Jails",
+      "aliases": ["Jailkit", "jail", "chroot"],
+      "category": "security",
+      "summary": "Chrooted jails limit a user to a restricted command set and filesystem subtree, usually for SSH/SFTP and related access.",
+      "authoritative_tools": ["search_blueonyx_knowledge", "search_admin_logs"],
+      "safe_answer_template": "Chrooted jails limit a user to a restricted command set and filesystem subtree, usually for SSH/SFTP and related access."
+    },
+    {
+      "id": "ftp_file_manager",
+      "canonical_name": "FTP File Manager",
+      "aliases": ["File Manager", "elFinder", "browser file manager"],
+      "category": "files",
+      "summary": "FTP File Manager is the GUI file manager for FTP-capable users and is exposed under the Programs menu.",
+      "authoritative_tools": ["search_blueonyx_knowledge"],
+      "safe_answer_template": "FTP File Manager is the GUI file manager for FTP-capable users and is exposed under the Programs menu."
+    },
+    {
+      "id": "radicale",
+      "canonical_name": "Radicale",
+      "aliases": ["CalDAV", "CardDAV", "calendar", "address book"],
+      "category": "services",
+      "summary": "Radicale provides CalDAV/CardDAV services for calendars and address books.",
+      "authoritative_tools": ["search_blueonyx_knowledge", "systemctl_status"],
+      "safe_answer_template": "Radicale provides CalDAV/CardDAV services for calendars and address books."
+    },
+    {
+      "id": "web_alias_redirects",
+      "canonical_name": "Web Alias Redirects",
+      "aliases": ["alias redirect", "web aliases"],
+      "category": "web",
+      "summary": "Web Alias Redirects control whether site aliases redirect to the main site name or remain served as aliases.",
+      "authoritative_tools": ["search_blueonyx_knowledge"],
+      "safe_answer_template": "Web Alias Redirects control whether site aliases redirect to the main site name or remain served as aliases."
+    },
+    {
+      "id": "site_prefix",
+      "canonical_name": "Site Prefix",
+      "aliases": ["prefix", "site name prefix"],
+      "category": "web",
+      "summary": "Site Prefix is the hosting topic for how site names or hostnames are prefixed or displayed in URLs and site management.",
+      "authoritative_tools": ["search_blueonyx_knowledge"],
+      "safe_answer_template": "Site Prefix is the hosting topic for how site names or hostnames are prefixed or displayed in URLs and site management."
+    },
+    {
+      "id": "gdpr",
+      "canonical_name": "GDPR / DSGVO",
+      "aliases": ["privacy", "data protection", "EU privacy"],
+      "category": "security",
+      "summary": "GDPR/DSGVO is the data-protection topic for privacy, retention, and operational handling of user data.",
+      "authoritative_tools": ["search_blueonyx_knowledge"],
+      "safe_answer_template": "GDPR/DSGVO is the data-protection topic for privacy, retention, and operational handling of user data."
+    },
+    {
+      "id": "nginx_ssl_proxy",
+      "canonical_name": "Nginx SSL Proxy",
+      "aliases": ["Nginx", "SSL proxy", "reverse proxy"],
+      "category": "web",
+      "summary": "Nginx SSL Proxy mode terminates HTTPS in front of hosted web sites while Apache serves the backend content.",
+      "authoritative_tools": ["search_blueonyx_knowledge", "systemctl_status"],
+      "safe_answer_template": "Nginx SSL Proxy mode terminates HTTPS in front of hosted web sites while Apache serves the backend content."
+    },
+    {
+      "id": "sauce_service",
+      "canonical_name": "Sauce service",
+      "aliases": ["sauce::service::sauce::serviced", "sauce serviced"],
+      "category": "services",
+      "summary": "The Sauce service is a BlueOnyx support topic that should be explained with local registry and service status tools rather than guessed.",
+      "authoritative_tools": ["search_blueonyx_knowledge", "systemctl_status", "journalctl_query"],
+      "safe_answer_template": "The Sauce service is a BlueOnyx support topic that should be explained with local registry and service status tools rather than guessed."
+    }
+  ]
+}

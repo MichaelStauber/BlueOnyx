@@ -1,0 +1,130 @@
+#!/usr/bin/python3
+"""Read-only capability check for the packaged BlueOnyx llama.cpp runtime."""
+
+import argparse
+import json
+import os
+import subprocess
+import sys
+
+
+BIN_DIR = "/home/ai/bin"
+SERVER = os.path.join(BIN_DIR, "llama-server")
+MODEL_DIR = "/home/ai/models"
+
+
+def memory_available_kib():
+    try:
+        with open("/proc/meminfo", "r") as handle:
+            for line in handle:
+                if line.startswith("MemAvailable:"):
+                    return int(line.split()[1])
+    except (OSError, ValueError, IndexError):
+        pass
+    return 0
+
+
+def has_cpu_flag(flag):
+    try:
+        with open("/proc/cpuinfo", "r") as handle:
+            for line in handle:
+                if line.startswith("flags"):
+                    return flag in line.split(":", 1)[1].split()
+    except (OSError, IndexError):
+        pass
+    return False
+
+
+def result(available, level, reason, warning, backend, model, model_available, memory_kib):
+    return {
+        "available": available,
+        "level": level,
+        "cpu_backend": backend,
+        "accelerator_devices": [],
+        "model_available": model_available,
+        "model": os.path.basename(model),
+        "memory_available_mib": memory_kib // 1024,
+        "warning": warning,
+        "reason": reason,
+    }
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--quiet", action="store_true")
+    parser.add_argument("--model", default="default.gguf")
+    args = parser.parse_args()
+
+    if (os.path.basename(args.model) != args.model or not args.model.endswith(".gguf")
+            or args.model.startswith(".") or ".." in args.model):
+        parser.error("invalid local model filename")
+
+    model = os.path.join(MODEL_DIR, args.model)
+    memory_kib = memory_available_kib()
+    payload = None
+
+    if not os.path.isfile(SERVER) or not os.access(SERVER, os.X_OK):
+        payload = result(False, "unavailable", "The packaged llama-server executable is missing or not executable.", "", "", model, False, memory_kib)
+    elif not os.path.exists(model):
+        payload = result(False, "unavailable", "The selected local GGUF model is missing.", "", "", model, False, memory_kib)
+    else:
+        model_real = os.path.realpath(model)
+        model_root = os.path.realpath(MODEL_DIR) + os.sep
+        if not model_real.startswith(model_root) or not model_real.endswith(".gguf"):
+            payload = result(False, "unavailable", "The selected model does not resolve inside /home/ai/models.", "", "", model, False, memory_kib)
+        elif not os.access(model_real, os.R_OK):
+            payload = result(False, "unavailable", "The selected local GGUF model is not readable.", "", "", model, False, memory_kib)
+
+    env = dict(os.environ)
+    env["LD_LIBRARY_PATH"] = BIN_DIR
+
+    if payload is None:
+        ldd = subprocess.run(["/usr/bin/ldd", SERVER], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, env=env)
+        if ldd.returncode != 0 or "not found" in ldd.stdout:
+            payload = result(False, "unavailable", "The llama.cpp runtime has unresolved shared-library dependencies.", "", "", model, True, memory_kib)
+
+    device_output = ""
+    if payload is None:
+        try:
+            devices = subprocess.run([SERVER, "--verbose", "--list-devices"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, env=env, timeout=20)
+            device_output = devices.stdout
+            if devices.returncode != 0:
+                payload = result(False, "unavailable", "The llama.cpp backend capability probe failed.", "", "", model, True, memory_kib)
+            elif "loaded cpu backend" not in device_output.lower():
+                payload = result(False, "unavailable", "No compatible llama.cpp CPU backend was discovered.", "", "", model, True, memory_kib)
+        except (OSError, subprocess.TimeoutExpired):
+            payload = result(False, "unavailable", "The llama.cpp backend capability probe failed.", "", "", model, True, memory_kib)
+
+    if payload is None:
+        backend = "runtime-selected"
+        marker = "libggml-cpu-"
+        if marker in device_output:
+            backend = device_output.split(marker, 1)[1].split(".so", 1)[0]
+        model_size_kib = (os.path.getsize(os.path.realpath(model)) + 1023) // 1024
+        if memory_kib < model_size_kib + 262144:
+            payload = result(False, "unavailable", "There is not enough available memory to load the selected local model safely.", "", backend, model, True, memory_kib)
+        elif memory_kib < model_size_kib * 2 + 524288:
+            payload = result(True, "supported_with_warning", "", "Available memory is marginal for local inference.", backend, model, True, memory_kib)
+        elif not has_cpu_flag("avx2"):
+            payload = result(True, "supported_with_warning", "", "This processor lacks AVX2; local inference is supported but may be slow.", backend, model, True, memory_kib)
+        else:
+            payload = result(True, "supported", "", "", backend, model, True, memory_kib)
+
+        device_lines = device_output.splitlines()
+        try:
+            device_index = next(index for index, line in enumerate(device_lines) if line.strip() == "Available devices:")
+            payload["accelerator_devices"] = [
+                line.strip().lstrip("-").strip()
+                for line in device_lines[device_index + 1:]
+                if line.strip()
+            ]
+        except StopIteration:
+            pass
+
+    if not args.quiet:
+        print(json.dumps(payload, sort_keys=True))
+    return 0 if payload["available"] else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

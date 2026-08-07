@@ -1,0 +1,147 @@
+<!-- 
+  $Id: ai.schema
+  
+  Schema for AI module configuration and session tracking.
+  
+  The AI config is stored in the System.AI namespace.
+  Session data is stored in the AI_Session class.
+-->
+
+<!-- Provider type: one of the supported AI backends -->
+<typedef name="aiProvider" type="re" data="^(openai|openrouter|ollama|anthropic|custom|local)$"/>
+
+<!-- ====================================================================
+  Class: System namespace="AI" - Server-wide AI configuration
+  ==================================================================== -->
+<class name="System" namespace="AI" version="1.0">
+    <property
+        name="enabled"
+        type="boolean"
+        default="0"
+        writeacl="ruleCapable(adminUser)"
+    />
+    <property
+        name="provider"
+        type="aiProvider"
+        default="local"
+        writeacl="ruleCapable(adminUser)"
+    />
+    <property
+        name="openai_api_key"
+        type="scalar"
+        default=""
+        optional="true"
+        writeacl="ruleCapable(adminUser)"
+    />
+    <property
+        name="openrouter_api_key"
+        type="scalar"
+        default=""
+        optional="true"
+        writeacl="ruleCapable(adminUser)"
+    />
+    <property
+        name="ollama_api_key"
+        type="scalar"
+        default=""
+        optional="true"
+        writeacl="ruleCapable(adminUser)"
+    />
+    <property
+        name="custom_api_key"
+        type="scalar"
+        default=""
+        optional="true"
+        writeacl="ruleCapable(adminUser)"
+    />
+    <property
+        name="service_api_key"
+        type="scalar"
+        default=""
+        optional="true"
+        writeacl="ruleCapable(adminUser)"
+    />
+    <property
+        name="default_model"
+        type="scalar"
+        default="SmolLM2-360M-Instruct-Q4_K_M.gguf"
+        optional="true"
+        writeacl="ruleCapable(adminUser)"
+    />
+    <property
+        name="models_cache"
+        type="scalar"
+        default=""
+        optional="true"
+        array="yes"
+        writeacl="ruleCapable(adminUser)"
+    />
+    <property
+        name="custom_endpoint"
+        type="scalar"
+        default=""
+        optional="true"
+        writeacl="ruleCapable(adminUser)"
+    />
+    <property
+        name="idle_timeout"
+        type="int"
+        default="5"
+        writeacl="ruleCapable(adminUser)"
+    />
+    <property
+        name="system_prompt"
+        type="scalar"
+        default=""
+        optional="true"
+        writeacl="ruleCapable(adminUser)"
+    />
+    <property
+        name="tools_enabled"
+        type="boolean"
+        default="1"
+        writeacl="ruleCapable(adminUser)"
+    />
+    <property
+        name="read_only_tools_enabled"
+        type="boolean"
+        default="1"
+        writeacl="ruleCapable(adminUser)"
+    />
+    <property
+        name="diagnostics_tools_enabled"
+        type="boolean"
+        default="1"
+        writeacl="ruleCapable(adminUser)"
+    />
+    <property
+        name="actions_tools_enabled"
+        type="boolean"
+        default="1"
+        writeacl="ruleCapable(adminUser)"
+    />
+    <property
+        name="allow_generic_privileged_command"
+        type="boolean"
+        default="0"
+        writeacl="ruleCapable(adminUser)"
+    />
+    <property
+        name="priv_tools_available"
+        type="scalar"
+        default=""
+        optional="true"
+        array="yes"
+        writeacl="ruleCapable(adminUser)"
+    />
+    <property
+        name="force_update"
+        type="int"
+        default=""
+        optional="true"
+        array="yes"
+        writeacl="ruleCapable(adminUser)"
+    />
+</class>
+
+<!-- end of ai.schema -->

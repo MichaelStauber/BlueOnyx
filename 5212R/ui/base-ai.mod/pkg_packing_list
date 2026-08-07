@@ -1,0 +1,16 @@
+[Package -- Version=1.0]
+Vendor:                blueonyx_it
+VendorTag:             [[vendorTag]]
+Name:                  BlueOnyx AI Assistant
+NameTag:               [[nameTag]]
+Version:               XXX_MODULE_VERSION_XXX
+Product:               XXX_PRODUCT_VERSION_XXX
+PackageType:           complete
+Options:               uninstallable,refreshui,refreshcce
+Autoinstall:           No
+Autoupdate:            Yes
+LongDesc:              [[longDesc]]
+ShortDesc:             [[shortDesc]]
+Copyright:             [[copyright]]
+License:               [[license]]
+[/Package]

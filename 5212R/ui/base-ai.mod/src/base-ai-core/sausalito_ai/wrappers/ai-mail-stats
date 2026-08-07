@@ -1,0 +1,539 @@
+#!/usr/bin/env python3
+"""Summarize mail activity from Postfix/maillog files.
+
+Copyright (c) 2026 Michael Stauber, SOLARSPEED.NET
+Copyright (c) 2026 Team BlueOnyx, BLUEONYX.IT
+All Rights Reserved.
+
+The wrapper is intentionally conservative: it reports queue/delivery counts,
+spam-classification hits, rejects, deferrals, bounces, and the most common
+submitters, authenticated users, recipients, and remote clients.
+"""
+
+from __future__ import annotations
+
+import argparse
+import gzip
+import glob
+import os
+import re
+import sys
+import time
+from datetime import date, datetime
+from collections import Counter, defaultdict
+
+
+DEFAULT_GLOBS = ["/var/log/maillog*"]
+QUEUE_ID_RE = re.compile(r": ([A-Za-z0-9]{5,12}): ")
+FROM_RE = re.compile(r"from=<([^>]*)>")
+TO_RE = re.compile(r"to=<([^>]*)>")
+SASL_RE = re.compile(r"sasl_username=([^\s,]+)")
+CLIENT_RE = re.compile(r"connect from ([^[]+)\[([^\]]+)\]")
+CLIENT_ALT_RE = re.compile(r"client=([^\s\[]+)\[([^\]]+)\]")
+DATE_RE = re.compile(r"-(\d{8})(?:\.gz)?$")
+
+
+def open_text(path: str):
+    if path.endswith(".gz"):
+        return gzip.open(path, "rt", errors="replace")
+    return open(path, "rt", errors="replace")
+
+
+def extract_queue_id(line: str) -> str:
+    match = QUEUE_ID_RE.search(line)
+    return match.group(1) if match else ""
+
+
+def extract_address(pattern: re.Pattern[str], line: str) -> str:
+    match = pattern.search(line)
+    return match.group(1) if match else ""
+
+
+def extract_client(line: str) -> str:
+    match = CLIENT_RE.search(line) or CLIENT_ALT_RE.search(line)
+    if not match:
+        return ""
+    name = (match.group(1) or "").strip()
+    ident = (match.group(2) or "").strip()
+    if name and ident:
+        return f"{name}[{ident}]"
+    return name or ident
+
+
+def path_day_label(path: str) -> str:
+    basename = os.path.basename(path)
+    match = DATE_RE.search(basename)
+    if match:
+        try:
+            return datetime.strptime(match.group(1), "%Y%m%d").date().isoformat()
+        except ValueError:
+            return basename
+    return "current"
+
+
+def user_matches(line: str, user: str) -> bool:
+    if not user:
+        return True
+    normalized = user.lower()
+    haystack = line.lower()
+    if normalized in haystack:
+        return True
+
+    values = (
+        extract_address(FROM_RE, line).lower(),
+        extract_address(TO_RE, line).lower(),
+        extract_address(SASL_RE, line).lower(),
+        extract_client(line).lower(),
+    )
+    return any(normalized in value for value in values if value)
+
+
+def resolve_paths(path_patterns: list[str], days: int = 0) -> list[str]:
+    expanded: list[str] = []
+    cutoff = time.time() - (days * 86400) if days > 0 else 0
+
+    for pattern in path_patterns or DEFAULT_GLOBS:
+        pattern = pattern.strip()
+        if not pattern or not pattern.startswith("/var/log/"):
+            continue
+        for match in glob.glob(pattern):
+            real = os.path.realpath(match)
+            if not real.startswith("/var/log/"):
+                continue
+            if days > 0:
+                try:
+                    if os.path.getmtime(match) < cutoff:
+                        continue
+                except OSError:
+                    continue
+            expanded.append(match)
+
+    return sorted(dict.fromkeys(expanded))
+
+
+def classify_and_count(paths: list[str], user: str) -> dict[str, object]:
+    message_qids: set[str] = set()
+    outbound_qids: set[str] = set()
+    local_qids: set[str] = set()
+    rejected_keys: set[str] = set()
+    deferred_keys: set[str] = set()
+    bounced_keys: set[str] = set()
+    spam_keys: set[str] = set()
+
+    submitter_counts: Counter[str] = Counter()
+    auth_user_counts: Counter[str] = Counter()
+    recipient_counts: Counter[str] = Counter()
+    client_counts: Counter[str] = Counter()
+    sample_lines: dict[str, list[str]] = defaultdict(list)
+    daily_counts: dict[str, Counter[str]] = defaultdict(Counter)
+    weekly_counts: dict[str, Counter[str]] = defaultdict(Counter)
+    key_day: dict[str, str] = {}
+
+    matched_lines = 0
+
+    def add_unique(bucket: set[str], label: str, day_label: str, key: str) -> bool:
+        if key in bucket:
+            return False
+        bucket.add(key)
+        daily_counts[day_label][label] += 1
+        if day_label != "current":
+            try:
+                iso_year, iso_week, _ = date.fromisoformat(day_label).isocalendar()
+                weekly_counts[f"{iso_year}-W{iso_week:02d}"][label] += 1
+            except ValueError:
+                pass
+        return True
+
+    for path in paths:
+        day_label = path_day_label(path)
+        try:
+            with open_text(path) as handle:
+                for raw_line in handle:
+                    line = raw_line.rstrip("\n")
+                    if not user_matches(line, user):
+                        continue
+
+                    matched_lines += 1
+                    lower = line.lower()
+                    qid = extract_queue_id(line)
+                    queue_key = qid or line
+                    key_day.setdefault(queue_key, day_label)
+                    item_day = key_day.get(queue_key, day_label)
+
+                    from_addr = extract_address(FROM_RE, line)
+                    to_addr = extract_address(TO_RE, line)
+                    sasl_user = extract_address(SASL_RE, line)
+                    client = extract_client(line)
+
+                    if qid and from_addr and any(token in lower for token in ("postfix/qmgr", "postfix/pickup", "postfix/cleanup")):
+                        if add_unique(message_qids, "submitted", item_day, queue_key):
+                            submitter_counts[from_addr] += 1
+                            if len(sample_lines["submitted"]) < 2:
+                                sample_lines["submitted"].append(line)
+
+                    if sasl_user and _is_plausible_user_name(sasl_user) and "authentication failed" not in lower:
+                        auth_user_counts[sasl_user] += 1
+
+                    if client:
+                        client_counts[client] += 1
+
+                    if "postfix/smtp" in lower and "status=sent" in lower:
+                        if add_unique(outbound_qids, "outbound", item_day, queue_key):
+                            if to_addr:
+                                recipient_counts[to_addr] += 1
+                            if len(sample_lines["outbound"]) < 2:
+                                sample_lines["outbound"].append(line)
+
+                    if ("postfix/local" in lower or "postfix/lmtp" in lower) and (
+                        "status=sent" in lower or "delivered to mailbox" in lower
+                    ):
+                        if add_unique(local_qids, "local", item_day, queue_key):
+                            if to_addr:
+                                recipient_counts[to_addr] += 1
+                            if len(sample_lines["local"]) < 2:
+                                sample_lines["local"].append(line)
+
+                    if any(
+                        token in lower
+                        for token in (
+                            "noqueue: reject",
+                            " reject:",
+                            "status=reject",
+                            "sasl authentication failed",
+                            "authentication failed",
+                            "relay access denied",
+                            "recipient address rejected",
+                            "sender address rejected",
+                            "client host rejected",
+                        )
+                    ):
+                        if add_unique(rejected_keys, "rejected", item_day, queue_key):
+                            if len(sample_lines["rejected"]) < 2:
+                                sample_lines["rejected"].append(line)
+
+                    if "status=deferred" in lower or "deferred (" in lower or "deferred:" in lower:
+                        if add_unique(deferred_keys, "deferred", item_day, queue_key):
+                            if len(sample_lines["deferred"]) < 2:
+                                sample_lines["deferred"].append(line)
+
+                    if "status=bounced" in lower or "postfix/bounce" in lower or ("bounce" in lower and "status=" in lower):
+                        if add_unique(bounced_keys, "bounced", item_day, queue_key):
+                            if len(sample_lines["bounced"]) < 2:
+                                sample_lines["bounced"].append(line)
+
+                    if _is_real_spam_hit(lower):
+                        if add_unique(spam_keys, "spam", item_day, queue_key):
+                            if len(sample_lines["spam"]) < 2:
+                                sample_lines["spam"].append(line)
+        except FileNotFoundError:
+            continue
+
+    return {
+        "matched_lines": matched_lines,
+        "submitted": message_qids,
+        "outbound": outbound_qids,
+        "local": local_qids,
+        "rejected": rejected_keys,
+        "deferred": deferred_keys,
+        "bounced": bounced_keys,
+        "spam": spam_keys,
+        "submitters": submitter_counts,
+        "auth_users": auth_user_counts,
+        "recipients": recipient_counts,
+        "clients": client_counts,
+        "samples": sample_lines,
+        "daily": daily_counts,
+        "weekly": weekly_counts,
+    }
+
+
+def _is_real_spam_hit(lower: str) -> bool:
+    spam_markers = (
+        "x-spam-status: yes",
+        "x-spam-flag: yes",
+        "x-spam-score:",
+        "spamassassin: identified spam",
+        "spamassassin: spam",
+        "amavis",
+        "spam verdict",
+        "spam hit",
+        "spam hits",
+    )
+    noise_markers = (
+        "server killed",
+        "shutting down",
+        "logger:",
+        "warning:",
+        "config",
+        "configuration",
+    )
+    if any(marker in lower for marker in noise_markers):
+        return False
+    return any(marker in lower for marker in spam_markers)
+
+
+def _is_plausible_user_name(value: str) -> bool:
+    value = (value or "").strip()
+    if len(value) < 2:
+        return False
+    if value in {"(unavailable)", "unknown", "none"}:
+        return False
+    return bool(re.fullmatch(r"[A-Za-z0-9._@+-]+", value))
+
+
+def render_report(paths: list[str], user: str, limit: int, days: int, mode: str) -> str:
+    stats = classify_and_count(paths, user)
+    submitters: Counter[str] = stats["submitters"]  # type: ignore[assignment]
+    auth_users: Counter[str] = stats["auth_users"]  # type: ignore[assignment]
+    recipients: Counter[str] = stats["recipients"]  # type: ignore[assignment]
+    clients: Counter[str] = stats["clients"]  # type: ignore[assignment]
+    samples: dict[str, list[str]] = stats["samples"]  # type: ignore[assignment]
+    daily: dict[str, Counter[str]] = stats["daily"]  # type: ignore[assignment]
+    weekly: dict[str, Counter[str]] = stats["weekly"]  # type: ignore[assignment]
+
+    submitted = len(stats["submitted"])  # type: ignore[arg-type]
+    outbound = len(stats["outbound"])  # type: ignore[arg-type]
+    local = len(stats["local"])  # type: ignore[arg-type]
+    rejected = len(stats["rejected"])  # type: ignore[arg-type]
+    deferred = len(stats["deferred"])  # type: ignore[arg-type]
+    bounced = len(stats["bounced"])  # type: ignore[arg-type]
+    spam = len(stats["spam"])  # type: ignore[arg-type]
+
+    scope_line = f"{len(paths)} file(s)"
+    if days > 0:
+        scope_line += f" (last {days} day(s))"
+
+    lines = [
+        "Mail Statistics:",
+        f"Scope: {scope_line}",
+        f"Filter: {user or 'none'}",
+        "",
+        f"Received/submitted messages: {submitted}",
+        f"Outbound deliveries: {outbound}",
+        f"Local deliveries: {local}",
+        f"Rejected/blocked: {rejected}",
+        f"Deferred: {deferred}",
+        f"Bounced: {bounced}",
+        f"Spam hits: {spam}",
+    ]
+
+    if submitters:
+        lines.append("")
+        lines.append("Top envelope senders:")
+        for addr, count in submitters.most_common(limit):
+            lines.append(f"- {addr}: {count}")
+
+    if auth_users:
+        lines.append("")
+        lines.append("Top authenticated users:")
+        for user_name, count in auth_users.most_common(limit):
+            lines.append(f"- {user_name}: {count}")
+
+    if recipients:
+        lines.append("")
+        lines.append("Top recipients:")
+        for addr, count in recipients.most_common(limit):
+            lines.append(f"- {addr}: {count}")
+
+    if clients:
+        lines.append("")
+        lines.append("Top remote clients:")
+        for client, count in clients.most_common(limit):
+            lines.append(f"- {client}: {count}")
+
+    lines.append("")
+    lines.append("Notes:")
+    lines.append("- Counts are log-based and approximate.")
+    lines.append("- Received/submitted means messages entering the Postfix queue.")
+    lines.append("- Envelope senders and authenticated users are counted separately.")
+    lines.append("- Spam hits only count real spam-classification events, not spamd warnings.")
+
+    def format_trend_bucket(label: str, bucket: Counter[str]) -> str:
+        return (
+            f"- {label}: received={bucket.get('submitted', 0)}, "
+            f"outbound={bucket.get('outbound', 0)}, local={bucket.get('local', 0)}, "
+            f"rejected={bucket.get('rejected', 0)}, deferred={bucket.get('deferred', 0)}, "
+            f"bounced={bucket.get('bounced', 0)}, spam={bucket.get('spam', 0)}"
+        )
+
+    if daily:
+        lines.append("")
+        lines.append("Daily trend:")
+        for label in sorted(daily.keys(), reverse=True)[:7]:
+            lines.append(format_trend_bucket(label, daily[label]))
+
+    if weekly:
+        lines.append("")
+        lines.append("Weekly trend:")
+        for label in sorted(weekly.keys(), reverse=True)[:8]:
+            lines.append(format_trend_bucket(label, weekly[label]))
+
+    if mode == "health":
+        status = "OK"
+        if rejected or deferred or bounced:
+            status = "WARNING"
+        if spam and (rejected + deferred + bounced) > 25:
+            status = "ALERT"
+        lines.insert(1, f"Health status: {status}")
+        lines.insert(2, f"Primary focus: mail delivery and filtering")
+
+    for key, label in (
+        ("submitted", "Submission samples"),
+        ("outbound", "Outbound delivery samples"),
+        ("local", "Local delivery samples"),
+        ("rejected", "Rejected samples"),
+        ("deferred", "Deferred samples"),
+        ("bounced", "Bounced samples"),
+        ("spam", "Spam samples"),
+    ):
+        if samples.get(key):
+            lines.append("")
+            lines.append(f"{label}:")
+            for sample in samples[key][:2]:
+                lines.append(f"- {sample}")
+
+    return "\n".join(lines)
+
+
+def render_spam_abuse_report(paths: list[str], user: str, limit: int, days: int) -> str:
+    """Focused spam/abuse report: who is sending spam, how much, from where.
+
+    This mode answers the admin question "Which account is currently
+    blasting spam?" by correlating SASL auth with outbound volume,
+    rejected/deferred messages, and remote client IPs.
+    """
+    stats = classify_and_count(paths, user)
+    auth_users: Counter[str] = stats["auth_users"]  # type: ignore[assignment]
+    submitters: Counter[str] = stats["submitters"]  # type: ignore[assignment]
+    recipients: Counter[str] = stats["recipients"]  # type: ignore[assignment]
+    clients: Counter[str] = stats["clients"]  # type: ignore[assignment]
+
+    submitted = len(stats["submitted"])  # type: ignore[arg-type]
+    outbound = len(stats["outbound"])  # type: ignore[arg-type]
+    rejected = len(stats["rejected"])  # type: ignore[arg-type]
+    deferred = len(stats["deferred"])  # type: ignore[arg-type]
+    bounced = len(stats["bounced"])  # type: ignore[arg-type]
+    spam = len(stats["spam"])  # type: ignore[arg-type]
+
+    scope_line = f"{len(paths)} file(s)"
+    if days > 0:
+        scope_line += f" (last {days} day(s))"
+
+    # ---------- Header ----------
+    lines = [
+        "=== Spam / Abuse Report ===",
+        f"Scope: {scope_line}",
+        f"Filter: {user or 'none'}",
+        "",
+        f"Submitted: {submitted}   Outbound: {outbound}   Rejected: {rejected}   Deferred: {deferred}   Bounced: {bounced}   Spam hits: {spam}",
+    ]
+
+    # ---------- TOP OFFENDER: highest-volume authenticated user ----------
+    ABUSE_THRESHOLD = 50  # more than 50 messages via auth = suspicious
+    CRITICAL_THRESHOLD = 500  # more than 500 = almost certainly compromised
+
+    if auth_users:
+        lines.append("")
+        lines.append("=== Authenticated Users by Volume (TOP OFFENDERS) ===")
+        for name, count in auth_users.most_common(limit):
+            flag = ""
+            if count >= CRITICAL_THRESHOLD:
+                flag = "  ** CRITICAL: likely compromised account **"
+            elif count >= ABUSE_THRESHOLD:
+                flag = "  * suspicious volume *"
+            lines.append(f"- {name}: {count} messages sent{flag}")
+    else:
+        lines.append("")
+        lines.append("No authenticated-user senders found in the inspected period.")
+
+    # ---------- Top envelope senders (includes non-auth) ----------
+    # Filter out empty/bounce senders and system addresses
+    real_submitters = Counter(
+        {addr: cnt for addr, cnt in submitters.items()
+         if addr and addr != "" and not addr.startswith("MAILER-DAEMON") and not addr.startswith("root@")}
+    )
+    if real_submitters:
+        lines.append("")
+        lines.append("Top envelope senders (excl. system/bounces):")
+        for addr, count in real_submitters.most_common(limit):
+            flag = ""
+            if count >= CRITICAL_THRESHOLD:
+                flag = "  ** CRITICAL **"
+            elif count >= ABUSE_THRESHOLD:
+                flag = "  * high volume *"
+            lines.append(f"- {addr}: {count}{flag}")
+
+    # ---------- Top connecting client IPs ----------
+    if clients:
+        lines.append("")
+        lines.append("Top connecting client IPs:")
+        for client, count in clients.most_common(limit):
+            lines.append(f"- {client}: {count} connections")
+
+    # ---------- Spam hits ----------
+    if spam:
+        lines.append("")
+        lines.append(f"Spam-classified messages: {spam}")
+        samples = stats.get("samples", {}).get("spam", [])  # type: ignore[arg-type]
+        if samples:
+            lines.append("Recent spam sample:")
+            lines.append(f"  {samples[0]}")
+
+    # ---------- Rejections summary ----------
+    if rejected:
+        lines.append("")
+        lines.append(f"Rejected/blocked messages: {rejected}")
+
+    # ---------- Suspicious activity flags ----------
+    lines.append("")
+    lines.append("=== Suspicious Activity Flags ===")
+
+    top_auth_count = auth_users.most_common(1)[0][1] if auth_users else 0
+    top_auth_name = auth_users.most_common(1)[0][0] if auth_users else "N/A"
+
+    if top_auth_count >= CRITICAL_THRESHOLD:
+        lines.append(f"CRITICAL: Authenticated user '{top_auth_name}' sent {top_auth_count} messages — almost certainly compromised.")
+        lines.append("         Recommended: Suspend account, change password, check outgoing queue.")
+    elif top_auth_count >= ABUSE_THRESHOLD:
+        lines.append(f"WARNING: Authenticated user '{top_auth_name}' sent {top_auth_count} messages — suspicious volume, investigate.")
+    else:
+        lines.append("No suspicious authenticated-sender volumes detected.")
+
+    top_client_count = clients.most_common(1)[0][1] if clients else 0
+    top_client_name = clients.most_common(1)[0][0] if clients else "N/A"
+
+    if top_client_count >= CRITICAL_THRESHOLD:
+        lines.append(f"CRITICAL: Client IP '{top_client_name}' made {top_client_count} connections — likely brute-force or spam bot.")
+    elif top_client_count >= ABUSE_THRESHOLD:
+        lines.append(f"WARNING: Client IP '{top_client_name}' made {top_client_count} connections — high, investigate.")
+
+    lines.append("")
+    lines.append("Note: Thresholds are 50 (suspicious) and 500 (critical) messages/connections.")
+    return "\n".join(lines)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Summarize mail activity from /var/log/maillog")
+    parser.add_argument("--user", default="", help="Optional username, sender, recipient, or email to filter")
+    parser.add_argument("--limit", type=int, default=5, help="Number of top senders/recipients to show")
+    parser.add_argument("--days", type=int, default=0, help="Only include log files modified within the last N days")
+    parser.add_argument("--mode", choices=["stats", "health", "spam_abuse"], default="stats", help="Output mode")
+    parser.add_argument("paths", nargs="*", help="Mail log paths or globs under /var/log/")
+    args = parser.parse_args()
+
+    days = max(0, min(int(args.days or 0), 3650))
+    paths = resolve_paths(args.paths, days=days)
+    if not paths:
+        print("No matching mail log files found.")
+        return 1
+
+    limit = max(1, min(int(args.limit or 5), 10))
+    if args.mode == "spam_abuse":
+        print(render_spam_abuse_report(paths, args.user, limit, days))
+    else:
+        print(render_report(paths, args.user, limit, days, args.mode))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

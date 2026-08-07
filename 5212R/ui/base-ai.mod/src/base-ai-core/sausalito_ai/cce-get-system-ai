@@ -1,0 +1,175 @@
+#!/usr/bin/env php
+<?php
+/*
+cce-get-system-ai -- Read System.AI config from CCEd, print as JSON.
+
+Copyright (c) 2026 Michael Stauber, SOLARSPEED.NET
+Copyright (c) 2026 Team BlueOnyx, BLUEONYX.IT
+All Rights Reserved.
+
+This is a PHP CLI script that runs as root (via sudo) to read the
+AI configuration from CCEd via the existing CCE.php socket client.
+blueonyx_ai user can run it NOPASSWD.
+
+Usage: /usr/sbin/cce-get-system-ai
+Output: JSON dict with keys: enabled, provider, openai_api_key,
+        openrouter_api_key, ollama_api_key, custom_api_key, model,
+        custom_endpoint, idle_timeout, system_prompt, tools_enabled,
+        allow_generic_privileged_command, priv_tools_available
+
+Exit codes: 0=success, 1=not found, 2=error
+*/
+
+$ERRORS = array();
+
+function error_out($msg) {
+    fwrite(STDERR, "cce-get-system-ai: $msg\n");
+}
+
+// Find CCE.php
+$paths = [
+    '/usr/sausalito/ci4/app/Libraries/CCE.php',
+    '/usr/sausalito/Chorizo/ci4/app/Libraries/CCE.php',
+];
+$cce_path = null;
+foreach ($paths as $p) {
+    if (file_exists($p)) {
+        $cce_path = $p;
+        break;
+    }
+}
+
+if (!$cce_path) {
+    error_out("CCE.php not found");
+    exit(2);
+}
+
+require_once $cce_path;
+
+try {
+    $cce = new CCE();
+
+    // Connect to CCEd
+    $cce->ccephp_new();
+
+    // Authenticate as admin (CceClient uses session auth)
+    // We use WHOAMI which connects as the system user
+    // For reading config, we just need a valid session
+
+    // Find the System object
+    $socketPath = CCE::getSocketPath();
+
+    // Open socket directly and send WHOAMI + GET
+    $fp = @stream_socket_client("unix://$socketPath", $errno, $errstr, 5);
+    if (!$fp) {
+        error_out("Cannot connect to CCE socket: $errstr ($errno)");
+        exit(2);
+    }
+
+    // Authenticate as admin using the site admin authkey
+    // Actually, the simplest is to use the fact that CCE allows
+    // WHOAMI as unauthenticated and GET System
+    $cmds = "WHOAMI\n";
+    fwrite($fp, $cmds);
+    $resp = '';
+    while (!feof($fp)) {
+        $line = fgets($fp);
+        if ($line === false) break;
+        $resp .= $line;
+        if (strpos($line, 'OK') !== false || strpos($line, 'ERROR') !== false) break;
+    }
+
+    // Send GET for System.AI
+    fwrite($fp, "GET System AI\n");
+    $ai_data = '';
+    while (!feof($fp)) {
+        $line = fgets($fp);
+        if ($line === false) break;
+        if (trim($line) === '.' || strpos($line, 'OK') !== false || strpos($line, 'ERROR') !== false) {
+            break;
+        }
+        $ai_data .= $line;
+    }
+
+    // Parse the key=value lines
+    $config = array(
+        'enabled' => false,
+        'provider' => 'openai',
+        'openai_api_key' => '',
+        'openrouter_api_key' => '',
+        'ollama_api_key' => '',
+        'custom_api_key' => '',
+        'model' => 'gpt-4',
+        'custom_endpoint' => '',
+        'idle_timeout' => 5,
+        'system_prompt' => '',
+        'tools_enabled' => true,
+        'allow_generic_privileged_command' => false,
+        'priv_tools_available' => [],
+    );
+
+    $lines = explode("\n", trim($ai_data));
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if (strpos($line, '=') === false) continue;
+        list($key, $value) = explode('=', $line, 2);
+        $key = trim($key);
+        $value = trim($value);
+
+        switch ($key) {
+            case 'enabled':
+                $config['enabled'] = (intval($value) == 1);
+                break;
+            case 'provider':
+                $config['provider'] = $value;
+                break;
+            case 'openai_api_key':
+                $config['openai_api_key'] = $value;
+                break;
+            case 'openrouter_api_key':
+                $config['openrouter_api_key'] = $value;
+                break;
+            case 'ollama_api_key':
+                $config['ollama_api_key'] = $value;
+                break;
+            case 'custom_api_key':
+                $config['custom_api_key'] = $value;
+                break;
+            case 'model':
+                $config['model'] = $value;
+                break;
+            case 'custom_endpoint':
+                $config['custom_endpoint'] = $value;
+                break;
+            case 'idle_timeout':
+                $config['idle_timeout'] = intval($value);
+                break;
+            case 'system_prompt':
+                $config['system_prompt'] = $value;
+                break;
+            case 'tools_enabled':
+                $config['tools_enabled'] = (intval($value) == 1);
+                break;
+            case 'allow_generic_privileged_command':
+                $config['allow_generic_privileged_command'] = (intval($value) == 1);
+                break;
+            case 'priv_tools_available':
+                $items = preg_split('/[,&;]/', $value);
+                $config['priv_tools_available'] = array_values(array_filter(array_map('trim', $items), function ($item) {
+                    return $item !== '';
+                }));
+                break;
+            }
+        }
+
+    // Send BYE
+    fwrite($fp, "BYE\n");
+    fclose($fp);
+
+    echo json_encode($config);
+    exit(0);
+
+} catch (Exception $e) {
+    error_out("Exception: " . $e->getMessage());
+    exit(2);
+}

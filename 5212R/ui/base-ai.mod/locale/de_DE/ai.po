@@ -1,0 +1,234 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"PO-Revision-Date: 2026-05-14 00:00+0000\n"
+"Last-Translator: Michael Stauber <mstauber@blueonyx.it>\n"
+"Language-Team: Team blueonyx\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+# Menu items
+msgid "ai"
+msgstr "KI-Assistent"
+
+msgid "aiDescription"
+msgstr "KI-gestützter Serverassistent für Loganalyse und Systemverwaltung."
+
+# Chat
+msgid "chat_title"
+msgstr "KI-Assistent"
+
+msgid "chat_welcome"
+msgstr "Willkommen beim KI-Assistenten. Ich kann bei der Loganalyse, dem Systemstatus und der Serververwaltung helfen. Was möchtest du wissen?"
+
+msgid "chat_placeholder"
+msgstr "Gib hier deine Frage ein..."
+
+msgid "chat_send"
+msgstr "Senden"
+
+msgid "chat_typing"
+msgstr "Die KI denkt nach..."
+
+msgid "chat_no_response"
+msgstr "Keine Antwort vom KI-Dienst erhalten. Bitte prüfe die KI-Einstellungen."
+
+msgid "chat_connection_error"
+msgstr "Keine Verbindung zum KI-Dienst. Bitte prüfen, ob der Dienst läuft und korrekt konfiguriert ist."
+
+# Settings
+msgid "settings_title"
+msgstr "KI-Einstellungen"
+
+msgid "settings_save"
+msgstr "Einstellungen speichern"
+
+msgid "save_success"
+msgstr "Die KI-Einstellungen wurden erfolgreich gespeichert."
+
+msgid "save_error"
+msgstr "Das Speichern der KI-Einstellungen ist fehlgeschlagen. Bitte erneut versuchen."
+
+msgid "DIVIDER_PROVIDER"
+msgstr "KI-Provider-Konfiguration"
+
+msgid "enabled"
+msgstr "KI-Assistent aktivieren"
+
+msgid "enabled_help"
+msgstr "Den KI-Assistentendienst aktivieren oder deaktivieren. Wenn deaktiviert, liefern Chat- und API-Endpunkte einen Dienst-nicht-verfügbar-Fehler."
+
+msgid "provider"
+msgstr "KI-Provider"
+
+msgid "provider_help"
+msgstr "Den zu verwendenden KI-Provider auswählen. OpenAI, OpenRouter oder einen benutzerdefinierten OpenAI-kompatiblen Endpunkt."
+
+msgid "model"
+msgstr "Modellname"
+
+msgid "model_help"
+msgstr "Die zu verwendende Modellkennung (z. B. gpt-4, claude-3-opus oder ein von deinem Provider unterstützter benutzerdefinierter Modellname)."
+
+msgid "custom_endpoint"
+msgstr "API-Endpunkt"
+
+msgid "custom_endpoint_help"
+msgstr "Die URL des API-Endpunkts. Für OpenAI: https://api.openai.com/v1. Für OpenRouter: https://openrouter.ai/api/v1. Für benutzerdefinierte Provider den Endpunkt angeben."
+
+msgid "idle_timeout"
+msgstr "Leerlauf-Timeout (Minuten)"
+
+msgid "idle_timeout_help"
+msgstr "Wie lange der KI-Backend-Dienst nach der letzten Anfrage weiterläuft, bevor er zum Sparen von Ressourcen beendet wird."
+
+msgid "DIVIDER_PROMPT"
+msgstr "System-Prompt"
+
+msgid "system_prompt"
+msgstr "System-Prompt"
+
+msgid "system_prompt_help"
+msgstr "Der System-Prompt, der das Verhalten des KI-Assistenten, die verfügbaren Tools und Einschränkungen definiert. Dieser wird mit jeder Anfrage an den KI-Provider gesendet."
+
+# Error messages
+msgid "must_enable_service"
+msgstr "Der KI-Assistentendienst ist derzeit deaktiviert. Bitte aktiviere ihn in den KI-Einstellungen, um den Chat zu verwenden."
+
+msgid "service_unavailable"
+msgstr "Der KI-Dienst ist derzeit nicht verfügbar. Bitte prüfe die KI-Einstellungsseite, um sicherzustellen, dass der Dienst aktiviert und korrekt konfiguriert ist."
+
+msgid "invalid_session"
+msgstr "Ungültige oder abgelaufene KI-Sitzung. Bitte starte eine neue Unterhaltung."
+
+msgid "provider_error"
+msgstr "Der KI-Provider hat einen Fehler zurückgegeben. Bitte prüfe deinen API-Schlüssel und die Modellkonfiguration."
+
+msgid "rate_limited"
+msgstr "Zu viele Anfragen. Bitte warte einen Moment, bevor du eine weitere Nachricht sendest."
+
+msgid "function_not_found"
+msgstr "Die angeforderte KI-Funktion existiert nicht."
+
+msgid "chat_html"
+msgstr ""
+
+msgid "chat_html_help"
+msgstr ""
+
+msgid "provider_openai"
+msgstr "OpenAI"
+
+msgid "provider_openrouter"
+msgstr "Openrouter"
+
+msgid "provider_ollama"
+msgstr "Ollama Cloud"
+
+msgid "provider_anthropic"
+msgstr "Anthropic"
+
+msgid "provider_custom"
+msgstr "Custom Provider"
+
+msgid "provider_local"
+msgstr "Local Provider"
+
+####
+
+msgid "DIVIDER_API_KEYS"
+msgstr "API-Schlüssel des Providers"
+
+msgid "openai_api_key"
+msgstr "OpenAI-API-Schlüssel"
+
+msgid "openai_api_key_help"
+msgstr "Der API-Schlüssel für den ausgewählten Provider. Leer lassen, um den vorhandenen Schlüssel beizubehalten."
+
+msgid "openrouter_api_key"
+msgstr "OpenRouter-API-Schlüssel"
+
+msgid "openrouter_api_key_help"
+msgstr "Der API-Schlüssel für den ausgewählten Provider. Leer lassen, um den vorhandenen Schlüssel beizubehalten."
+
+msgid "ollama_api_key"
+msgstr "Ollama-Cloud-API-Schlüssel"
+
+msgid "ollama_api_key_help"
+msgstr "Der API-Schlüssel für den ausgewählten Provider. Leer lassen, um den vorhandenen Schlüssel beizubehalten."
+
+msgid "custom_api_key"
+msgstr "Benutzerdefinierter API-Schlüssel"
+
+msgid "custom_api_key_help"
+msgstr "Der API-Schlüssel für den ausgewählten Provider. Leer lassen, um den vorhandenen Schlüssel beizubehalten."
+
+msgid "EXEC_DIVIDER_PROMPT"
+msgstr "Generischer privilegierter Befehl (Erweitert)"
+
+msgid "priv_tools_available"
+msgstr "Whitelist für Wrapper-Skripte"
+
+msgid "priv_tools_available_help"
+msgstr "Nur freigegebene Wrapper-Skripte. Der Assistent darf Befehle aus dieser Liste ausführen, wenn generische privilegierte Befehle aktiviert sind."
+
+msgid "tools_enabled"
+msgstr "KI-Tools aktiviert"
+
+msgid "tools_enabled_help"
+msgstr "Dem Assistenten die Verwendung der konfigurierten KI-Tools erlauben."
+
+msgid "allow_generic_privileged_command"
+msgstr "Generische privilegierte Befehle aktivieren"
+
+msgid "allow_generic_privileged_command_help"
+msgstr "Erweiterte Option. Dem Assistenten erlauben, das generische privilegierte Befehls-Tool mit der untenstehenden Wrapper-Whitelist zu verwenden."
+
+msgid "no_key_stored"
+msgstr "Kein Schlüssel gespeichert"
+
+msgid "key_stored"
+msgstr "Gespeichert: ****"
+
+msgid "exit_fullscreen"
+msgstr "Vollbild beenden"
+
+msgid "read_only_tools_enabled"
+msgstr "Nur-Lese-Tools aktiviert"
+
+msgid "read_only_tools_enabled_help"
+msgstr "Dem Assistenten die Verwendung sicherer Nur-Lese-Tools für Logs, Dateien, Verzeichnislisten, Suche und Prüfsummen erlauben."
+
+msgid "diagnostics_tools_enabled"
+msgstr "Diagnose-Tools aktiviert"
+
+msgid "diagnostics_tools_enabled_help"
+msgstr "Dem Assistenten die Verwendung von Systeminformations-Tools wie uname, Dienststatus und Journal-Abfragen erlauben."
+
+msgid "actions_tools_enabled"
+msgstr "Aktions-Tools aktiviert"
+
+msgid "actions_tools_enabled_help"
+msgstr "Dem Assistenten die Verwendung bestätigungspflichtiger Aktions-Tools wie Dienstneustarts und Dateischreibvorgänge erlauben."
+
+msgid "no_models_available"
+msgstr "Keine Modelle verfügbar"
+
+msgid "local_provider_status"
+msgstr "Local inference status"
+
+msgid "local_provider_status_ok"
+msgstr "Local inference is available. CPU backend:"
+
+msgid "local_provider_unavailable"
+msgstr "Local inference cannot be enabled:"
+
+msgid "local_provider_unavailable_short"
+msgstr "Unavailable"
+
+msgid "local_provider_unknown_error"
+msgstr "The capability check did not report a reason."
+
+msgid "no_provider_specified"
+msgstr "Kein Provider angegeben"

@@ -1,0 +1,166 @@
+#!/bin/bash
+#
+# ai-search-logs -- Search common admin logs under /var/log/ safely.
+#
+# Supports plain text and gzip-compressed rotated logs. The wrapper is used
+# via sudo so the AI service can inspect logs without getting stuck on
+# password prompts or sudoers command matching quirks.
+#
+set -e
+
+PATH=/bin:/usr/bin:/usr/local/bin
+
+usage() {
+    echo "Usage: $(basename \"$0\") --pattern PATTERN [--context N] [--ignore-case] [--max-matches N] <file> [file...]" >&2
+    exit 1
+}
+
+PATTERN=""
+CONTEXT="2"
+IGNORE_CASE="0"
+MAX_MATCHES="100"
+
+FILES=()
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --pattern)
+            shift
+            [ $# -gt 0 ] || usage
+            PATTERN="$1"
+            ;;
+        --context)
+            shift
+            [ $# -gt 0 ] || usage
+            CONTEXT="$1"
+            ;;
+        --ignore-case)
+            IGNORE_CASE="1"
+            ;;
+        --max-matches)
+            shift
+            [ $# -gt 0 ] || usage
+            MAX_MATCHES="$1"
+            ;;
+        --)
+            shift
+            while [ $# -gt 0 ]; do
+                FILES+=("$1")
+                shift
+            done
+            break
+            ;;
+        *)
+            FILES+=("$1")
+            ;;
+    esac
+    shift
+done
+
+if [ -z "$PATTERN" ]; then
+    echo "ERROR: --pattern is required" >&2
+    usage
+fi
+
+case "$CONTEXT" in
+    ''|*[!0-9]*)
+        echo "ERROR: --context must be an integer" >&2
+        exit 1
+        ;;
+esac
+
+case "$MAX_MATCHES" in
+    ''|*[!0-9]*)
+        echo "ERROR: --max-matches must be an integer" >&2
+        exit 1
+        ;;
+esac
+
+if [ ${#FILES[@]} -eq 0 ]; then
+    echo "ERROR: at least one log file is required" >&2
+    exit 1
+fi
+
+FOUND=0
+MATCH_COUNT=0
+
+NOISE_REGEX='sudo\[[0-9]+\]: pam_unix\(sudo:|sudo\[[0-9]+\]: .*COMMAND=/home/ai/wrappers/ai-|sudo\[[0-9]+\]: blueonyx_ai :|sudo\[[0-9]+\]: root : \(command continued\)|sudo\[[0-9]+\]: pam_unix\(sudo:session\): session (opened|closed) for user root|ccewrap\[[0-9]+\]: running \(/bin/(cat|grep)\)'
+
+run_search() {
+    local cmd=("$@")
+    local output
+    set +e
+    output="$("${cmd[@]}" 2>/dev/null)"
+    rc=$?
+    set -e
+    if [ $rc -eq 0 ] && [ -n "$output" ]; then
+        filtered="$(printf '%s\n' "$output" | grep -Ev "$NOISE_REGEX" | sed '/^--$/d' || true)"
+        if [ -n "$filtered" ]; then
+            FOUND=1
+            printf '%s\n' "$filtered"
+            MATCH_COUNT=$((MATCH_COUNT + 1))
+        fi
+    fi
+}
+
+for file in "${FILES[@]}"; do
+    [ -e "$file" ] || continue
+    if [ "$MATCH_COUNT" -ge "$MAX_MATCHES" ]; then
+        break
+    fi
+
+    if [ "$IGNORE_CASE" = "1" ]; then
+        if [[ "$file" == *.gz ]]; then
+            run_search zgrep -h -m "$MAX_MATCHES" -E -i -C "$CONTEXT" "$PATTERN" "$file"
+        else
+            run_search grep -h -m "$MAX_MATCHES" -E -i -C "$CONTEXT" "$PATTERN" "$file"
+        fi
+    else
+        if [[ "$file" == *.gz ]]; then
+            run_search zgrep -h -m "$MAX_MATCHES" -E -C "$CONTEXT" "$PATTERN" "$file"
+        else
+            run_search grep -h -m "$MAX_MATCHES" -E -C "$CONTEXT" "$PATTERN" "$file"
+        fi
+    fi
+done
+
+if [ "$FOUND" -eq 0 ]; then
+    exit 1
+fi
+
+exit 0
+
+# 
+# Copyright (c) 2008-2026 Michael Stauber, SOLARSPEED.NET
+# Copyright (c) 2008-2026 Team BlueOnyx, BLUEONYX.IT
+# All Rights Reserved.
+# 
+# 1. Redistributions of source code must retain the above copyright 
+#    notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+#    notice, this list of conditions and the following disclaimer in 
+#    the documentation and/or other materials provided with the 
+#    distribution.
+# 
+# 3. Neither the name of the copyright holder nor the names of its 
+#    contributors may be used to endorse or promote products derived 
+#    from this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
+# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+# POSSIBILITY OF SUCH DAMAGE.
+# 
+# You acknowledge that this software is not designed or intended for 
+# use in the design, construction, operation or maintenance of any 
+# nuclear facility.
+# 

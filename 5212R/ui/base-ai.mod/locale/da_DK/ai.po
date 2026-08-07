@@ -1,0 +1,234 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"PO-Revision-Date: 2026-05-14 00:00+0000\n"
+"Last-Translator: Michael Stauber <mstauber@blueonyx.it>\n"
+"Language-Team: Team blueonyx\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+# Menu items
+msgid "ai"
+msgstr "AI-assistent"
+
+msgid "aiDescription"
+msgstr "AI-drevet serverassistent til loganalyse og systemadministration."
+
+# Chat
+msgid "chat_title"
+msgstr "AI-assistent"
+
+msgid "chat_welcome"
+msgstr "Velkommen til AI-assistenten. Jeg kan hjælpe med loganalyse, systemstatus og serveradministration. Hvad vil du vide?"
+
+msgid "chat_placeholder"
+msgstr "Skriv dit spørgsmål her..."
+
+msgid "chat_send"
+msgstr "Send"
+
+msgid "chat_typing"
+msgstr "AI tænker..."
+
+msgid "chat_no_response"
+msgstr "Ingen svar modtaget fra AI-tjenesten. Kontroller AI-indstillingerne."
+
+msgid "chat_connection_error"
+msgstr "Kunne ikke oprette forbindelse til AI-tjenesten. Kontroller, at tjenesten kører og er korrekt konfigureret."
+
+# Settings
+msgid "settings_title"
+msgstr "AI-indstillinger"
+
+msgid "settings_save"
+msgstr "Gem indstillinger"
+
+msgid "save_success"
+msgstr "AI-indstillingerne er blevet gemt."
+
+msgid "save_error"
+msgstr "Kunne ikke gemme AI-indstillingerne. Prøv igen."
+
+msgid "DIVIDER_PROVIDER"
+msgstr "AI-udbyderkonfiguration"
+
+msgid "enabled"
+msgstr "Aktiver AI-assistent"
+
+msgid "enabled_help"
+msgstr "Slå AI-assistenttjenesten til eller fra. Når den er slået fra, returnerer chat- og API-endepunkter en fejl om, at tjenesten ikke er tilgængelig."
+
+msgid "provider"
+msgstr "AI-udbyder"
+
+msgid "provider_help"
+msgstr "Vælg den AI-udbyder, der skal bruges. OpenAI, OpenRouter eller et brugerdefineret OpenAI-kompatibelt endepunkt."
+
+msgid "model"
+msgstr "Modelnavn"
+
+msgid "model_help"
+msgstr "Modelidentifikatoren der skal bruges (f.eks. gpt-4, claude-3-opus eller et brugerdefineret modelnavn understøttet af din udbyder)."
+
+msgid "custom_endpoint"
+msgstr "API-endepunkt"
+
+msgid "custom_endpoint_help"
+msgstr "URL’en til API-endepunktet. For OpenAI: https://api.openai.com/v1. For OpenRouter: https://openrouter.ai/api/v1. For brugerdefinerede udbydere skal du angive dit endepunkt."
+
+msgid "idle_timeout"
+msgstr "Inaktivitets-timeout (minutter)"
+
+msgid "idle_timeout_help"
+msgstr "Hvor længe AI-backendtjenesten fortsætter med at køre efter den sidste anmodning, før den lukkes ned for at spare ressourcer."
+
+msgid "DIVIDER_PROMPT"
+msgstr "Systemprompt"
+
+msgid "system_prompt"
+msgstr "Systemprompt"
+
+msgid "system_prompt_help"
+msgstr "Systemprompten, der definerer AI-assistentens adfærd, tilgængelige værktøjer og begrænsninger. Den sendes med hver anmodning til AI-udbyderen."
+
+# Error messages
+msgid "must_enable_service"
+msgstr "AI-assistenttjenesten er i øjeblikket deaktiveret. Aktivér den i AI-indstillingerne for at bruge chatten."
+
+msgid "service_unavailable"
+msgstr "AI-tjenesten er i øjeblikket ikke tilgængelig. Kontroller AI-indstillingssiden for at sikre, at tjenesten er aktiveret og korrekt konfigureret."
+
+msgid "invalid_session"
+msgstr "Ugyldig eller udløbet AI-session. Start venligst en ny samtale."
+
+msgid "provider_error"
+msgstr "AI-udbyderen returnerede en fejl. Kontroller din API-nøgle og modelkonfiguration."
+
+msgid "rate_limited"
+msgstr "For mange anmodninger. Vent et øjeblik, før du sender en ny besked."
+
+msgid "function_not_found"
+msgstr "Den anmodede AI-funktion findes ikke."
+
+msgid "chat_html"
+msgstr ""
+
+msgid "chat_html_help"
+msgstr ""
+
+msgid "provider_openai"
+msgstr "OpenAI"
+
+msgid "provider_openrouter"
+msgstr "Openrouter"
+
+msgid "provider_ollama"
+msgstr "Ollama Cloud"
+
+msgid "provider_anthropic"
+msgstr "Anthropic"
+
+msgid "provider_custom"
+msgstr "Custom Provider"
+
+msgid "provider_local"
+msgstr "Local Provider"
+
+####
+
+msgid "DIVIDER_API_KEYS"
+msgstr "Udbyderens API-nøgler"
+
+msgid "openai_api_key"
+msgstr "OpenAI API-nøgle"
+
+msgid "openai_api_key_help"
+msgstr "API-nøglen til den valgte udbyder. Lad feltet være tomt for at beholde den eksisterende nøgle."
+
+msgid "openrouter_api_key"
+msgstr "OpenRouter API-nøgle"
+
+msgid "openrouter_api_key_help"
+msgstr "API-nøglen til den valgte udbyder. Lad feltet være tomt for at beholde den eksisterende nøgle."
+
+msgid "ollama_api_key"
+msgstr "Ollama Cloud API-nøgle"
+
+msgid "ollama_api_key_help"
+msgstr "API-nøglen til den valgte udbyder. Lad feltet være tomt for at beholde den eksisterende nøgle."
+
+msgid "custom_api_key"
+msgstr "Brugerdefineret API-nøgle"
+
+msgid "custom_api_key_help"
+msgstr "API-nøglen til den valgte udbyder. Lad feltet være tomt for at beholde den eksisterende nøgle."
+
+msgid "EXEC_DIVIDER_PROMPT"
+msgstr "Generisk privilegeret kommando (Avanceret)"
+
+msgid "priv_tools_available"
+msgstr "Whitelist for wrapper-scripts"
+
+msgid "priv_tools_available_help"
+msgstr "Kun godkendte wrapper-scripts. Assistenten må køre kommandoer fra denne liste, når generiske privilegerede kommandoer er aktiveret."
+
+msgid "tools_enabled"
+msgstr "AI-værktøjer aktiveret"
+
+msgid "tools_enabled_help"
+msgstr "Tillad assistenten at bruge de konfigurerede AI-værktøjer."
+
+msgid "allow_generic_privileged_command"
+msgstr "Aktiver generiske privilegerede kommandoer"
+
+msgid "allow_generic_privileged_command_help"
+msgstr "Avanceret indstilling. Tillad assistenten at bruge det generiske privilegerede kommandoværktøj med wrapper-whitelist nedenfor."
+
+msgid "no_key_stored"
+msgstr "Ingen nøgle gemt"
+
+msgid "key_stored"
+msgstr "Gemt: ****"
+
+msgid "exit_fullscreen"
+msgstr "Forlad fuldskærm"
+
+msgid "read_only_tools_enabled"
+msgstr "Skrivebeskyttede værktøjer aktiveret"
+
+msgid "read_only_tools_enabled_help"
+msgstr "Tillad assistenten at bruge sikre skrivebeskyttede værktøjer til logs, filer, kataloglister, søgning og hash-kontrol."
+
+msgid "diagnostics_tools_enabled"
+msgstr "Diagnoseværktøjer aktiveret"
+
+msgid "diagnostics_tools_enabled_help"
+msgstr "Tillad assistenten at bruge systeminformationsværktøjer som uname, tjenestestatus og journalforespørgsler."
+
+msgid "actions_tools_enabled"
+msgstr "Handlingsværktøjer aktiveret"
+
+msgid "actions_tools_enabled_help"
+msgstr "Tillad assistenten at bruge handlingværktøjer med bekræftelse, såsom genstart af tjenester og skrivning af filer."
+
+msgid "no_models_available"
+msgstr "Ingen modeller tilgængelige"
+
+msgid "local_provider_status"
+msgstr "Local inference status"
+
+msgid "local_provider_status_ok"
+msgstr "Local inference is available. CPU backend:"
+
+msgid "local_provider_unavailable"
+msgstr "Local inference cannot be enabled:"
+
+msgid "local_provider_unavailable_short"
+msgstr "Unavailable"
+
+msgid "local_provider_unknown_error"
+msgstr "The capability check did not report a reason."
+
+msgid "no_provider_specified"
+msgstr "Ingen udbyder angivet"

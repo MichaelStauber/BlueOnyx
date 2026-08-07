@@ -1,0 +1,234 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"PO-Revision-Date: 2026-05-14 00:00+0000\n"
+"Last-Translator: Michael Stauber <mstauber@blueonyx.it>\n"
+"Language-Team: Team blueonyx\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+# Menu items
+msgid "ai"
+msgstr "AI Assistant"
+
+msgid "aiDescription"
+msgstr "AI-powered server assistant for log analysis and system management."
+
+# Chat
+msgid "chat_title"
+msgstr "AI Assistant"
+
+msgid "chat_welcome"
+msgstr "Welcome to the AI Assistant. I can help you analyze logs, check system status, and manage your server. What would you like to know?"
+
+msgid "chat_placeholder"
+msgstr "Type your question here..."
+
+msgid "chat_send"
+msgstr "Send"
+
+msgid "chat_typing"
+msgstr "AI is thinking..."
+
+msgid "chat_no_response"
+msgstr "No response received from the AI service. Please check the AI settings."
+
+msgid "chat_connection_error"
+msgstr "Could not connect to the AI service. Please check that the service is running and configured correctly."
+
+# Settings
+msgid "settings_title"
+msgstr "AI Settings"
+
+msgid "settings_save"
+msgstr "Save Settings"
+
+msgid "save_success"
+msgstr "AI settings have been saved successfully."
+
+msgid "save_error"
+msgstr "Failed to save AI settings. Please try again."
+
+msgid "DIVIDER_PROVIDER"
+msgstr "AI Provider Configuration"
+
+msgid "enabled"
+msgstr "Enable AI Assistant"
+
+msgid "enabled_help"
+msgstr "Enable or disable the AI assistant service. When disabled, chat and API endpoints return a service unavailable error."
+
+msgid "provider"
+msgstr "AI Provider"
+
+msgid "provider_help"
+msgstr "Select the AI provider to use. OpenAI, OpenRouter, or a custom OpenAI-compatible endpoint."
+
+msgid "model"
+msgstr "Model Name"
+
+msgid "model_help"
+msgstr "The model identifier to use (e.g., gpt-4, claude-3-opus, or a custom model name supported by your provider)."
+
+msgid "custom_endpoint"
+msgstr "API Endpoint"
+
+msgid "custom_endpoint_help"
+msgstr "The API endpoint URL. For OpenAI: https://api.openai.com/v1. For OpenRouter: https://openrouter.ai/api/v1. For custom providers, enter your endpoint."
+
+msgid "idle_timeout"
+msgstr "Idle Timeout (minutes)"
+
+msgid "idle_timeout_help"
+msgstr "How long the AI backend service stays running after the last request before shutting down to save resources."
+
+msgid "DIVIDER_PROMPT"
+msgstr "System Prompt"
+
+msgid "system_prompt"
+msgstr "System Prompt"
+
+msgid "system_prompt_help"
+msgstr "The system prompt that defines the AI assistant's behavior, available tools, and constraints. This is sent with every request to the AI provider."
+
+# Error messages
+msgid "must_enable_service"
+msgstr "The AI Assistant service is currently disabled. Please enable it in the AI Settings to use the chat."
+
+msgid "service_unavailable"
+msgstr "The AI service is currently unavailable. Please check the AI settings page to ensure the service is enabled and configured."
+
+msgid "invalid_session"
+msgstr "Invalid or expired AI session. Please start a new conversation."
+
+msgid "provider_error"
+msgstr "The AI provider returned an error. Please check your API key and model configuration."
+
+msgid "rate_limited"
+msgstr "Too many requests. Please wait a moment before sending another message."
+
+msgid "function_not_found"
+msgstr "The requested AI function does not exist."
+
+msgid "chat_html"
+msgstr ""
+
+msgid "chat_html_help"
+msgstr ""
+
+msgid "provider_openai"
+msgstr "OpenAI"
+
+msgid "provider_openrouter"
+msgstr "Openrouter"
+
+msgid "provider_ollama"
+msgstr "Ollama Cloud"
+
+msgid "provider_anthropic"
+msgstr "Anthropic"
+
+msgid "provider_custom"
+msgstr "Custom Provider"
+
+msgid "provider_local"
+msgstr "Local Provider"
+
+####
+
+msgid "DIVIDER_API_KEYS"
+msgstr "Provider API Keys"
+
+msgid "openai_api_key"
+msgstr "OpenAI API Key"
+
+msgid "openai_api_key_help"
+msgstr "The API key for the selected provider. Leave empty to keep the existing key."
+
+msgid "openrouter_api_key"
+msgstr "OpenRouter API Key"
+
+msgid "openrouter_api_key_help"
+msgstr "The API key for the selected provider. Leave empty to keep the existing key."
+
+msgid "ollama_api_key"
+msgstr "Ollama Cloud API Key"
+
+msgid "ollama_api_key_help"
+msgstr "The API key for the selected provider. Leave empty to keep the existing key."
+
+msgid "custom_api_key"
+msgstr "Custom API Key"
+
+msgid "custom_api_key_help"
+msgstr "The API key for the selected provider. Leave empty to keep the existing key."
+
+msgid "EXEC_DIVIDER_PROMPT"
+msgstr "Generic Privileged Command (Advanced)"
+
+msgid "priv_tools_available"
+msgstr "Wrapper Script Whitelist"
+
+msgid "priv_tools_available_help"
+msgstr "Approved wrapper scripts only. The assistant may execute commands from this list when generic privileged commands are enabled."
+
+msgid "tools_enabled"
+msgstr "AI Tools Enabled"
+
+msgid "tools_enabled_help"
+msgstr "Allow the assistant to use the configured AI tools."
+
+msgid "allow_generic_privileged_command"
+msgstr "Enable Generic Privileged Commands"
+
+msgid "allow_generic_privileged_command_help"
+msgstr "Advanced option. Allow the assistant to use the generic privileged command tool with the wrapper whitelist below."
+
+msgid "no_key_stored"
+msgstr "No key stored"
+
+msgid "key_stored"
+msgstr "Stored: ****"
+
+msgid "exit_fullscreen"
+msgstr "Exit fullscreen"
+
+msgid "read_only_tools_enabled"
+msgstr "Read Only tools enabled"
+
+msgid "read_only_tools_enabled_help"
+msgstr "Allow the assistant to use safe read-only tools for logs, files, directory listings, search, and hash checks."
+
+msgid "diagnostics_tools_enabled"
+msgstr "Diagnostics tools enabled"
+
+msgid "diagnostics_tools_enabled_help"
+msgstr "Allow the assistant to use system information tools such as uname, service status, and journal queries."
+
+msgid "actions_tools_enabled"
+msgstr "Actions tools enabled"
+
+msgid "actions_tools_enabled_help"
+msgstr "Allow confirmation-gated action tools such as service restarts and file writes."
+
+msgid "no_models_available"
+msgstr "No models available"
+
+msgid "local_provider_status"
+msgstr "Local inference status"
+
+msgid "local_provider_status_ok"
+msgstr "Local inference is available. CPU backend:"
+
+msgid "local_provider_unavailable"
+msgstr "Local inference cannot be enabled:"
+
+msgid "local_provider_unavailable_short"
+msgstr "Unavailable"
+
+msgid "local_provider_unknown_error"
+msgstr "The capability check did not report a reason."
+
+msgid "no_provider_specified"
+msgstr "No provider specified"

@@ -1,0 +1,214 @@
+# configuration bits for mod_rpmize
+# syntax:
+# <begin [x]section>
+# <end [x]section>
+#
+# x an be $ for a string or % for a hash.
+# if a hash is being used, you can add sub-sections with
+# <begin sub-section>
+# <end sub-section>
+
+
+<begin $DESCRIPTION>
+%package [LABEL]
+Group: CCE/[VENDOR]
+Summary: [LABEL] for [VENDOR]-[SERVICE].
+
+[AUTOFILL]
+[BUILDARCH]
+[PROVIDES]
+
+%description [LABEL]
+The [VENDOR]-[SERVICE]-[LABEL] package contains the [LABEL]
+information for [VENDOR]-[SERVICE].
+
+<end $DESCRIPTION>
+
+<begin %PREP>
+<end %PREP>
+
+<begin %SETUP>
+<end %SETUP>
+
+<begin %BUILD>
+<end %BUILD>
+
+<begin %INSTALL>
+<end %INSTALL>
+
+<begin %FILES>
+<begin HEADER>
+%files [LABEL]
+%defattr(-,root,root)
+<end HEADER>
+
+<begin capstone>
+%{RootDir}/capstone/%{Vendor}-%{Service}.cap
+[AUTOFILL]
+
+<end capstone>
+
+<begin glue>
+[AUTOFILL]
+%attr(0700,-,-) /usr/sausalito/sbin/ai_helper.pl
+%attr(0644,-,-) /etc/sudoers.d/blueonyx_ai
+<end glue>
+
+<begin ui>
+[AUTOFILL]
+
+<end ui>
+
+<begin locale>
+[AUTOFILL]
+
+<end locale>
+
+<!-- src section removed — handled by sub-RPM base-ai-core -->
+
+<end %FILES>
+
+<begin %POST-INSTALL>
+<begin HEADER>
+%post [LABEL]
+<end HEADER>
+
+<begin glue>
+# glue post-install
+
+# Restart CCEd if yumcce directory exists:
+if [ -d "/usr/sausalito/yumcce" ];then 
+	touch /usr/sausalito/yumcce/restart
+fi
+
+<end glue>
+<begin ui>
+# ui post-install
+# Create default locale symlinks
+if [ x"[DEFLOCALE]" != x ]; then
+	for dir in `find [CCEWEB] -type d`; do 
+		(cd $dir; 
+		if [ x"`ls *.htm[l].[DEFLOCALE] 2> /dev/null`" != x ]; then
+			for file in `ls *.htm[l].[DEFLOCALE]`; do
+				base=`basename $file .[DEFLOCALE]`
+				if [ ! -f $base ]; then
+					ln -s $file $base
+				fi
+			done
+		fi)
+	done
+fi
+
+<end ui>
+<begin locale>
+# locale post-install
+
+<end locale>
+<!-- src post-install removed — handled by sub-RPM base-ai-core -->
+<end %POST-INSTALL>
+
+<begin %POST-UNINSTALL>
+<begin HEADER>
+%postun [LABEL]
+<end HEADER>
+
+<begin glue>
+# glue post-uninstall
+
+<end glue>
+<begin ui>
+# ui post-uninstall
+
+<end ui>
+<begin locale>
+# locale post-uninstall
+
+<end locale>
+<!-- src post-uninstall removed — handled by sub-RPM base-ai-core -->
+<end %POST-UNINSTALL>
+
+<begin $CHANGELOG>
+
+* Fri Aug 07 2026 Michael Stauber <mstauber@solarspeed.net> 1.0.4-1
+- Consolidation. Source builds for 5210R, 5211R and 5212R from the same tree.
+
+* Fri Aug 07 2026 Michael Stauber <mstauber@solarspeed.net> 1.0.3-4
+- Synced the 5211R and 5212R module trees forward to the current 5210R
+  feature set, including the updated GUI, locales, base-ai-core service
+  changes, diagnostics, and llama.cpp packaging/build integration.
+- Fixed the AI settings page so remote providers such as Ollama Cloud no
+  longer show misleading local-provider availability warnings while the local
+  provider is not selected.
+
+* Fri Aug 07 2026 Michael Stauber <mstauber@solarspeed.net> 1.0.3-3
+- Hide the local inference status in the AI settings GUI unless the active
+  provider is the local llama.cpp backend.
+- Force remote model discovery on page load for non-local providers so the
+  model dropdown refreshes from the selected provider instead of showing only
+  the previously saved model value.
+
+* Sat Aug 01 2026 Michael Stauber <mstauber@solarspeed.net> 1.0.3-2
+- Added hardware and model capability reporting for the local llama.cpp
+  provider in the AI settings GUI.
+- Prevent enabling local inference when no compatible CPU backend or usable
+  local model is available, while leaving external providers selectable.
+- Added matching CCE-side capability enforcement so direct configuration
+  writes cannot bypass the GUI validation.
+- Changed the local llama lifecycle to on-demand startup and clean shutdown;
+  settings changes stop stale instances instead of loading the model.
+- Added localized local-provider status and error message keys for all
+  supported GUI locales.
+
+* Sun May 17 2026 Michael Stauber <mstauber@solarspeed.net> 1.0.3-1
+- AI startup now clears any stale sausalito-llama.service instance when a
+  non-local provider is selected, so local llama does not linger in the
+  background. This is now actually working.
+- GUI-to-AI transport now uses a CODB-stored service auth key
+  (`System.AI.service_api_key`) and sends it as `X-BlueOnyx-AI-Auth` to
+  guard `/chat` and `/function` against local loopback callers.
+
+* Sun May 17 2026 Michael Stauber <mstauber@solarspeed.net> 1.0.2-1
+- AI startup now clears any stale sausalito-llama.service instance when a
+  non-local provider is selected, so local llama does not linger in the
+  background.
+- UI and runtime provider handling were tightened up for OpenRouter,
+  Ollama Cloud, Anthropic, and local/custom Ollama discovery.
+- Added and refined AI GUI controls for tool groups, generic privileged
+  commands, log inspection, disk usage, mail stats, and diagnostics.
+- Chat UI now supports copy buttons, code block rendering, and fullscreen
+  toggle behavior.
+- Locale strings were updated across all supported languages.
+- GUI-to-AI transport now uses a CODB-stored service auth key
+  (`System.AI.service_api_key`) and sends it as `X-BlueOnyx-AI-Auth` to
+  guard `/chat` and `/function` against local loopback callers.
+
+* Sat May 16 2026 Michael Stauber <mstauber@solarspeed.net> 1.0.1-1
+- AI settings and runtime path were converted from a single shared 
+  api_key to provider-specific keys.
+- Extensive rewrite of Settings for better tool-chain usage.
+- Wrappers for tool-usage started. Tools now can handle logfiles,
+  disk space and usage to some degree, email statistics, failed logins
+  and other health related issues. Needs further work. Very basic
+  handling of generic BlueOnyx question handling was started.
+- Added locales for all supported languages.
+- Chat window can be maximized/minimized.
+- Copy-to-clipboard icon added to questions and answers.
+
+* Fri May 15 2026 Michael Stauber <mstauber@solarspeed.net> 1.0.0-3
+- Long batch of improvements, better llama build, toolchain integration
+  started. GUI improvements, Schema changes, Handler/Constructor updates.
+
+* Thu May 14 2026 Michael Stauber <mstauber@solarspeed.net> 1.0.0-2
+- Rewrote AiSettings.php to use uifc2 form fields (Boolean, MultiChoice,
+  TextField, Password, Integer) with proper input validation and Elmer
+  theming.
+- Fixed field name mismatch: 'endpoint' → 'custom_endpoint' to match CCE
+  schema (ai.schema). save() now reverse-maps MultiChoice labels back to
+  provider keys.
+- Added uifc2-compatible locale keys (DIVIDER_PROVIDER, DIVIDER_PROMPT,
+  provider_*, _help suffixes) to en_US/ai.po.
+
+* Sat May 09 2026 Michael Stauber <mstauber@solarspeed.net> 1.0.0-1
+- Initial build of BlueOnyx AI module.
+
+<end $CHANGELOG>

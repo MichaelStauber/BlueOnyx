@@ -1,0 +1,40 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2025-01-01 00:00+0000\n"
+"PO-Revision-Date: 2025-01-01 00:00+0000\n"
+"Last-Translator: Michael Stauber <mstauber@blueonyx.it>\n"
+"Language-Team: Team blueonyx\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "vendor"
+msgstr "BlueOnyx.it"
+
+msgid "blueonyx_it"
+msgstr "BlueOnyx.it"
+
+msgid "vendorTag"
+msgstr "BlueOnyx.it"
+
+msgid "name"
+msgstr "BlueOnyx AI Assistant"
+
+msgid "nameTag"
+msgstr "BlueOnyx AI Assistant"
+
+msgid "version"
+msgstr "XXX_MODULE_VERSION_XXX"
+
+msgid "shortDesc"
+msgstr "The BlueOnyx AI Assistant provides an AI chat interface for server diagnostics, log analysis, and admin assistance."
+
+msgid "longDesc"
+msgstr "The BlueOnyx AI Assistant lets administrators query the system through chat and use built-in tools for common support work. It integrates with local or external LLMs, supports service and log inspection, incident timelines, SSL  and PHP-FPM health checks, Vsite health evidence, web-owner checks, memory/disk/network diagnostics, and controlled privileged actions through BlueOnyx-specific wrappers and policy."
+
+msgid "copyright"
+msgstr "(c) 2026 by Solarspeed.net"
+
+msgid "license"
+msgstr "<pre>Copyright (c) 2026 Michael Stauber, SOLARSPEED.NET\nCopyright (c) 2026 Team BlueOnyx, BLUEONYX.IT\nAll Rights Reserved.\n\n1. Redistributions of source code must retain the above copyright \n   notice, this list of conditions and the following disclaimer.\n\n2. Redistributions in binary form must reproduce the above copyright \n   notice, this list of conditions and the following disclaimer in \n   the documentation and/or other materials provided with the \n   distribution.\n\n3. Neither the name of the copyright holder nor the names of its \n   contributors may be used to endorse or promote products derived \n   from this software without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \n\"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT \nLIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS \nFOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE \nCOPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, \nINCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, \nBUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; \nLOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER \nCAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT \nLIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN \nANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE \nPOSSIBILITY OF SUCH DAMAGE.\n\nYou acknowledge that this software is not designed or intended for \nuse in the design, construction, operation or maintenance of any \nnuclear facility.\n</pre>"

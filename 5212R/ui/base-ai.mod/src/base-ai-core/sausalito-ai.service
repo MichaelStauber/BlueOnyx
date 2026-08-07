@@ -1,0 +1,32 @@
+[Unit]
+Description=BlueOnyx AI Agent
+Documentation=man:systemd.service(5)
+# Socket activation starts us on first connection to 127.0.0.1:1972
+Requires=sausalito-ai.socket
+After=network.target
+
+[Service]
+Type=simple
+User=blueonyx_ai
+Group=blueonyx_ai
+WorkingDirectory=/home/ai
+Environment=HOME=/home/ai
+Environment=PYTHONUNBUFFERED=1
+Environment=XDG_CACHE_HOME=/home/ai/.cache
+Environment=TIKTOKEN_CACHE_DIR=/home/ai/.cache/tiktoken
+Environment=CUSTOM_TIKTOKEN_CACHE_DIR=/home/ai/.cache/tiktoken
+# Run pre-start repairs as root before dropping to blueonyx_ai.
+PermissionsStartOnly=yes
+# Repair AI runtime directory ownership before every start, without touching venv.
+ExecStartPre=/usr/bin/systemd-tmpfiles --create /usr/lib/tmpfiles.d/base-ai.conf
+ExecStartPre=/usr/bin/chown blueonyx_ai:blueonyx_ai /home/ai /home/ai/.cache /home/ai/.cache/tiktoken /home/ai/sessions /home/ai/logs /home/ai/wrappers /var/lib/sausalito/ai /var/lib/sausalito/ai/sessions
+# systemd passes the listening socket on stdin (fd 0) when activated
+StandardInput=socket
+ExecStart=/home/ai/venv/bin/python /home/ai/ai_service.py
+StandardOutput=journal
+StandardError=journal
+TimeoutStopSec=10
+# Idle timeout: service exits after inactivity, next connection wakes it via socket
+
+[Install]
+WantedBy=multi-user.target

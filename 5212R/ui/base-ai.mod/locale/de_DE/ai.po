@@ -158,6 +158,12 @@ msgstr "Ollama-Cloud-API-Schlüssel"
 msgid "ollama_api_key_help"
 msgstr "Der API-Schlüssel für den ausgewählten Provider. Leer lassen, um den vorhandenen Schlüssel beizubehalten."
 
+msgid "anthropic_api_key"
+msgstr "Anthropic-API-Schlüssel"
+
+msgid "anthropic_api_key_help"
+msgstr "Der API-Schlüssel für den ausgewählten Provider. Leer lassen, um den vorhandenen Schlüssel beizubehalten."
+
 msgid "custom_api_key"
 msgstr "Benutzerdefinierter API-Schlüssel"
 

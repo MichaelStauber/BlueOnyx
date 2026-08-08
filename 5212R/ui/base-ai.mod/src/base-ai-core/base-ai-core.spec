@@ -1,6 +1,6 @@
 Name:           base-ai-core
 Version:        1.0.8
-Release:        29%{?dist}
+Release:        31%{?dist}
 Summary:        BlueOnyx AI core service (Python agent with systemd socket activation)
 
 License:        SUN-modified-BSD
@@ -209,6 +209,26 @@ fi
 %systemd_postun_with_restart sausalito-ai.service
 
 %changelog
+* Sat Aug 08 2026 Michael Stauber <mstauber@solarspeed.net> 1.0.8-31
+- Tightened the webroot-integrity matcher so generic Vsite health checks are
+  no longer misrouted into compromise scanning.
+- Improved Vsite inventory responses for prompts such as "list sites and
+  domains" by preferring the richer grounded inventory format.
+- Reduced false positives in first-pass webroot compromise scans by skipping
+  obvious vendor/core library paths and using a summary view for broad
+  server-compromise checks.
+
+* Sat Aug 08 2026 Michael Stauber <mstauber@solarspeed.net> 1.0.8-30
+- Added proper Anthropic provider runtime support with a dedicated
+  anthropic_api_key path across the GUI, schema, config writers, and
+  LiteLLM wrapper.
+- Broadened deterministic Vsite/domain inventory matching so prompts such as
+  "list sites and domains" are handled by grounded helper output instead of
+  falling through to weak local-model completions.
+- Added an aggregate all-Vsite health path for unscoped Vsite health checks
+  and separated server-compromise suspicion questions from webroot-only
+  compromise scans.
+
 * Sat Aug 08 2026 Michael Stauber <mstauber@solarspeed.net> 1.0.8-29
 - Added a dedicated broad deterministic suspicion check for unscoped
   "anything suspicious?" style questions so the agent now runs a cross-domain

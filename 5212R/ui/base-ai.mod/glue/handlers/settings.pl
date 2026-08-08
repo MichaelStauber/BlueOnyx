@@ -67,6 +67,7 @@ sub write_ai_config {
             'openai_api_key' => '',
             'openrouter_api_key' => '',
             'ollama_api_key' => '',
+            'anthropic_api_key' => '',
             'custom_api_key' => '',
             'service_api_key' => '',
             'default_model' => '',
@@ -212,6 +213,7 @@ sub restart_runtime_services {
         changed_value($old_ai, $new_ai, 'openai_api_key') ||
         changed_value($old_ai, $new_ai, 'openrouter_api_key') ||
         changed_value($old_ai, $new_ai, 'ollama_api_key') ||
+        changed_value($old_ai, $new_ai, 'anthropic_api_key') ||
         changed_value($old_ai, $new_ai, 'custom_api_key');
     my $prompt_changed = changed_value($old_ai, $new_ai, 'system_prompt');
     my $tools_changed = changed_value($old_ai, $new_ai, 'tools_enabled');

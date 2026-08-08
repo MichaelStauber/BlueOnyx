@@ -62,6 +62,7 @@ if (!$ok) {
         'openai_api_key' => '',
         'openrouter_api_key' => '',
         'ollama_api_key' => '',
+        'anthropic_api_key' => '',
         'custom_api_key' => '',
         'service_api_key' => generate_service_api_key(),
         'default_model' => 'SmolLM2-360M-Instruct-Q4_K_M.gguf',

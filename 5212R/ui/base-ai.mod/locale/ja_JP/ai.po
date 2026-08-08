@@ -158,6 +158,12 @@ msgstr "Ollama Cloud APIキー"
 msgid "ollama_api_key_help"
 msgstr "選択したプロバイダのAPIキーです。既存のキーを保持するには空欄のままにしてください。"
 
+msgid "anthropic_api_key"
+msgstr "Anthropic APIキー"
+
+msgid "anthropic_api_key_help"
+msgstr "選択したプロバイダのAPIキーです。既存のキーを保持するには空欄のままにしてください。"
+
 msgid "custom_api_key"
 msgstr "カスタムAPIキー"
 

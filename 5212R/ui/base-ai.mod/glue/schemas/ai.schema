@@ -48,6 +48,13 @@
         writeacl="ruleCapable(adminUser)"
     />
     <property
+        name="anthropic_api_key"
+        type="scalar"
+        default=""
+        optional="true"
+        writeacl="ruleCapable(adminUser)"
+    />
+    <property
         name="custom_api_key"
         type="scalar"
         default=""

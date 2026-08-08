@@ -34,6 +34,7 @@ class ExternalProvider:
         openai_api_key (str): OpenAI API key
         openrouter_api_key (str): OpenRouter API key
         ollama_api_key (str): Ollama API key
+        anthropic_api_key (str): Anthropic API key
         custom_api_key (str): Custom endpoint API key
         model (str): Model name (e.g. "gpt-4", "claude-3-opus-20240229")
         endpoint (str, optional): Custom API endpoint URL
@@ -97,6 +98,13 @@ class ExternalProvider:
                 self.endpoint,
                 self.model,
             )
+        elif self.name == "anthropic":
+            self.model = f"anthropic/{self.model}"
+            logger.info(
+                "Anthropic provider: using model=%s endpoint=%s",
+                self.model,
+                self.endpoint or "default",
+            )
         elif self.name == "custom":
             # Custom Provider may point at a local Ollama instance.
             # If the endpoint looks Ollama-like, tell litellm explicitly.
@@ -125,6 +133,7 @@ class ExternalProvider:
             "openai": "openai_api_key",
             "openrouter": "openrouter_api_key",
             "ollama": "ollama_api_key",
+            "anthropic": "anthropic_api_key",
             "custom": "custom_api_key",
         }
 
@@ -132,7 +141,15 @@ class ExternalProvider:
         if not provider_key:
             return ""
 
-        return str(config.get(provider_key, "") or "").strip()
+        value = str(config.get(provider_key, "") or "").strip()
+        if value:
+            return value
+
+        provider_name = str(config.get("provider", "openai") or "openai").strip().lower()
+        if provider_name == "anthropic":
+            return str(config.get("custom_api_key", "") or "").strip()
+
+        return value
 
     async def chat(
         self,

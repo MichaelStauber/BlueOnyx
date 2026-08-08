@@ -158,6 +158,12 @@ msgstr "Ollama Cloud API Key"
 msgid "ollama_api_key_help"
 msgstr "The API key for the selected provider. Leave empty to keep the existing key."
 
+msgid "anthropic_api_key"
+msgstr "Anthropic API Key"
+
+msgid "anthropic_api_key_help"
+msgstr "The API key for the selected provider. Leave empty to keep the existing key."
+
 msgid "custom_api_key"
 msgstr "Custom API Key"
 

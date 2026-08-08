@@ -158,6 +158,12 @@ msgstr "Ollama Cloud API-nøgle"
 msgid "ollama_api_key_help"
 msgstr "API-nøglen til den valgte udbyder. Lad feltet være tomt for at beholde den eksisterende nøgle."
 
+msgid "anthropic_api_key"
+msgstr "Anthropic API-nøgle"
+
+msgid "anthropic_api_key_help"
+msgstr "API-nøglen til den valgte udbyder. Lad feltet være tomt for at beholde den eksisterende nøgle."
+
 msgid "custom_api_key"
 msgstr "Brugerdefineret API-nøgle"
 

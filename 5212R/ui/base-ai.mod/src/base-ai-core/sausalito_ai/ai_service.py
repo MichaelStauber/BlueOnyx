@@ -104,7 +104,7 @@ def load_cce_config() -> dict[str, Any]:
 
     Returns a dict with keys:
         enabled (bool), provider (str), openai_api_key (str),
-        openrouter_api_key (str), ollama_api_key (str), custom_api_key (str),
+        openrouter_api_key (str), ollama_api_key (str), anthropic_api_key (str), custom_api_key (str),
         service_api_key (str),
         default_model (str), custom_endpoint (str), idle_timeout (int),
         system_prompt (str), tools_enabled (bool),
@@ -125,6 +125,7 @@ def load_cce_config() -> dict[str, Any]:
         "openai_api_key": "",
         "openrouter_api_key": "",
         "ollama_api_key": "",
+        "anthropic_api_key": "",
         "custom_api_key": "",
         "service_api_key": "",
         "default_model": "",

@@ -13,7 +13,7 @@ blueonyx_ai user can run it NOPASSWD.
 
 Usage: /usr/sbin/cce-get-system-ai
 Output: JSON dict with keys: enabled, provider, openai_api_key,
-        openrouter_api_key, ollama_api_key, custom_api_key, model,
+        openrouter_api_key, ollama_api_key, anthropic_api_key, custom_api_key, model,
         custom_endpoint, idle_timeout, system_prompt, tools_enabled,
         allow_generic_privileged_command, priv_tools_available
 
@@ -98,6 +98,7 @@ try {
         'openai_api_key' => '',
         'openrouter_api_key' => '',
         'ollama_api_key' => '',
+        'anthropic_api_key' => '',
         'custom_api_key' => '',
         'model' => 'gpt-4',
         'custom_endpoint' => '',
@@ -131,6 +132,9 @@ try {
                 break;
             case 'ollama_api_key':
                 $config['ollama_api_key'] = $value;
+                break;
+            case 'anthropic_api_key':
+                $config['anthropic_api_key'] = $value;
                 break;
             case 'custom_api_key':
                 $config['custom_api_key'] = $value;

@@ -158,6 +158,12 @@ msgstr "Clave API de Ollama Cloud"
 msgid "ollama_api_key_help"
 msgstr "La clave API para el proveedor seleccionado. Déjela vacía para conservar la clave existente."
 
+msgid "anthropic_api_key"
+msgstr "Clave API de Anthropic"
+
+msgid "anthropic_api_key_help"
+msgstr "La clave API para el proveedor seleccionado. Déjela vacía para conservar la clave existente."
+
 msgid "custom_api_key"
 msgstr "Clave API personalizada"
 

@@ -470,6 +470,24 @@ class Agent:
         )
         return any(re.search(pattern, normalized) for pattern in patterns)
 
+    def _is_all_vsite_health_request(self, message: str) -> bool:
+        normalized = " ".join((message or "").strip().lower().split())
+        if not normalized:
+            return False
+        patterns = (
+            r"\bcheck\s+vsite\s+health\b",
+            r"\bcheck\s+site\s+health\b",
+            r"\bvsite\s+health\b",
+            r"\bsite\s+health\b",
+            r"\bhealth\s+of\s+(?:all\s+)?vsites\b",
+            r"\bhealth\s+of\s+(?:all\s+)?sites\b",
+            r"\ball\s+vsites?\b.*\bhealth\b",
+            r"\ball\s+sites?\b.*\bhealth\b",
+        )
+        if not any(re.search(pattern, normalized) for pattern in patterns):
+            return False
+        return not bool(re.search(r"([A-Za-z0-9][A-Za-z0-9._-]*(?:\.[A-Za-z0-9][A-Za-z0-9._-]*)+)|\b(?:vsite|site)\s+site\d+\b|/home/sites/|/home/\.sites/", message or ""))
+
     def _is_site_health_followup_request(self, message: str) -> bool:
         normalized = " ".join((message or "").strip().lower().split())
         return bool(re.search(r"\b(this|that|same)\s+site\b", normalized))
@@ -559,12 +577,19 @@ class Agent:
             r"\bwhat\s+are\s+the\s+domain\s+names\s+of\s+(?:these|the)\s+vsites\b",
             r"\bdomain\s+names?\s+of\s+(?:these|the)\s+vsites\b",
             r"\bhosted\s+domains?\b",
+            r"\blist\s+(?:the\s+)?sites?\s+and\s+domains?\b",
+            r"\blist\s+(?:the\s+)?domains?\b",
+            r"\blist\s+(?:the\s+)?sites?\b",
+            r"\bshow\s+(?:the\s+)?domains?\b",
+            r"\bshow\s+(?:the\s+)?sites?\b",
         )
         return any(re.search(pattern, normalized) for pattern in patterns)
 
     def _vsite_inventory_args(self, message: str) -> dict[str, Any]:
         normalized = " ".join((message or "").strip().lower().split())
         if re.search(r"\b(full|details?|detailed)\b", normalized):
+            return {"detail": "full"}
+        if re.search(r"\bsites?\b", normalized) and re.search(r"\bdomains?\b", normalized):
             return {"detail": "full"}
         if re.search(r"\b(names?|internal)\b", normalized):
             return {"detail": "names"}
@@ -575,19 +600,29 @@ class Agent:
         if not normalized:
             return False
         patterns = (
-            r"\bhacked\b",
-            r"\bcompromis(?:ed|e)\b",
-            r"\binfected\b",
-            r"\bwebshell\b",
-            r"\bbackdoor\b",
-            r"\bdefaced\b",
-            r"\bmalware\b",
+            r"\b(hacked|compromis(?:ed|e)|infected|webshell|backdoor|defaced|malware)\b.*\b(vsite|site|webroot|web\s+root|directory|document\s+root|website|web\s+site|web)\b",
+            r"\b(vsite|site|webroot|web\s+root|directory|document\s+root|website|web\s+site|web)\b.*\b(hacked|compromis(?:ed|e)|infected|webshell|backdoor|defaced|malware)\b",
             r"\bsuspicious\b.*\b(vsite|site|webroot|web\s+root|directory|document\s+root|website|web\s+site|web)\b",
             r"\b(vsite|site|webroot|web\s+root|directory|document\s+root|website|web\s+site|web)\b.*\bsuspicious\b",
-            r"\bcheck\b.*\b(vsite|webroot|directory)\b",
+            r"\bcheck\b.*\b(webroot|directory)\b",
+            r"\bcheck\b.*\bvsite\b.*\b(hacked|compromis(?:ed|e)|infected|webshell|backdoor|defaced|malware|suspicious)\b",
             r"/home/sites/",
             r"/home/\.sites/",
             r"wwwroot/web",
+        )
+        return any(re.search(pattern, normalized) for pattern in patterns)
+
+    def _is_server_compromise_request(self, message: str) -> bool:
+        normalized = " ".join((message or "").strip().lower().split())
+        if not normalized:
+            return False
+        if self._is_webroot_integrity_request(message):
+            return False
+        patterns = (
+            r"\b(has|is)\s+(?:my|this|the)\s+server\s+been\s+(hacked|compromised|infected)\b",
+            r"\bserver\b.*\b(hacked|compromised|infected|malware|backdoor|webshell)\b",
+            r"\b(hacked|compromised|infected|malware|backdoor|webshell)\b.*\bserver\b",
+            r"\bcheck\b.*\b(if\s+)?(?:my|this|the)\s+server\b.*\b(hacked|compromised|infected)\b",
         )
         return any(re.search(pattern, normalized) for pattern in patterns)
 
@@ -752,6 +787,30 @@ class Agent:
                 break
         return rows
 
+    def _filter_webroot_hits(self, hits: list[str]) -> list[str]:
+        filtered: list[str] = []
+        skip_parts = (
+            "/nextcloud/3rdparty/",
+            "/cloud/nextcloud/3rdparty/",
+            "/wp-admin/",
+            "/wp-includes/",
+            "/vendor/",
+            "/node_modules/",
+            "/roundcube/vendor/",
+            "/README.md:",
+            "/CHANGELOG.md:",
+            "/readme.html:",
+            "/license.txt:",
+            "/test/",
+            "/tests/",
+        )
+        for item in hits:
+            text = str(item or "")
+            if any(part in text for part in skip_parts):
+                continue
+            filtered.append(text)
+        return filtered
+
     async def _scan_all_vsites(self) -> str:
         """Scan webroots of all Vsites for compromise indicators.
 
@@ -820,6 +879,46 @@ class Agent:
 
         return "\n".join(lines)
 
+    async def _get_all_vsite_health_output(self) -> str:
+        lines: list[str] = ["Vsite Health Summary", ""]
+
+        list_result = await self._execute_tool("list_vsites", {"detail": "full"}, "root")
+        if list_result.success and (list_result.output or "").strip():
+            lines.append("=== Vsite Inventory ===")
+            lines.append((list_result.output or "").strip())
+            lines.append("")
+
+        ssl_result = await self._execute_tool("ssl_health", {}, "root")
+        if ssl_result.success and (ssl_result.output or "").strip():
+            lines.append("=== SSL Coverage ===")
+            lines.append((ssl_result.output or "").strip())
+            lines.append("")
+
+        web_owner_result = await self._execute_tool("web_owner_health", {}, "root")
+        if web_owner_result.success and (web_owner_result.output or "").strip():
+            lines.append("=== Web Ownership ===")
+            lines.append((web_owner_result.output or "").strip())
+
+        return "\n".join(lines).strip()
+
+    async def _get_server_compromise_output(self, message: str) -> str:
+        lines = [await self._get_general_suspicion_output(message), ""]
+        lines.append("=== Vsite Webroot Integrity Summary ===")
+        lines.append(await self._get_webroot_integrity_summary_output())
+        return "\n".join(lines).strip()
+
+    async def _get_webroot_integrity_summary_output(self) -> str:
+        full_output = await self._scan_all_vsites()
+        lines = [line for line in full_output.splitlines() if line.strip()]
+        summary: list[str] = []
+        for line in lines:
+            if line.startswith("Webroot integrity scan:") or line.startswith("⚠ ") or line.startswith("No compromise indicators") or line.startswith("Scan errors:"):
+                summary.append(line)
+        if not summary:
+            summary.append("Webroot integrity summary unavailable.")
+        summary.append("Use a site-specific webroot check for detailed file-level evidence.")
+        return "\n".join(summary)
+
     async def _get_webroot_integrity_output(self, target_path: str) -> str:
         forensic_mode = self._is_webroot_forensic_request(self._last_user_message or "")
         path = target_path.rstrip("/") + "/"
@@ -849,7 +948,8 @@ class Agent:
         )
 
         top_entries = self._parse_directory_listing(listing_result.output, limit=15) if listing_result.success else []
-        suspicious_hits = self._parse_search_hits(content_result.output, limit=10) if content_result.success else []
+        suspicious_hits = self._parse_search_hits(content_result.output, limit=20) if content_result.success else []
+        suspicious_hits = self._filter_webroot_hits(suspicious_hits)[:10]
         suspicious_name_hits: list[str] = []
         weak_name_hits: list[str] = []
         if listing_result.success:
@@ -2508,6 +2608,19 @@ class Agent:
                 yield {"type": "done", "data": {}}
                 return
 
+            if self._is_all_vsite_health_request(message):
+                logger.info("Short-circuiting all-Vsite health request to aggregated Vsite checks")
+                try:
+                    output = await self._get_all_vsite_health_output()
+                    await self.session_manager.add_message(session_id, "assistant", output)
+                    yield {"type": "delta", "content": output}
+                    yield {"type": "done", "data": {}}
+                    return
+                except Exception as exc:
+                    yield {"type": "error", "message": str(exc) or "Failed to collect Vsite health summary"}
+                    yield {"type": "done", "data": {}}
+                    return
+
             if self._is_php_fpm_health_request(message):
                 logger.info("Short-circuiting PHP-FPM health request to php_fpm_health tool")
                 result = await self._execute_tool("php_fpm_health", {}, "root")
@@ -2544,6 +2657,19 @@ class Agent:
                 yield {"type": "error", "message": result.error or "Failed to collect site health evidence"}
                 yield {"type": "done", "data": {}}
                 return
+
+            if self._is_server_compromise_request(message):
+                logger.info("Short-circuiting server compromise request to broad compromise checks")
+                try:
+                    output = await self._get_server_compromise_output(message)
+                    await self.session_manager.add_message(session_id, "assistant", output)
+                    yield {"type": "delta", "content": output}
+                    yield {"type": "done", "data": {}}
+                    return
+                except Exception as exc:
+                    yield {"type": "error", "message": str(exc) or "Failed to run server compromise checks"}
+                    yield {"type": "done", "data": {}}
+                    return
 
             if self._is_vsite_inventory_request(message):
                 logger.info("Short-circuiting Vsite inventory request to list_vsites tool")

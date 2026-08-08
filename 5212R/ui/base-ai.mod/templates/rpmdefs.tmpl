@@ -129,7 +129,7 @@ fi
 
 <begin $CHANGELOG>
 
-* Sat Aug 08 2026 Michael Stauber <mstauber@solarspeed.net> 1.0.5-1
+* Sat Aug 08 2026 Michael Stauber <mstauber@solarspeed.net> 1.0.5-2
 - Tightened the deterministic server health summary so it no longer assumes
   fail2ban is a standard managed BlueOnyx service on every installation.
 - Corrected deterministic Vsite webroot integrity scans to use the real
@@ -142,6 +142,16 @@ fi
   a cross-domain check instead of letting one subsystem matcher hijack the
   request. Scoped questions still route to their specific mail, web, network,
   SSL, or other domain checks.
+- Added proper Anthropic provider support with a dedicated anthropic API-key
+  field in the GUI, schema/config storage, and runtime provider wiring.
+- Broadened deterministic Vsite/domain inventory matching so prompts such as
+  "list sites and domains" are grounded in live helper output.
+- Added aggregate all-Vsite health handling for unscoped Vsite health
+  questions and separated server-compromise suspicion checks from webroot-only
+  compromise scans.
+
+* Fri Aug 07 2026 Michael Stauber <mstauber@solarspeed.net> 1.0.5-1 
+- Version number bump for release.
 
 * Fri Aug 07 2026 Michael Stauber <mstauber@solarspeed.net> 1.0.4-1
 - Consolidation. Source builds for 5210R, 5211R and 5212R from the same tree.

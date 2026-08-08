@@ -332,6 +332,15 @@ class AiSettings extends BaseController
         );
         $BxPage->setLabel('ollama_api_key', $i18n->get('[[base-ai.ollama_api_key]]'), $this->formatApiKeyHint($this->getStoredApiKeyForDisplay($AI_config, 'ollama'), $i18n));
 
+        $anthropic_api_key = $factory->getPassword('anthropic_api_key', '', false, 'rw', false);
+        $anthropic_api_key->setOptional(true);
+        $block->addFormField(
+            $anthropic_api_key,
+            $factory->getLabel('anthropic_api_key', false),
+            $defaultPage
+        );
+        $BxPage->setLabel('anthropic_api_key', $i18n->get('[[base-ai.anthropic_api_key]]'), $this->formatApiKeyHint($this->getStoredApiKeyForDisplay($AI_config, 'anthropic'), $i18n));
+
         $custom_api_key = $factory->getPassword('custom_api_key', '', false, 'rw', false);
         $custom_api_key->setOptional(true);
         $block->addFormField(
@@ -592,7 +601,7 @@ class AiSettings extends BaseController
                     });
                 }
 
-                ["openai_api_key", "openrouter_api_key", "ollama_api_key", "custom_api_key", "custom_endpoint"].forEach(function(fieldId) {
+                ["openai_api_key", "openrouter_api_key", "ollama_api_key", "anthropic_api_key", "custom_api_key", "custom_endpoint"].forEach(function(fieldId) {
                     var field = document.getElementById(fieldId);
                     if (!field) {
                         return;
@@ -977,6 +986,7 @@ JS
             'openai' => 'openai_api_key',
             'openrouter' => 'openrouter_api_key',
             'ollama' => 'ollama_api_key',
+            'anthropic' => 'anthropic_api_key',
             'custom' => 'custom_api_key',
         );
     }
@@ -1010,6 +1020,7 @@ JS
             'openai' => trim((string)$this->getConfigValue($AI_config, 'openai_api_key', '')),
             'openrouter' => trim((string)$this->getConfigValue($AI_config, 'openrouter_api_key', '')),
             'ollama' => trim((string)$this->getConfigValue($AI_config, 'ollama_api_key', '')),
+            'anthropic' => trim((string)$this->getConfigValue($AI_config, 'anthropic_api_key', '')),
             'custom' => trim((string)$this->getConfigValue($AI_config, 'custom_api_key', '')),
         );
 
@@ -1040,6 +1051,7 @@ JS
             'openai' => trim((string)$this->request->getPost('openai_api_key')),
             'openrouter' => trim((string)$this->request->getPost('openrouter_api_key')),
             'ollama' => trim((string)$this->request->getPost('ollama_api_key')),
+            'anthropic' => trim((string)$this->request->getPost('anthropic_api_key')),
             'custom' => trim((string)$this->request->getPost('custom_api_key')),
         );
     }

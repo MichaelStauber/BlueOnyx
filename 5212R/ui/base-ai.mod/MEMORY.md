@@ -5,6 +5,102 @@
 ## Current Status
 Model Discovery, provider-specific API key handling, and the tool-policy controls are implemented and working in the GUI/runtime. The llama.cpp subpackage now builds with CPU + Vulkan best-effort support; RPM packaging is still being tightened for EL10 RPATH handling and CPU-variant library naming.
 
+## Update 2026-08-08
+
+The module is now materially further along than the early notes above suggest. The 5210R tree is the working source base that was used to bring 5211R and 5212R forward, and the current code has already been validated by real package builds on EL8, EL9, and EL10.
+
+### Current shipping state
+- Local inference works through `llama.cpp` and `sausalito-llama.service`.
+- Remote inference works through external providers, including Ollama Cloud via its OpenAI-compatible endpoint.
+- The GUI can discover provider models, save provider-specific credentials, and switch between local and remote providers correctly.
+- Deterministic BlueOnyx diagnostics now cover server health, Vsite inventory, SSL coverage, mail statistics, disk usage, quotas, incident timelines, admin-log summaries, web ownership, PHP-FPM state, and webroot integrity checks.
+- The AI runtime is protected by a service auth key and runs behind a loopback-only HTTP service with socket activation.
+- The code now builds successfully on:
+  - 5210R / EL8
+  - 5211R / EL9
+  - 5212R / EL10
+
+### Cross-EL llama.cpp build direction
+- The approved direction is one consistent `llama.cpp` build strategy across EL8, EL9, and EL10 using GCC 14 toolset builds instead of per-platform compiler drift.
+- The goal is broadest realistic x86-64 hardware support within each OS baseline.
+- EL8 and EL9 can still support older CPUs when `llama.cpp` is built portably.
+- EL10 still carries the OS-level `x86-64-v3` floor, so older pre-v3 hardware remains unsupported there regardless of the module.
+- Separate SVN trees still exist for packaging/build-root reasons, but the source logic and build settings were intentionally converged.
+
+### Confirmed 5210R hardware incident and fix direction
+- On an AlmaLinux 8 system with older Xeon E5520 CPUs, the first local-LLM port failed with `make_cpu_buft_list: no CPU backend found`.
+- Root cause was not permissions, not the model file, and not missing shared libraries.
+- Root cause was a non-portable CPU backend build that effectively required newer x86 features than the live server had.
+- The packaging/build work was then reoriented toward a portable multi-backend `llama.cpp` build, using the newer compiler toolchain while still targeting wider CPU compatibility.
+- This is paired with product behavior that should not blindly advertise local inference on hardware where it cannot actually run.
+
+### Local inference GUI/runtime behavior
+- The AI settings page now hides local-provider capability warnings unless the local provider is actually selected.
+- When a remote provider such as Ollama Cloud is active, the user should not see misleading local-inference status noise.
+- Remote model discovery now refreshes correctly for non-local providers on page load.
+- The local provider is started on demand and idled back down instead of running permanently.
+
+### Python/runtime packaging corrections
+- EL8 required special handling because the live runtime is Python 3.8, while newer platforms use newer system Python.
+- The service packaging was corrected so the AI venv on EL8 is recreated with Python 3.8 explicitly.
+- Helper-script shebang handling was also corrected during package build so directly executed helper scripts on EL8 remain runnable.
+- A separate runtime issue was fixed where `litellm` / `tiktoken` tried to write under the read-only virtualenv path and crashed the service with a permission error.
+
+### Deterministic BlueOnyx health work
+- Health reporting was moved away from model guesswork toward deterministic helper output plus live system checks.
+- The health summary now understands BlueOnyx service intent instead of assuming that every common Linux daemon must always be active.
+- The implementation was adjusted to read BlueOnyx intent through privileged helper paths instead of trying to query CCEd directly as the unprivileged AI account.
+- `named-chroot` is treated as the actual DNS service on BlueOnyx, not plain `named`.
+- `proftpd` is treated as the BlueOnyx FTP service, not `vsftpd`.
+- Optional add-ons must not be treated as universal base services. In particular, `fail2ban` was removed from the deterministic managed-service assumptions because it is an optional add-on, not a guaranteed core component.
+- The Active Monitor object and its namespaces are the right truth source for enabled/managed services, rather than hard-coded daemon assumptions.
+
+### SSL coverage behavior
+- SSL coverage is based on Vsite SSL state and helper output, not just the physical presence of certificate files.
+- A Vsite may still have certificate material on disk while SSL is disabled in the GUI.
+- AdmServ certificate status is reported separately from Vsite SSL coverage and should not be mixed into the Vsite count.
+
+### Webroot integrity / forensic work
+- Webroot compromise questions are short-circuited to deterministic inspections instead of letting the model improvise shell-like reasoning.
+- The scanner now distinguishes between strong content hits, stronger filename signals, and weaker filename heuristics.
+- Follow-up forensic prompts can reuse the last inspected webroot within a session for weaker models.
+- The real BlueOnyx Vsite storage layout matters:
+  - Actual webroots live under `/home/.sites/<site>/wwwroot/web/`
+  - `/home/sites/<fqdn>` is the symlinked convenience path
+- A defect was fixed where the agent invented invalid paths such as `/home/sites/site1/wwwroot/web/`.
+- The deterministic scan path now resolves Vsite webroots from the actual hidden site storage layout and accepts both the real path and the FQDN symlink path when the user provides an explicit path.
+
+### Vsite and support grounding work
+- Vsite-list questions are now answered from deterministic BlueOnyx helper output and return actual hosted domain names.
+- Earlier nonsense answers such as "WordPress, Joomla, and Drupal" were eliminated by grounding Vsite inventory in live data.
+- The health and support answers are being pushed toward BlueOnyx-specific truth instead of generic hosting folklore.
+
+### SmolLM2 model packaging
+- The `base-ai-model-SmolLM2` source package no longer has to rely on the GGUF file being present in every checkout.
+- Build logic was adjusted so that if `SmolLM2-360M-Instruct-Q4_K_M.gguf` is already present locally it is used as-is, and if it is absent it is downloaded at build time from the BlueOnyx-hosted source URL.
+- This keeps SVN workflows intact while avoiding GitHub file-size problems for the large GGUF payload.
+
+### Consolidation work across 5210R, 5211R, and 5212R
+- Top-level module metadata and build behavior were consolidated significantly.
+- The main `Makefile` now carries the canonical module version/release and platform detection.
+- Package metadata placeholders are filled from the build logic instead of being manually edited per tree.
+- A `make clean` path was introduced so generated metadata can be rolled back to placeholders.
+- The 5210R tree was used as the canonical working source while the 5211R and 5212R trees were brought forward and kept in sync.
+- Real-world rebuild testing confirmed that the consolidated source can produce working packages on all three supported BlueOnyx release lines.
+
+### Current version markers
+- Module version in the 5210R tree is now `1.0.5-1`.
+- `base-ai-core` RPM release in the 5210R tree is now `1.0.8-27`.
+
+### Most recent fixes as of 2026-08-08
+1. Removed the hard-coded `fail2ban` assumption from the deterministic managed-service health summary.
+2. Corrected Vsite webroot integrity scanning so it no longer invents `/home/sites/siteN/...` paths and instead resolves the real `/home/.sites/<site>/wwwroot/web/` layout.
+
+### Practical product stance
+- Local LLM support is now good enough to ship, but performance on older EL8-class hardware can be poor even when it works correctly.
+- On such hardware, external providers are likely to remain the better default for real use.
+- The product should therefore expose local inference only when the capability checks and backend reality support it, and otherwise communicate clearly why local inference is unavailable.
+
 ## Update 2026-05-16
 The AI settings and runtime path were converted from a single shared `api_key` to provider-specific keys.
 

@@ -1,6 +1,6 @@
 Name:           base-ai-core
 Version:        1.0.8
-Release:        26%{?dist}
+Release:        29%{?dist}
 Summary:        BlueOnyx AI core service (Python agent with systemd socket activation)
 
 License:        SUN-modified-BSD
@@ -209,6 +209,25 @@ fi
 %systemd_postun_with_restart sausalito-ai.service
 
 %changelog
+* Sat Aug 08 2026 Michael Stauber <mstauber@solarspeed.net> 1.0.8-29
+- Added a dedicated broad deterministic suspicion check for unscoped
+  "anything suspicious?" style questions so the agent now runs a cross-domain
+  sweep instead of misrouting the request into one specific subsystem.
+
+* Sat Aug 08 2026 Michael Stauber <mstauber@solarspeed.net> 1.0.8-28
+- Tightened deterministic intent routing so broad phrases such as "anything
+  suspicious" no longer trigger a webroot integrity sweep unless the request
+  also contains clear Vsite/site/webroot context.
+
+* Fri Aug 07 2026 Michael Stauber <mstauber@solarspeed.net> 1.0.8-27
+- Removed fail2ban from the deterministic managed-service health summary so
+  servers are no longer reported against an optional add-on that BlueOnyx
+  does not universally install or manage through Active Monitor.
+- Corrected the deterministic webroot integrity sweep to resolve Vsite
+  document roots under /home/.sites/<site>/wwwroot/web and to accept both the
+  hidden site path and the FQDN symlink path when an explicit webroot is
+  provided.
+
 * Fri Aug 07 2026 Michael Stauber <mstauber@solarspeed.net> 1.0.8-26
 - Corrected the cross-EL Python runtime consolidation for 5210R/EL8 so the
   AI service venv is recreated with Python 3.8 instead of the older platform

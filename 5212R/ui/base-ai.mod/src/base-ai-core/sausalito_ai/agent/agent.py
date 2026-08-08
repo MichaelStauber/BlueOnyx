@@ -582,9 +582,11 @@ class Agent:
             r"\bbackdoor\b",
             r"\bdefaced\b",
             r"\bmalware\b",
-            r"\bsuspicious\b",
+            r"\bsuspicious\b.*\b(vsite|site|webroot|web\s+root|directory|document\s+root|website|web\s+site|web)\b",
+            r"\b(vsite|site|webroot|web\s+root|directory|document\s+root|website|web\s+site|web)\b.*\bsuspicious\b",
             r"\bcheck\b.*\b(vsite|webroot|directory)\b",
             r"/home/sites/",
+            r"/home/\.sites/",
             r"wwwroot/web",
         )
         return any(re.search(pattern, normalized) for pattern in patterns)
@@ -592,13 +594,20 @@ class Agent:
     def _extract_webroot_path(self, message: str) -> str | None:
         patterns = (
             r"(/home/sites/[^\s`\"']+/wwwroot/web/?(?:[^\s`\"']*)?)",
-            r"(/home/sites/[^\s`\"']+/wwwroot/web/? )",
+            r"(/home/\.sites/[^\s`\"']+/wwwroot/web/?(?:[^\s`\"']*)?)",
         )
         for pattern in patterns:
             match = re.search(pattern, message or "")
             if match:
                 return match.group(1).strip().rstrip("/") + "/"
         return None
+
+    def _vsite_webroot_path(self, site_name: str, fqdn: str) -> str:
+        site_name = (site_name or "").strip()
+        fqdn = (fqdn or "").strip()
+        if site_name:
+            return f"/home/.sites/{site_name}/wwwroot/web/"
+        return f"/home/sites/{fqdn}/wwwroot/web/"
 
     def _timeline_args(self, message: str) -> dict[str, Any]:
         normalized = " ".join((message or "").strip().lower().split())
@@ -747,7 +756,7 @@ class Agent:
         """Scan webroots of all Vsites for compromise indicators.
 
         Fetches the Vsite list via vsite_list.pl, constructs the webroot
-        path for each Vsite (/home/sites/<group>/wwwroot/web/), and runs
+        path for each Vsite from the real site storage layout, and runs
         the webroot integrity scan on each one.
         Returns a combined report.
         """
@@ -764,9 +773,9 @@ class Agent:
             parts = line.split()
             if len(parts) < 2:
                 continue
-            group_name = parts[0].strip()
+            site_name = parts[0].strip()
             fqdn = parts[1].strip()
-            webroot = f"/home/sites/{group_name}/wwwroot/web/"
+            webroot = self._vsite_webroot_path(site_name, fqdn)
             vsite_paths.append((fqdn, webroot))
 
         if not vsite_paths:
@@ -1688,6 +1697,74 @@ class Agent:
         )
         return any(re.search(pattern, normalized) for pattern in patterns)
 
+    def _is_general_suspicion_request(self, message: str) -> bool:
+        normalized = " ".join((message or "").strip().lower().split())
+        if not normalized:
+            return False
+        patterns = (
+            r"\banything\s+suspicious\b",
+            r"\bsomething\s+suspicious\b",
+            r"\bany(?:thing)?\s+unusual\b",
+            r"\bany(?:thing)?\s+odd\b",
+            r"\bany(?:thing)?\s+concerning\b",
+            r"\banything\s+off\b",
+            r"\banything\s+wrong\b",
+            r"\bsuspicious\s+activity\b",
+            r"\bdoes\s+anything\s+look\s+wrong\b",
+            r"\bdoes\s+anything\s+look\s+off\b",
+            r"\bdoes\s+anything\s+look\s+suspicious\b",
+        )
+        return any(re.search(pattern, normalized) for pattern in patterns)
+
+    async def _get_general_suspicion_output(self, message: str) -> str:
+        lines: list[str] = ["Broad Suspicion Check", ""]
+
+        health_result = await self._execute_tool("server_health_summary", {}, "root")
+        if health_result.success and (health_result.output or "").strip():
+            lines.append("=== Server Health ===")
+            lines.append((health_result.output or "").strip())
+            lines.append("")
+
+        mail_result = await self._execute_tool("mail_health", self._mail_health_args(message), "root")
+        if mail_result.success and (mail_result.output or "").strip():
+            lines.append("=== Mail Health ===")
+            lines.append((mail_result.output or "").strip())
+            lines.append("")
+
+        abuse_result = await self._execute_tool(
+            "spam_abuse",
+            {"paths": ["/var/log/maillog*"], "days": 7, "limit": 5},
+            "root",
+        )
+        if abuse_result.success and (abuse_result.output or "").strip():
+            lines.append("=== Spam / Abuse Check ===")
+            lines.append((abuse_result.output or "").strip())
+            lines.append("")
+
+        log_result = await self._execute_tool(
+            "search_admin_logs",
+            {
+                "pattern": r"failed|error|denied|reject|rejected|deferred|bounced|segfault|panic|critical|oom|out of memory|invalid user|authentication failure",
+                "paths": [
+                    "/var/log/messages*",
+                    "/var/log/secure*",
+                    "/var/log/maillog*",
+                    "/var/log/httpd/*",
+                    "/var/log/audit/audit.log*",
+                ],
+                "max_matches": 20,
+                "ignore_case": True,
+            },
+            "root",
+        )
+        lines.append("=== Recent Admin / Security Signals ===")
+        if log_result.success and (log_result.output or "").strip() and not self._is_no_matches_output(log_result.output):
+            lines.append(self._format_admin_log_result(message, log_result.output, detail_mode=False))
+        else:
+            lines.append("No obvious suspicious signals were found in the inspected admin logs.")
+
+        return "\n".join(lines).strip()
+
     def _is_email_problem_request(self, message: str) -> bool:
         """Detect email delivery/problem questions that need multi-source diagnosis.
 
@@ -2231,7 +2308,7 @@ class Agent:
                 target_path = self._extract_webroot_path(message)
                 if not target_path:
                     if self._contains_explicit_path(message):
-                        yield {"type": "error", "message": "Only /home/sites/.../wwwroot/web/ paths are supported for webroot integrity checks"}
+                        yield {"type": "error", "message": "Only /home/sites/<fqdn>/wwwroot/web/ or /home/.sites/<site>/wwwroot/web/ paths are supported for webroot integrity checks"}
                         yield {"type": "done", "data": {}}
                         return
                     if self._is_webroot_followup_request(message) and self.model_profile in {"restricted", "guided"}:
@@ -2264,7 +2341,7 @@ class Agent:
                 logger.info("Handling webroot forensic request")
                 target_path = self._extract_webroot_path(message)
                 if not target_path and self._contains_explicit_path(message):
-                    yield {"type": "error", "message": "Only /home/sites/.../wwwroot/web/ paths are supported for webroot integrity checks"}
+                    yield {"type": "error", "message": "Only /home/sites/<fqdn>/wwwroot/web/ or /home/.sites/<site>/wwwroot/web/ paths are supported for webroot integrity checks"}
                     yield {"type": "done", "data": {}}
                     return
                 if not target_path and self._is_webroot_followup_request(message) and self.model_profile in {"restricted", "guided"}:
@@ -2556,6 +2633,19 @@ class Agent:
                 yield {"type": "error", "message": result.error or "Failed to collect mail health"}
                 yield {"type": "done", "data": {}}
                 return
+
+            if self._is_general_suspicion_request(message):
+                logger.info("Short-circuiting general suspicion request to broad deterministic checks")
+                try:
+                    output = await self._get_general_suspicion_output(message)
+                    await self.session_manager.add_message(session_id, "assistant", output)
+                    yield {"type": "delta", "content": output}
+                    yield {"type": "done", "data": {}}
+                    return
+                except Exception as exc:
+                    yield {"type": "error", "message": str(exc) or "Failed to run broad suspicion check"}
+                    yield {"type": "done", "data": {}}
+                    return
 
             # Deterministic shortcut for admin log investigations.
             # These are evidence-gathering tasks, so we should search the logs directly

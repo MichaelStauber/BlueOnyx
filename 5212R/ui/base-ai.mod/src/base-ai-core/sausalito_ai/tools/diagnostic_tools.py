@@ -395,14 +395,6 @@ def _collect_service_overview() -> dict[str, Any]:
             "use_am": True,
             "unit_states": {"sshd": _systemctl_state("sshd")},
         },
-        {
-            "key": "fail2ban",
-            "label": "fail2ban",
-            "enabled": True,
-            "am_state": "",
-            "use_am": False,
-            "unit_states": {"fail2ban": _systemctl_state("fail2ban")},
-        },
     ]
 
     services: list[dict[str, Any]] = []

@@ -6,7 +6,7 @@ VENDOR=base
 VENDORNAME='Team BlueOnyx'
 SERVICE=ai
 
-VERSION=1.0.4
+VERSION=1.0.5
 RELEASE=1
 MODULE_FULL_VERSION=$(VERSION)-$(RELEASE)
 BO_PRODUCT=$(shell sed -n 's/.* for a \([0-9][0-9][0-9][0-9]R\).*/\1/p' /etc/build 2>/dev/null || echo -n "5210R")

@@ -129,6 +129,20 @@ fi
 
 <begin $CHANGELOG>
 
+* Sat Aug 08 2026 Michael Stauber <mstauber@solarspeed.net> 1.0.5-1
+- Tightened the deterministic server health summary so it no longer assumes
+  fail2ban is a standard managed BlueOnyx service on every installation.
+- Corrected deterministic Vsite webroot integrity scans to use the real
+  /home/.sites/<site>/wwwroot/web/ layout instead of inventing invalid
+  /home/sites/siteN/... paths.
+- Tightened deterministic intent routing so generic phrases such as
+  "anything suspicious" no longer hijack mail-status questions into the
+  webroot integrity scan path.
+- Added a dedicated broad "anything suspicious?" deterministic path that runs
+  a cross-domain check instead of letting one subsystem matcher hijack the
+  request. Scoped questions still route to their specific mail, web, network,
+  SSL, or other domain checks.
+
 * Fri Aug 07 2026 Michael Stauber <mstauber@solarspeed.net> 1.0.4-1
 - Consolidation. Source builds for 5210R, 5211R and 5212R from the same tree.
 

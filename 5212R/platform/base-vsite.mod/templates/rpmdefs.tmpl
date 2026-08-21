@@ -161,6 +161,14 @@ fi
 
 <begin $CHANGELOG>
 
+* Wed Aug 19 2026 Michael Stauber <mstauber@solarspeed.net> 4.9-3
+- Modified ui/chorizo/web/Controllers/VsiteEmail.php to exclude
+  form handling of server values if siteAdmin has 'rw' access for
+  Email related UI Extesions. This allows siteAdmin to save w/o
+  having the ability to touch CODB keys for which he has no write
+  access. Also renamed the default tab for a string for that  we 
+  have localization in case an UI extension brings an extra tab.
+
 * Thu Aug 06 2026 Michael Stauber <mstauber@solarspeed.net> 4.9-2
 - Modified ui/chorizo/web/Controllers/VsiteMod.php and VsiteAdd.php to 
   add defensive checks for critical System object keys (IPType, gateway, 

@@ -1,7 +1,7 @@
 Summary: Cobalt development tools
 Name: sausalito-devel-tools
 Version: 0.7.2
-Release: 4%{?dist}
+Release: 5%{?dist}
 Vendor: %{vendor}
 License: Sun modified BSD
 Group: System Environment/BlueOnyx
@@ -61,6 +61,9 @@ done
 /etc/rpm/macros.blueonyx
 
 %changelog
+
+* Fri Aug 21 2026 Michael Stauber <mstauber@solarspeed.net> 0.7.2-5
+- Make makePkg prefer module-local rpms/ and ignore host-global as_rpms noise
 
 * Tue Apr 21 2026 Michael Stauber <mstauber@solarspeed.net> 0.7.2-4
 - Added requirement for valkey-devel for new CCEd

@@ -7,8 +7,9 @@
 # This script is used by module.mk to make a PKG file from a module.
 #
 # There is no need to specify RPM fields in <module>/pkg_packing_list.
-# All RPMs under <module>/as_rpms are automatically included in the final
-# packing_list.
+# All RPMs under <module>/rpms are included in the final packing_list.
+# We intentionally do not sweep <module>/as_rpms here because that directory
+# may contain host-global build artifacts from the shared packaging toolchain.
 
 # 2012-08-07 (mstauber): Added optional sorting of RPMs. Not perfect yet, 
 #			 but it is a start.
@@ -123,8 +124,12 @@ if(-d $localeDir) {
 # the list of RPMs in the PKG
 my @rpms = ();
 
-# include RPMs under as_rpms directory
-my $rpmsDir = "$moduleDir/as_rpms";
+# include RPMs under rpms directory first; fall back to as_rpms only when a
+# module still uses the legacy layout and has no rpms/ directory.
+my $rpmsDir = "$moduleDir/rpms";
+if(!-d $rpmsDir) {
+    $rpmsDir = "$moduleDir/as_rpms";
+}
 if(-d $rpmsDir) {
     opendir(DIR, $rpmsDir)
 	|| die "ERROR: Cannot open directory $rpmsDir";

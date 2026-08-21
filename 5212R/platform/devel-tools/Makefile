@@ -4,7 +4,7 @@ CCEMODULE = sausalito-devel-tools
 CCERPMSPEC = sausalito-devel-tools.spec
 
 VERSION=0.7.2
-RELEASE=4
+RELEASE=5
 
 DIRS = scripts libdebug rules templates glue
 
@@ -27,4 +27,3 @@ clean local_clean:
 include rules/package.mk
 
 FORCE:
-

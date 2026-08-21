@@ -41,7 +41,28 @@ export LANG=en_US
 export LC_ALL=en_US.UTF-8
 export LINGUAS="en_US ja da_DK de_DE"
 
-rm -f /tmp/rpmtest
-rpm -ihv --test -v $1/*.rpm 2> /tmp/rpmtest 1>/dev/null
-cat /tmp/rpmtest|grep "D:    "|cut -d + -f2|grep -v "^Preparing..."|grep -v "######"|sed 's@$@.rpm@' | sed ':a;N;$!ba;s/\n/ /g'
+tmpfile=/tmp/rpmtest.$$
+trap 'rm -f "$tmpfile"' EXIT
 
+rm -f "$tmpfile"
+rpm -ihv --test -v "$1"/*.rpm 2> "$tmpfile" 1>/dev/null
+
+awk '
+    /^D: =+ .*\.rpm$/ {
+        current = $0
+        sub(/^D: =+ /, "", current)
+        sub(/^.*\//, "", current)
+        next
+    }
+    /^D:[[:space:]]+added binary package \[[0-9]+\]/ {
+        if (current != "") {
+            if (out != "") {
+                out = out " "
+            }
+            out = out current
+        }
+    }
+    END {
+        printf "%s", out
+    }
+' "$tmpfile"

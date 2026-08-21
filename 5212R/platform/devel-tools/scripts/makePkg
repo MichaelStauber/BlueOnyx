@@ -123,12 +123,13 @@ if(-d $localeDir) {
 
 # the list of RPMs in the PKG
 my @rpms = ();
+my @dirRpms = ();
 
-# include RPMs under rpms directory first; fall back to as_rpms only when a
-# module still uses the legacy layout and has no rpms/ directory.
-my $rpmsDir = "$moduleDir/rpms";
+# include RPMs under as_rpms first; fall back to rpms only when a module
+# does not populate the normal shared build output directory.
+my $rpmsDir = "$moduleDir/as_rpms";
 if(!-d $rpmsDir) {
-    $rpmsDir = "$moduleDir/as_rpms";
+    $rpmsDir = "$moduleDir/rpms";
 }
 if(-d $rpmsDir) {
     opendir(DIR, $rpmsDir)
@@ -138,6 +139,7 @@ if(-d $rpmsDir) {
 
     # filter away hidden files or non-rpm files
     @rpms = grep /^[^\.].+\.rpm$/i, @rpms;
+    @dirRpms = @rpms;
 
     # make directory to hold RPMs
     if($#rpms >= 0) {
@@ -149,6 +151,43 @@ if(-d $rpmsDir) {
     foreach $rpm (@rpms) {
 	`$cp $rpmsDir/$rpm $tmpTarDir/RPMS/`;
     }
+}
+
+sub fallback_sort_rpms {
+    my @input = @_;
+    my %groups = (
+        other   => [],
+        locale  => [],
+        ui      => [],
+        glue    => [],
+        capstone => [],
+    );
+
+    foreach my $rpm (@input) {
+        if ($rpm =~ m/-capstone-/i) {
+            push(@{$groups{capstone}}, $rpm);
+        }
+        elsif ($rpm =~ m/-locale-/i) {
+            push(@{$groups{locale}}, $rpm);
+        }
+        elsif ($rpm =~ m/-glue-/i) {
+            push(@{$groups{glue}}, $rpm);
+        }
+        elsif ($rpm =~ m/-ui-/i) {
+            push(@{$groups{ui}}, $rpm);
+        }
+        else {
+            push(@{$groups{other}}, $rpm);
+        }
+    }
+
+    return (
+        @{$groups{other}},
+        @{$groups{locale}},
+        @{$groups{ui}},
+        @{$groups{glue}},
+        @{$groups{capstone}},
+    );
 }
 
 # build the packing list
@@ -168,9 +207,12 @@ while($line = <IN>) {
       # put in RPM list before the end
       if($line =~ /^\s*\[\/Package\]/) {
         my $inrpms = `/usr/sausalito/bin/rpmsorter.sh $rpmsDir`;
-        @rpms = split /\s+/, $inrpms;
+        my @sortedRpms = split /\s+/, $inrpms;
+        if ($#sortedRpms < 0) {
+            @sortedRpms = fallback_sort_rpms(@dirRpms);
+        }
 	my $rpm;
-	foreach $rpm (@rpms) {
+	foreach $rpm (@sortedRpms) {
 	    print OUT "RPM: $rpm\n";
 	}
       }

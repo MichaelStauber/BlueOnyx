@@ -86,6 +86,23 @@ class vsiteEmail extends BaseController {
             Log403Error("/gui/Forbidden403#2");
         }
 
+        // Only 'manageSite' can modify things on this page.
+        // Site admins can view it for informational purposes.
+        if ($CI->getAllowed('manageSite')) {
+            $is_site_admin = FALSE;
+            $access = 'rw';
+        }
+        elseif (($CI->getAllowed('siteAdmin')) && ($group == $CI->serverScriptHelper->loginUser['site'])) {
+            $access = 'r';
+            $is_site_admin = TRUE;
+        }
+        else {
+            // Nice people say goodbye, or CCEd waits forever:
+            $CI->cceClient->bye();
+            $CI->serverScriptHelper->destructor();
+            Log403Error("/gui/Forbidden403#2");
+        }
+
         //
         //-- Prepare data:
         //
@@ -114,6 +131,10 @@ class vsiteEmail extends BaseController {
 
         // Items we do NOT want to submit to CCE:
         $ignore_attributes = array("BlueOnyx_Info_Text");
+
+        if ($is_site_admin) {
+            $ignore_attributes = array("BlueOnyx_Info_Text", 'email_autoconfig', 'mailAliases', 'emailDisabled', 'mailCatchAll', 'allow_sender_spoof');
+        }
 
         if ((is_array($form_data)) && ($this->request->getPost(NULL, NULL, TRUE))) {
             // Function GetFormAttributes() walks through the $form_data and returns us the $parameters we want to
@@ -157,131 +178,134 @@ class vsiteEmail extends BaseController {
             $af_errors = $autoFeatures->handle('modifyEmail.Vsite', $cce_info);
             $errors = array_merge($errors, $af_errors);
 
-            if ($System_Email['authsend_protect'] == '0') {
-                $attributes['allow_sender_spoof'] = '0';
-            }
-
-            if (($attributes['emailDisabled'] == '1') && ($attributes['email_autoconfig'] == '1')) {
-                $attributes['email_autoconfig'] = '0';
-            }
-
-            // --- Maintain webAliases for email autoconfig/autodiscover:
-            $webAliasesArr  = $CI->cceClient->scalar_to_array($vsite['webAliases'] ?? '');
-            $webAliasesOrig = $webAliasesArr;
-
-            // Base domain choice:
-            $domain = trim((string)($vsite['domain'] ?? ''));   // e.g. smd.net
-            $fqdn   = trim((string)($vsite['fqdn']   ?? ''));   // e.g. banana.smd.net
-            $hn     = strtolower(trim((string)($vsite['hostname'] ?? '')));
-
-            // If Vsite doesn't have hostname 'www' or 'mail', we use the FQDN:
-            if ($hn !== 'www' && $hn !== 'mail') {
-                if ($fqdn !== '') {
-                    $domain = $fqdn;
+            // Process POST data of server-admin users:
+            if (!$is_site_admin) {
+                if ($System_Email['authsend_protect'] == '0') {
+                    $attributes['allow_sender_spoof'] = '0';
                 }
-            }
 
-            // Safety: trim trailing dot (some places store FQDNs with a dot)
-            $domain = strtolower(trim($domain, ". \t\n\r\0\x0B"));
-
-            if ($domain !== '') {
-                $wantAuto  = 'autoconfig.'   . $domain;
-                $wantDisco = 'autodiscover.' . $domain;
-
-                if ((string)$attributes['email_autoconfig'] === '1') {
-                    // Ensure autoconfig.* and autodiscover.* exist (case-insensitive):
-                    $lower = array_map('strtolower', $webAliasesArr);
-
-                    foreach ([$wantAuto, $wantDisco] as $fqdnNeed) {
-                        $lf = strtolower($fqdnNeed);
-                        if (!in_array($lf, $lower, true)) {
-                            $webAliasesArr[] = $fqdnNeed;
-                            $lower[] = $lf;
-                        }
-                    }
-                } else {
-                    // Strip ONLY the autoconfig/autodiscover aliases for this vsite's chosen domain:
-                    $reDomain = preg_quote($domain, '/');
-                    $webAliasesArr = array_values(array_filter($webAliasesArr, function ($a) use ($reDomain) {
-                        $a = strtolower(trim((string)$a, ". \t\n\r\0\x0B"));
-                        return !preg_match('/^(autoconfig|autodiscover)\.' . $reDomain . '$/i', $a);
-                    }));
+                if (($attributes['emailDisabled'] == '1') && ($attributes['email_autoconfig'] == '1')) {
+                    $attributes['email_autoconfig'] = '0';
                 }
-            }
 
-            // Only set webAliases if it changed (case-insensitive compare):
-            $webAliasesChanged = (array_map('strtolower', $webAliasesArr) !== array_map('strtolower', $webAliasesOrig));
-            $webAliasesScalar  = $CI->cceClient->array_to_scalar($webAliasesArr);
+                // --- Maintain webAliases for email autoconfig/autodiscover:
+                $webAliasesArr  = $CI->cceClient->scalar_to_array($vsite['webAliases'] ?? '');
+                $webAliasesOrig = $webAliasesArr;
 
-            if ($webAliasesChanged) {
-                $setData['webAliases'] = $webAliasesScalar;
-            }
+                // Base domain choice:
+                $domain = trim((string)($vsite['domain'] ?? ''));   // e.g. smd.net
+                $fqdn   = trim((string)($vsite['fqdn']   ?? ''));   // e.g. banana.smd.net
+                $hn     = strtolower(trim((string)($vsite['hostname'] ?? '')));
 
-            $setData = array(
-                "emailDisabled" => $attributes['emailDisabled'], 
-                "email_autoconfig" => $attributes['email_autoconfig'], 
-                "allow_sender_spoof" => $attributes['allow_sender_spoof'],
-                "mailAliases" => $attributes['mailAliases'], 
-                "mailCatchAll" => $attributes['mailCatchAll'],
-                "force_update" => time()
-            );
-
-            if ($webAliasesChanged) {
-                $setData['webAliases'] = $webAliasesScalar;
-            }
-
-            $CI->cceClient->set($vsite['OID'], '', $setData);
-
-            // CCE errors that might have happened during submit to CODB:
-            $CCEerrors = $CI->cceClient->errors();
-            foreach ($CCEerrors as $object => $objData) {
-                // When we fetch the CCE errors it tells us which field it bitched on. And gives us an error message, which we can return:
-                $errors[] = ErrorMessage($i18n->get($objData->message, true, array('key' => $objData->key)) . '<br>&nbsp;');
-            }
-
-            // --- Maintain SSL.LEwantedAliases for email autoconfig/autodiscover:
-            $leAliasesArr  = $CI->cceClient->scalar_to_array($vsiteSSL['LEwantedAliases'] ?? '');
-            $leAliasesOrig = $leAliasesArr;
-
-            if ($domain !== '') {
-                $wantAuto  = 'autoconfig.'   . $domain;
-                $wantDisco = 'autodiscover.' . $domain;
-
-                if ((string)$attributes['email_autoconfig'] === '1') {
-                    // Ensure aliases exist (case-insensitive)
-                    $lower = array_map('strtolower', $leAliasesArr);
-
-                    foreach ([$wantAuto, $wantDisco] as $need) {
-                        $l = strtolower($need);
-                        if (!in_array($l, $lower, true)) {
-                            $leAliasesArr[] = $need;
-                            $lower[] = $l;
-                        }
+                // If Vsite doesn't have hostname 'www' or 'mail', we use the FQDN:
+                if ($hn !== 'www' && $hn !== 'mail') {
+                    if ($fqdn !== '') {
+                        $domain = $fqdn;
                     }
-                } else {
-                    // Remove ONLY this vsite's autoconfig/autodiscover entries
-                    $reDomain = preg_quote($domain, '/');
-                    $leAliasesArr = array_values(array_filter(
-                        $leAliasesArr,
-                        function ($a) use ($reDomain) {
+                }
+
+                // Safety: trim trailing dot (some places store FQDNs with a dot)
+                $domain = strtolower(trim($domain, ". \t\n\r\0\x0B"));
+
+                if ($domain !== '') {
+                    $wantAuto  = 'autoconfig.'   . $domain;
+                    $wantDisco = 'autodiscover.' . $domain;
+
+                    if ((string)$attributes['email_autoconfig'] === '1') {
+                        // Ensure autoconfig.* and autodiscover.* exist (case-insensitive):
+                        $lower = array_map('strtolower', $webAliasesArr);
+
+                        foreach ([$wantAuto, $wantDisco] as $fqdnNeed) {
+                            $lf = strtolower($fqdnNeed);
+                            if (!in_array($lf, $lower, true)) {
+                                $webAliasesArr[] = $fqdnNeed;
+                                $lower[] = $lf;
+                            }
+                        }
+                    } else {
+                        // Strip ONLY the autoconfig/autodiscover aliases for this vsite's chosen domain:
+                        $reDomain = preg_quote($domain, '/');
+                        $webAliasesArr = array_values(array_filter($webAliasesArr, function ($a) use ($reDomain) {
                             $a = strtolower(trim((string)$a, ". \t\n\r\0\x0B"));
                             return !preg_match('/^(autoconfig|autodiscover)\.' . $reDomain . '$/i', $a);
-                        }
-                    ));
+                        }));
+                    }
                 }
-            }
 
-            // Write SSL namespace only if changed
-            $leChanged = (array_map('strtolower', $leAliasesArr) !== array_map('strtolower', $leAliasesOrig));
+                // Only set webAliases if it changed (case-insensitive compare):
+                $webAliasesChanged = (array_map('strtolower', $webAliasesArr) !== array_map('strtolower', $webAliasesOrig));
+                $webAliasesScalar  = $CI->cceClient->array_to_scalar($webAliasesArr);
 
-            if ($leChanged) {
-                $CI->cceClient->set($vsite['OID'], 'SSL', ['LEwantedAliases' => $CI->cceClient->array_to_scalar($leAliasesArr)]);
+                if ($webAliasesChanged) {
+                    $setData['webAliases'] = $webAliasesScalar;
+                }
+
+                $setData = array(
+                    "emailDisabled" => $attributes['emailDisabled'], 
+                    "email_autoconfig" => $attributes['email_autoconfig'], 
+                    "allow_sender_spoof" => $attributes['allow_sender_spoof'],
+                    "mailAliases" => $attributes['mailAliases'], 
+                    "mailCatchAll" => $attributes['mailCatchAll'],
+                    "force_update" => time()
+                );
+
+                if ($webAliasesChanged) {
+                    $setData['webAliases'] = $webAliasesScalar;
+                }
+
+                $CI->cceClient->set($vsite['OID'], '', $setData);
 
                 // CCE errors that might have happened during submit to CODB:
                 $CCEerrors = $CI->cceClient->errors();
                 foreach ($CCEerrors as $object => $objData) {
                     // When we fetch the CCE errors it tells us which field it bitched on. And gives us an error message, which we can return:
                     $errors[] = ErrorMessage($i18n->get($objData->message, true, array('key' => $objData->key)) . '<br>&nbsp;');
+                }
+
+                // --- Maintain SSL.LEwantedAliases for email autoconfig/autodiscover:
+                $leAliasesArr  = $CI->cceClient->scalar_to_array($vsiteSSL['LEwantedAliases'] ?? '');
+                $leAliasesOrig = $leAliasesArr;
+
+                if ($domain !== '') {
+                    $wantAuto  = 'autoconfig.'   . $domain;
+                    $wantDisco = 'autodiscover.' . $domain;
+
+                    if ((string)$attributes['email_autoconfig'] === '1') {
+                        // Ensure aliases exist (case-insensitive)
+                        $lower = array_map('strtolower', $leAliasesArr);
+
+                        foreach ([$wantAuto, $wantDisco] as $need) {
+                            $l = strtolower($need);
+                            if (!in_array($l, $lower, true)) {
+                                $leAliasesArr[] = $need;
+                                $lower[] = $l;
+                            }
+                        }
+                    } else {
+                        // Remove ONLY this vsite's autoconfig/autodiscover entries
+                        $reDomain = preg_quote($domain, '/');
+                        $leAliasesArr = array_values(array_filter(
+                            $leAliasesArr,
+                            function ($a) use ($reDomain) {
+                                $a = strtolower(trim((string)$a, ". \t\n\r\0\x0B"));
+                                return !preg_match('/^(autoconfig|autodiscover)\.' . $reDomain . '$/i', $a);
+                            }
+                        ));
+                    }
+                }
+
+                // Write SSL namespace only if changed
+                $leChanged = (array_map('strtolower', $leAliasesArr) !== array_map('strtolower', $leAliasesOrig));
+
+                if ($leChanged) {
+                    $CI->cceClient->set($vsite['OID'], 'SSL', ['LEwantedAliases' => $CI->cceClient->array_to_scalar($leAliasesArr)]);
+
+                    // CCE errors that might have happened during submit to CODB:
+                    $CCEerrors = $CI->cceClient->errors();
+                    foreach ($CCEerrors as $object => $objData) {
+                        // When we fetch the CCE errors it tells us which field it bitched on. And gives us an error message, which we can return:
+                        $errors[] = ErrorMessage($i18n->get($objData->message, true, array('key' => $objData->key)) . '<br>&nbsp;');
+                    }
                 }
             }
 
@@ -304,7 +328,7 @@ class vsiteEmail extends BaseController {
         $BxPage->setVerticalMenuChild('base_sitemail');
         $page_module = 'base_sitemanage';
 
-        $defaultPage = "basicSettings";
+        $defaultPage = "siteDefaultsTab";
         $block = $factory->getPagedBlock("siteEmailSettings", array($defaultPage));
         $block->setLabel($factory->getLabel('siteEmailSettings', false, array('fqdn' => $vsite['fqdn'])));
 
@@ -312,23 +336,6 @@ class vsiteEmail extends BaseController {
         $block->setSideTabs(FALSE);
         $block->setShowAllTabs('#');
         $block->setDefaultPage($defaultPage);
-
-        // Only 'manageSite' can modify things on this page.
-        // Site admins can view it for informational purposes.
-        if ($CI->getAllowed('manageSite')) {
-            $is_site_admin = FALSE;
-            $access = 'rw';
-        }
-        elseif (($CI->getAllowed('siteAdmin')) && ($group == $CI->serverScriptHelper->loginUser['site'])) {
-            $access = 'r';
-            $is_site_admin = TRUE;
-        }
-        else {
-            // Nice people say goodbye, or CCEd waits forever:
-            $CI->cceClient->bye();
-            $CI->serverScriptHelper->destructor();
-            Log403Error("/gui/Forbidden403#2");
-        }
 
         // Enable & disable Email
         $xff = $factory->getBoolean("emailDisabled", $vsite["emailDisabled"], $access);
@@ -613,8 +620,8 @@ class vsiteEmail extends BaseController {
 }
 
 /*
-Copyright (c) 2008-2025 Michael Stauber, SOLARSPEED.NET
-Copyright (c) 2008-2025 Team BlueOnyx, BLUEONYX.IT
+Copyright (c) 2008-2026 Michael Stauber, SOLARSPEED.NET
+Copyright (c) 2008-2026 Team BlueOnyx, BLUEONYX.IT
 All Rights Reserved.
 
 1. Redistributions of source code must retain the above copyright 

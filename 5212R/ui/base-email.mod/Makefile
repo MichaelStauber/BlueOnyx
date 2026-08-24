@@ -7,7 +7,7 @@ VENDORNAME='Project BlueOnyx and Bluapp AB'
 SERVICE=email
 
 VERSION=2.2.8
-RELEASE=2
+RELEASE=3
 
 # add a buildarch if desired
 BUILDARCH=noarch
@@ -31,4 +31,3 @@ INSTALL_OTH=$(INSTALL) -m 644
 TMPDIR=/tmp
 
 include /usr/sausalito/devel/module.mk
-

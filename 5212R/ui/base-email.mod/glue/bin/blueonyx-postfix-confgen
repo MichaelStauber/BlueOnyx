@@ -417,6 +417,9 @@ if [ -d /etc/postfix ]; then
         MILTERS=$(cat /etc/postfix/milters.d/*.cf | grep -v "#" | tr '\n' ' ' | tr -s ' ')
         postconf -e "smtpd_milters = $MILTERS"
     fi
+    postconf -e 'milter_connect_timeout = 30s'
+    postconf -e 'milter_command_timeout = 30s'
+    postconf -e 'milter_content_timeout = 300s'
 
     #
     ### Recipient ACL's (keep suspended_* behaviour!)

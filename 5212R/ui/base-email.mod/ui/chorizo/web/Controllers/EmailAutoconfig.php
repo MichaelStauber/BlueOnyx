@@ -28,8 +28,6 @@ class EmailAutoconfig extends BaseController {
         $BX_SESSION['loginName'] = 'api-admin';
         $password = $this->getApiAdminPassword();
         $BX_SESSION['sessionId'] = $CI->cceClient->auth($BX_SESSION['loginName'], $password);
-        $CI->cceClient->bye();
-        $CI->serverScriptHelper->destructor();
 
         if (!empty($BX_SESSION['sessionId'])) {
 
@@ -41,8 +39,6 @@ class EmailAutoconfig extends BaseController {
             $serverScriptHelper = $CI->getSSH();
             $locale = 'en_US';
             $BX_SESSION = $CI->getBX_SESSION();
-            $CI->cceClient->bye();
-            $CI->serverScriptHelper->destructor();
         }
         else {
             //
@@ -72,6 +68,8 @@ class EmailAutoconfig extends BaseController {
 
         // Policy gate: only serve if allowed for that domain/vsite:
         if (!$this->isAutoconfigAllowed($domain)) {
+            $CI->cceClient->bye();
+            $CI->serverScriptHelper->destructor();
             return $this->xmlError(404, 'Autoconfig not available for this domain');
         }
 
@@ -91,6 +89,8 @@ class EmailAutoconfig extends BaseController {
         $xml = $this->renderThunderbirdXml($cfg, $services);
 
         $CI->cceClient->endkey();
+        $CI->cceClient->bye();
+        $CI->serverScriptHelper->destructor();
 
         return $this->response
             ->setStatusCode(200)
@@ -127,8 +127,6 @@ class EmailAutoconfig extends BaseController {
         $BX_SESSION['loginName'] = 'api-admin';
         $password = $this->getApiAdminPassword();
         $BX_SESSION['sessionId'] = $CI->cceClient->auth($BX_SESSION['loginName'], $password);
-        $CI->cceClient->bye();
-        $CI->serverScriptHelper->destructor();
 
         if (!empty($BX_SESSION['sessionId'])) {
 
@@ -140,8 +138,6 @@ class EmailAutoconfig extends BaseController {
             $serverScriptHelper = $CI->getSSH();
             $locale = 'en_US';
             $BX_SESSION = $CI->getBX_SESSION();
-            $CI->cceClient->bye();
-            $CI->serverScriptHelper->destructor();
         }
         else {
             //
@@ -188,6 +184,9 @@ class EmailAutoconfig extends BaseController {
             );
 
             $CI->cceClient->endkey();
+            $CI->cceClient->bye();
+            $CI->serverScriptHelper->destructor();
+
             return $this->response
                 ->setStatusCode(200)
                 ->setContentType('text/xml', 'utf-8')
@@ -235,6 +234,8 @@ class EmailAutoconfig extends BaseController {
         }
 
         $CI->cceClient->endkey();
+        $CI->cceClient->bye();
+        $CI->serverScriptHelper->destructor();
 
         return $this->response
             ->setStatusCode(200)
@@ -262,6 +263,10 @@ class EmailAutoconfig extends BaseController {
         $email = strtolower(trim($seg6));
 
         if ($email === '' || !preg_match('/^[^@\s]+@[^@\s]+\.[^@\s]+$/', $email)) {
+
+            $CI->cceClient->bye();
+            $CI->serverScriptHelper->destructor();
+
             return $this->response->setStatusCode(400)
                 ->setContentType('application/json', 'utf-8')
                 ->setBody(json_encode(['Error' => 'Invalid email']));
@@ -283,6 +288,9 @@ class EmailAutoconfig extends BaseController {
             'Protocol' => $protocol,
             'Url'      => $url,
         ];
+
+        $CI->cceClient->bye();
+        $CI->serverScriptHelper->destructor();
 
         return $this->response->setStatusCode(200)
             ->setHeader('Cache-Control', 'no-store')

@@ -178,6 +178,15 @@ fi
 
 <begin $CHANGELOG>
 
+* Thu Aug 28 2026 Michael Stauber <mstauber@blueonyx.it> - 2.2.8-4
+- Fixed EmailAutoconfig: Removed premature CCE connection teardown
+  (double bye()/destructor() calls) inside thunderbird() and autodiscover()
+  controller methods. The inner bye()/destructor() calls destroyed the freshly
+  established ServerScriptHelper connection before getAll() queries could
+  run, causing getSystemEmailServiceFlags() to return all-false and resulting
+  in empty XML responses missing incomingServer/outgoingServer blocks.
+  Reported by Lars Herrmann.
+
 * Mon Aug 24 2026 Michael Stauber <mstauber@solarspeed.net> 2.2.8-3
 - Modified glue/bin/blueonyx-postfix-confgen to set Postfix milter
   timeout defaults for connect, command and content handling.

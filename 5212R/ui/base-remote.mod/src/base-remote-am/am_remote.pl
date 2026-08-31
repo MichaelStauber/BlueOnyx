@@ -27,6 +27,20 @@ if (!$ok) {
     exit $am_states{AM_STATE_NOINFO};
 }
 
+# Garbage-collect expired authorization records. These records are not
+# consumed after the first request because Shellinabox makes subsequent
+# polling/resource requests with the same cookie.
+my $token_dir = '/usr/sausalito/sessions/shellinabox-tokens';
+if (-d $token_dir && opendir(my $token_dh, $token_dir)) {
+    while (my $token_file = readdir($token_dh)) {
+        next unless $token_file =~ /\A[0-9a-f]{64}\z/;
+        my $token_path = "$token_dir/$token_file";
+        my @token_stat = stat($token_path);
+        unlink($token_path) if @token_stat && $token_stat[9] < time() - 600;
+    }
+    closedir($token_dh);
+}
+
 # Check if the service is enabled:
 if ($RemoteSettings->{'enabled'} eq "1") {
     # Service is enabled:

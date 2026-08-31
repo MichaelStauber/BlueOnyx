@@ -7,7 +7,7 @@ VENDORNAME='Project BlueOnyx'
 SERVICE=admserv
 
 VERSION=2.4.1
-RELEASE=5
+RELEASE=6
 
 # add a buildarch if desired
 BUILDARCH=noarch
@@ -29,4 +29,3 @@ REQUIRES_GLUE=openssl httpd mod_ssl sausalito-cce-client sausalito-cce-server sa
 OBSOLETES=php-mysql
 
 include /usr/sausalito/devel/module.mk
-

@@ -35,6 +35,19 @@ Sauce::Service::service_set_init('shellinaboxd', $ssh->{enabled});
 #Sauce::Service::service_run_init('shellinaboxd', $action);
 system("/usr/bin/systemctl $action shellinaboxd");
 
+# Invalidate outstanding browser authorizations immediately when the service
+# is disabled. Only the generated hex token records are removed.
+if ($action eq 'stop') {
+    my $token_dir = '/usr/sausalito/sessions/shellinabox-tokens';
+    if (-d $token_dir && opendir(my $token_dh, $token_dir)) {
+        while (my $token_file = readdir($token_dh)) {
+            next unless $token_file =~ /\A[0-9a-f]{64}\z/;
+            unlink("$token_dir/$token_file");
+        }
+        closedir($token_dh);
+    }
+}
+
 $cce->bye('SUCCESS');
 exit(0);
 

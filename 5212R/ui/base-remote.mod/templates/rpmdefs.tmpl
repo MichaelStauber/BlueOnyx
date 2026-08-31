@@ -79,6 +79,9 @@ if [ -d "/usr/sausalito/yumcce" ];then
   touch /usr/sausalito/yumcce/rehash
 fi
 
+# Shellinabox authorization records are written by AdmServ PHP.
+/usr/bin/install -d -o admserv -g admserv -m 0700 /usr/sausalito/sessions/shellinabox-tokens || exit 1
+
 <end glue>
 <begin ui>
 # ui post-install
@@ -125,6 +128,10 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+
+* Sun Aug 30 2026 BlueOnyx Team <team@blueonyx.it> 1.6.0-6
+- Added session-derived Shellinabox authorization with scoped cookie.
+- Added automatic creation of the AdmServ-owned token directory.
 
 * Tue Dec 09 2025 Michael Stauber <mstauber@solarspeed.net> 1.6.0-5
 - Modified glue/handlers/toggle_remote.pl to immediately bring our
@@ -204,4 +211,3 @@ fi
 - Former nuonce-mindterm wrapped into a properly build BX module
 
 <end $CHANGELOG>
-

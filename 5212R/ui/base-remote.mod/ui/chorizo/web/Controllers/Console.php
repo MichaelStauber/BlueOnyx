@@ -59,8 +59,6 @@ class Console extends BaseController {
         //-- Prepare data:
         //
 
-        setcookie("remote", $BX_SESSION['sessionId'], "0", "/");
-
         $userShell = $CI->cceClient->getObject("User", array("name" => $BX_SESSION['loginName']), "Shell");
         $vsiteShell = $CI->cceClient->getObject("Vsite", array("name" => $user['site']), "Shell");
 
@@ -168,8 +166,8 @@ class Console extends BaseController {
         $block->setShowAllTabs('#');
         $block->setDefaultPage($defaultPage);
 
-        $uri_full = 'https://' . $_SERVER['SERVER_NAME'] . ':' . $BX_SESSION['GUI_PORT'] . '/bxshell/?' . $BX_SESSION['loginName'] . '=' . time();
-        $uri_short = '/bxshell/?' . $BX_SESSION['loginName'] . '=' . time();
+        $uri_full = 'https://' . $_SERVER['SERVER_NAME'] . ':' . $BX_SESSION['GUI_PORT'] . '/remote/shell-auth';
+        $uri_short = '/remote/shell-auth';
 
         if (!isset($userShell['enabled'])) {
             $uri_full = 'https://' . $_SERVER['SERVER_NAME'] . ':' . $BX_SESSION['GUI_PORT'] . '/remote/noaccess/?' . $BX_SESSION['loginName'] . '=' . time();

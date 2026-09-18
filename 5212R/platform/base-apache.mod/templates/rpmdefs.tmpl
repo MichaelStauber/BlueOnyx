@@ -253,6 +253,15 @@ fi
 
 <begin $CHANGELOG>
 
+* Thu Sep 17 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.8-4
+- Ensure all installed OPcache configuration files contain the complete
+  baseline configuration while preserving administrator-selected values.
+
+* Thu Sep 17 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.8-3
+- Modified constructor/fix_php_conf.pl to remove active open_basedir
+  directives from global OS and additional PHP php.ini files, preserving
+  open_basedir enforcement in Vsite-specific Apache configurations.
+
 * Thu Aug 03 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.8-2
 - Modified glue/handlers/virtual_host.pl to properly handle wildcard
   webAliases (e.g. *.domain.com) in RewriteCond generation for

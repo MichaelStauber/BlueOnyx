@@ -65,6 +65,29 @@ if ($custom_php_conf ne "1") {
                         'PHP94' => '/home/solarspeed/php-9.4',
                         );
 
+# PHP used from the command line must not inherit the web-only open_basedir
+# restriction. The restriction is applied later in the Vsite Apache/FPM
+# configuration (and in the suPHP copy of php.ini).
+&clear_global_open_basedir('/etc/php.ini');
+&clear_global_open_basedir('/home/solarspeed/php/etc/php.ini');
+for my $php_ini (glob('/home/solarspeed/php-*/etc/php.ini')) {
+  &clear_global_open_basedir($php_ini);
+}
+# Ensure that every installed OPcache configuration has the complete
+# BlueOnyx baseline. Existing active values are deliberately preserved.
+my %seen_opcache_ini;
+for my $opcache_ini (
+  '/etc/php.d/opcache.ini',
+  glob('/etc/php.d/*opcache*.ini'),
+  '/home/solarspeed/php/etc/php.d/opcache.ini',
+  glob('/home/solarspeed/php/etc/php.d/*opcache*.ini'),
+  glob('/home/solarspeed/php-*/etc/php.d/opcache.ini'),
+  glob('/home/solarspeed/php-*/etc/php.d/*opcache*.ini')
+) {
+  next if $seen_opcache_ini{$opcache_ini}++;
+  &ensure_opcache_settings($opcache_ini);
+}
+
 # List of PEAR modules that we *need* to install:
 %required_modules = (
                       'Net_Socket', 
@@ -146,6 +169,75 @@ if ($check_net eq "1") {
 $cce->bye("SUCCESS");
 
 exit(0);
+
+sub ensure_opcache_settings {
+  my ($php_ini) = @_;
+  return unless -f $php_ini;
+
+  my @defaults = (
+    [ 'opcache.enable',                '1' ],
+    [ 'opcache.enable_cli',            '0' ],
+    [ 'opcache.memory_consumption',    '256' ],
+    [ 'opcache.max_accelerated_files', '30000' ],
+    [ 'opcache.validate_timestamps',   '1' ],
+    [ 'opcache.revalidate_freq',       '60' ],
+  );
+
+  my @lines;
+  my %present;
+  open(my $in, '<', $php_ini) || return;
+  while (my $line = <$in>) {
+    push @lines, $line;
+    if ($line =~ /^\s*(opcache\.[A-Za-z0-9_]+)\s*=/i) {
+      $present{lc($1)} = 1;
+    }
+  }
+  close($in);
+
+  my @missing;
+  for my $setting (@defaults) {
+    push @missing, $setting unless $present{lc($setting->[0])};
+  }
+  return unless @missing;
+
+  my @stat = stat($php_ini);
+  my $mode = $stat[2] & 07777;
+  my $stage = "$php_ini~";
+  open(my $out, '>', $stage) || return;
+  print {$out} @lines;
+  print {$out} "\n" if @lines && $lines[-1] !~ /\n\z/;
+  print {$out} "; BlueOnyx OPcache defaults (existing values are preserved)\n";
+  for my $setting (@missing) {
+    print {$out} $setting->[0] . '=' . $setting->[1] . "\n";
+  }
+  close($out);
+  chmod($mode, $stage);
+  chown($stat[4], $stat[5], $stage);
+  rename($stage, $php_ini) || unlink($stage);
+}
+sub clear_global_open_basedir {
+  my ($php_ini) = @_;
+  return unless -f $php_ini;
+
+  my $stage = "$php_ini~";
+  my @stat = stat($php_ini);
+  my $mode = $stat[2] & 07777;
+
+  open(my $in, '<', $php_ini) || return;
+  open(my $out, '>', $stage) || do { close($in); return; };
+
+  while (my $line = <$in>) {
+    # Remove active directives only. Commented documentation is retained.
+    next if $line =~ /^\s*open_basedir\s*=/i;
+    print {$out} $line;
+  }
+
+  close($in);
+  close($out);
+  chmod($mode, $stage);
+  chown($stat[4], $stat[5], $stage);
+  rename($stage, $php_ini) || unlink($stage);
+}
 
 # 
 # Copyright (c) 2008-2025 Michael Stauber, SOLARSPEED.NET

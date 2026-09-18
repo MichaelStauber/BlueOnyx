@@ -161,6 +161,13 @@ fi
 
 <begin $CHANGELOG>
 
+* Thu Sep 17 2026 Michael Stauber <mstauber@solarspeed.net> 4.9-4
+- Modified constructor/import_php_ini_settings.pl to remove active
+  open_basedir directives from global OS and additional PHP php.ini files.
+- Modified glue/handlers/php_handler.pl to keep open_basedir out of global
+  php.ini write-offs while retaining per-Vsite enforcement for suPHP and
+  PHP-FPM.
+
 * Wed Aug 19 2026 Michael Stauber <mstauber@solarspeed.net> 4.9-3
 - Modified ui/chorizo/web/Controllers/VsiteEmail.php to exclude
   form handling of server values if siteAdmin has 'rw' access for

@@ -373,6 +373,9 @@ sub edit_php_ini {
     &debug_msg("Called to edit $php_ini \n");
     &debug_msg("Called to deal with $platform \n");
 
+    # open_basedir is deliberately omitted from the global php.ini write-off.
+    # It is enforced per Vsite by Apache, PHP-FPM pools, or suPHP's copied ini.
+
     # Making sure 'open_basedir' has the bare minimum defaults:
     @php_settings_temporary = split(":", $PHP->{"open_basedir"});
     @my_baremetal_minimums = ('/usr/sausalito/configs/php/', '/tmp/', '/var/lib/php/session/');
@@ -437,7 +440,6 @@ sub edit_php_ini {
             'allow_url_include' => $PHP->{"allow_url_include"}, 
             'disable_classes' => $PHP->{"disable_classes"}, 
             'disable_functions' => $PHP->{"disable_functions"}, 
-            'open_basedir' => $PHP->{"open_basedir"}, 
             'post_max_size' => $PHP->{"post_max_size"}, 
             'upload_max_filesize' => $PHP->{"upload_max_filesize"},
             'max_execution_time' => $PHP->{"max_execution_time"}, 
@@ -467,7 +469,6 @@ sub edit_php_ini {
             'allow_url_include' => $PHP->{"allow_url_include"}, 
             'disable_classes' => $PHP->{"disable_classes"}, 
             'disable_functions' => $PHP->{"disable_functions"}, 
-            'open_basedir' => $PHP->{"open_basedir"}, 
             'post_max_size' => $PHP->{"post_max_size"}, 
             'upload_max_filesize' => $PHP->{"upload_max_filesize"},
             'max_execution_time' => $PHP->{"max_execution_time"}, 

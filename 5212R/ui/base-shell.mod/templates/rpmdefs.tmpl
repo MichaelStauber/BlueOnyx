@@ -51,6 +51,8 @@ information for [VENDOR]-[SERVICE].
 %attr(0755,-,-) /usr/sausalito/sbin/jail_toggler.pl
 %attr(0755,-,-) /usr/sausalito/sbin/gauth_add.sh
 %attr(0755,-,-) /usr/sausalito/sbin/gauth_check.sh
+%attr(0755,-,-) /usr/sausalito/sbin/jailkit_integrity.pl
+%attr(0755,-,-) /etc/cron.daily/jailkit_integrity
 
 <end glue>
 
@@ -125,6 +127,16 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+
+* Thu Sep 17 2026 Michael Stauber <mstauber@solarspeed.net> 1.4-16
+- Fixed Jailkit repair to copy missing executables and libraries with jk_cp.
+- Added --help output to jailkit_integrity.pl.
+
+* Thu Sep 17 2026 Michael Stauber <mstauber@solarspeed.net> 1.4-15
+- Added daily Jailkit integrity verification and repair.
+- Added a quiet once-per-day Constructor fallback for CCEd restarts.
+- Repair checks follow the active jk_lsh.ini executable policy and
+  only inspect jails belonging to active jailed Vsites.
 
 * Wed May 06 2026 Michael Stauber <mstauber@solarspeed.net> 1.4-14
 - Fixed vsite_shell.pl to detect and regenerate broken jk_socketd.ini files

@@ -30,6 +30,15 @@ $php_dso_location = '/usr/lib64/httpd/modules/libphp7.so';
 
 $extra_PHP_basepath = '/home/solarspeed/';
 
+# open_basedir is a web-SAPI restriction. Keep it out of the global PHP
+# configuration so command-line PHP remains unrestricted. Vsite-specific
+# Apache/FPM configuration adds the restriction again where it is needed.
+&clear_global_open_basedir('/etc/php.ini');
+&clear_global_open_basedir('/home/solarspeed/php/etc/php.ini');
+for my $php_ini_path (glob('/home/solarspeed/php-*/etc/php.ini')) {
+    &clear_global_open_basedir($php_ini_path);
+}
+
 use CCE;
 use Sauce::Config;
 use Sauce::Util;
@@ -217,6 +226,30 @@ else {
 
 $cce->bye('SUCCESS');
 exit(0);
+
+sub clear_global_open_basedir {
+    my ($php_ini_path) = @_;
+    return unless -f $php_ini_path;
+
+    my $stage = "$php_ini_path~";
+    my @stat = stat($php_ini_path);
+    my $mode = $stat[2] & 07777;
+
+    open(my $in, '<', $php_ini_path) || return;
+    open(my $out, '>', $stage) || do { close($in); return; };
+
+    while (my $line = <$in>) {
+        # Remove active directives only. Keep commented documentation.
+        next if $line =~ /^\s*open_basedir\s*=/i;
+        print {$out} $line;
+    }
+
+    close($in);
+    close($out);
+    chmod($mode, $stage);
+    chown($stat[4], $stat[5], $stage);
+    rename($stage, $php_ini_path) || unlink($stage);
+}
 
 # Read and parse php.ini:
 sub ini_read {

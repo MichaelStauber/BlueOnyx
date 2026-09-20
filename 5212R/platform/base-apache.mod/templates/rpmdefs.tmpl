@@ -253,6 +253,12 @@ fi
 
 <begin $CHANGELOG>
 
+* Fri Sep 18 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.9-1
+- Modified glue/handlers/virtual_host.pl to generate configurable PHP-FPM
+  ondemand and dynamic pools using server and per-Vsite settings.
+- Modified PHP-FPM pool generation to emit only the directives valid for the
+  selected process manager.
+
 * Thu Sep 17 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.8-4
 - Ensure all installed OPcache configuration files contain the complete
   baseline configuration while preserving administrator-selected values.

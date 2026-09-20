@@ -1566,6 +1566,26 @@ sub handle_fpm_pools {
         $fpm_max_children = $PHP_server->{'fpm_max_children'};
     }
 
+    # PHP-FPM process manager and pool defaults. Vsite values override the
+    # server-wide PHP values; zero/empty means to inherit the default.
+    $fpm_process_manager = $PHP_Vsite->{'fpm_process_manager'};
+    if ($fpm_process_manager ne 'ondemand' && $fpm_process_manager ne 'dynamic') {
+        $fpm_process_manager = $PHP_server->{'fpm_process_manager'};
+    }
+    $fpm_process_manager = 'ondemand' if ($fpm_process_manager ne 'ondemand' && $fpm_process_manager ne 'dynamic');
+    $fpm_start_servers = $PHP_Vsite->{'fpm_start_servers'} || $PHP_server->{'fpm_start_servers'};
+    $fpm_start_servers = 3 if ($fpm_start_servers < 1 || $fpm_start_servers > $fpm_max_children);
+    $fpm_min_spare_servers = $PHP_Vsite->{'fpm_min_spare_servers'} || $PHP_server->{'fpm_min_spare_servers'};
+    $fpm_min_spare_servers = 2 if ($fpm_min_spare_servers < 1 || $fpm_min_spare_servers > $fpm_max_children);
+    $fpm_max_spare_servers = $PHP_Vsite->{'fpm_max_spare_servers'} || $PHP_server->{'fpm_max_spare_servers'};
+    $fpm_max_spare_servers = 5 if ($fpm_max_spare_servers < 1 || $fpm_max_spare_servers > $fpm_max_children);
+    $fpm_max_spare_servers = $fpm_min_spare_servers if ($fpm_max_spare_servers < $fpm_min_spare_servers);
+    $fpm_min_spare_servers = $fpm_max_spare_servers if ($fpm_min_spare_servers > $fpm_max_spare_servers);
+    $fpm_process_idle_timeout = $PHP_Vsite->{'fpm_process_idle_timeout'} || $PHP_server->{'fpm_process_idle_timeout'};
+    $fpm_process_idle_timeout = 30 if ($fpm_process_idle_timeout < 1 || $fpm_process_idle_timeout > 3600);
+    $fpm_max_requests = defined($PHP_Vsite->{'fpm_max_requests'}) && $PHP_Vsite->{'fpm_max_requests'} ne '' ? $PHP_Vsite->{'fpm_max_requests'} : $PHP_server->{'fpm_max_requests'};
+    $fpm_max_requests = 500 if ($fpm_max_requests < 0 || $fpm_max_requests > 100000);
+
     # Location of the PHP-FPM pool file:
     $pool_file_wildcard = '/etc/php-fpm*.d/';
     if (-d $pool_directory) {
@@ -1610,11 +1630,18 @@ sub handle_fpm_pools {
         $pool_conf .= 'user = ' . $pool_UID . "\n";
         $pool_conf .= 'group = ' . $pool_group . "\n";
         $pool_conf .= '' . "\n";
-        $pool_conf .= '; Set to \'ondemand\' and set limits:' . "\n";
-        $pool_conf .= 'pm = ondemand' . "\n";
+        $pool_conf .= '; PHP-FPM process manager and pool limits:' . "\n";
+        $pool_conf .= 'pm = ' . $fpm_process_manager . "\n";
         $pool_conf .= 'pm.max_children = ' . $fpm_max_children . "\n";
-        $pool_conf .= 'pm.process_idle_timeout = 30s' . "\n";
-        $pool_conf .= 'pm.max_requests = 500' . "\n";
+        if ($fpm_process_manager eq 'dynamic') {
+            $pool_conf .= 'pm.start_servers = ' . $fpm_start_servers . "\n";
+            $pool_conf .= 'pm.min_spare_servers = ' . $fpm_min_spare_servers . "\n";
+            $pool_conf .= 'pm.max_spare_servers = ' . $fpm_max_spare_servers . "\n";
+        }
+        else {
+            $pool_conf .= 'pm.process_idle_timeout = ' . $fpm_process_idle_timeout . 's' . "\n";
+        }
+        $pool_conf .= 'pm.max_requests = ' . $fpm_max_requests . "\n";
         $pool_conf .= '' . "\n";
         $pool_conf .= '; Set session path to a directory owned by process user' . "\n";
         $pool_conf .= 'php_value[session.save_handler] = files' . "\n";

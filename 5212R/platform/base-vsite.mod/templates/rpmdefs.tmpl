@@ -161,6 +161,12 @@ fi
 
 <begin $CHANGELOG>
 
+* Fri Sep 18 2026 Michael Stauber <mstauber@solarspeed.net> 4.10-1
+- Added configurable PHP-FPM process manager and pool settings to the
+  server PHP defaults and per-Vsite PHP settings.
+- Added support for ondemand and dynamic PHP-FPM pools, including validation,
+  inheritance of server defaults, and localized UI labels.
+
 * Thu Sep 17 2026 Michael Stauber <mstauber@solarspeed.net> 4.9-4
 - Modified constructor/import_php_ini_settings.pl to remove active
   open_basedir directives from global OS and additional PHP php.ini files.

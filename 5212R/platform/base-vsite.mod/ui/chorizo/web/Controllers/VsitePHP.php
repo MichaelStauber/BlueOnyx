@@ -135,6 +135,22 @@ class VsitePHP extends BaseController {
         // Main PHP Object data:
         $system_php = $all_php_data['OBJECT'];
 
+        // PHP-FPM defaults. The PHPVsite schema normally contains concrete
+        // values; the fallback also keeps older or incomplete objects safe.
+        $fpm_defaults = array(
+            'fpm_process_manager' => isset($system_php['fpm_process_manager']) && in_array($system_php['fpm_process_manager'], array('ondemand', 'dynamic')) ? $system_php['fpm_process_manager'] : 'ondemand',
+            'fpm_start_servers' => (isset($system_php['fpm_start_servers']) && $system_php['fpm_start_servers'] > 0) ? $system_php['fpm_start_servers'] : 3,
+            'fpm_min_spare_servers' => (isset($system_php['fpm_min_spare_servers']) && $system_php['fpm_min_spare_servers'] > 0) ? $system_php['fpm_min_spare_servers'] : 2,
+            'fpm_max_spare_servers' => (isset($system_php['fpm_max_spare_servers']) && $system_php['fpm_max_spare_servers'] > 0) ? $system_php['fpm_max_spare_servers'] : 5,
+            'fpm_process_idle_timeout' => (isset($system_php['fpm_process_idle_timeout']) && $system_php['fpm_process_idle_timeout'] > 0) ? $system_php['fpm_process_idle_timeout'] : 30,
+            'fpm_max_requests' => (isset($system_php['fpm_max_requests']) && $system_php['fpm_max_requests'] > 0) ? $system_php['fpm_max_requests'] : 500,
+        );
+
+        $fpm_effective = array();
+        foreach ($fpm_defaults as $key => $default) {
+            $fpm_effective[$key] = (!empty($PHPVsiteObj[$key])) ? $PHPVsiteObj[$key] : $default;
+        }
+
         // Find out which PHP version the server uses:         
         $platform = $system_php["PHP_version"];
 
@@ -310,6 +326,15 @@ class VsitePHP extends BaseController {
             if (($system_php['allow_open_basedir_off'] == '0') && ($attributes['allow_open_basedir_off'] == '1')) {
                 $attributes['allow_open_basedir_off'] = '0';
             }
+
+            if ($vsite_php['fpm_enabled'] == '1' && isset($attributes['fpm_process_manager']) && $attributes['fpm_process_manager'] == 'dynamic') {
+                $fpm_max_children = isset($system_php['fpm_max_children']) ? $system_php['fpm_max_children'] : 15;
+                if (($attributes['fpm_start_servers'] > $fpm_max_children) ||
+                    ($attributes['fpm_min_spare_servers'] > $attributes['fpm_max_spare_servers']) ||
+                    ($attributes['fpm_max_spare_servers'] > $fpm_max_children)) {
+                    $errors[] = ErrorMessage($i18n->get('[[base-vsite.fpm_invalid_pool_settings]]'));
+                }
+            }
         }
 
         //
@@ -344,6 +369,14 @@ class VsitePHP extends BaseController {
                             "max_input_vars" => $attributes['max_input_vars'],
                             "memory_limit" => $attributes['memory_limit'],
                         );
+                    if ($vsite_php['fpm_enabled'] == '1') {
+                        $setMe['fpm_process_manager'] = $attributes['fpm_process_manager'];
+                        $setMe['fpm_start_servers'] = $attributes['fpm_start_servers'];
+                        $setMe['fpm_min_spare_servers'] = $attributes['fpm_min_spare_servers'];
+                        $setMe['fpm_max_spare_servers'] = $attributes['fpm_max_spare_servers'];
+                        $setMe['fpm_process_idle_timeout'] = $attributes['fpm_process_idle_timeout'];
+                        $setMe['fpm_max_requests'] = $attributes['fpm_max_requests'];
+                    }
                 }
                 else {
                     $setMe = array(
@@ -379,6 +412,14 @@ class VsitePHP extends BaseController {
                                 "max_input_vars" => $attributes['max_input_vars'],
                                 "memory_limit" => $attributes['memory_limit']
                                 );
+                    if ($vsite_php['fpm_enabled'] == '1') {
+                        $setMe['fpm_process_manager'] = $attributes['fpm_process_manager'];
+                        $setMe['fpm_start_servers'] = $attributes['fpm_start_servers'];
+                        $setMe['fpm_min_spare_servers'] = $attributes['fpm_min_spare_servers'];
+                        $setMe['fpm_max_spare_servers'] = $attributes['fpm_max_spare_servers'];
+                        $setMe['fpm_process_idle_timeout'] = $attributes['fpm_process_idle_timeout'];
+                        $setMe['fpm_max_requests'] = $attributes['fpm_max_requests'];
+                    }
                 }
                 else {
                     $setMe = array(
@@ -885,6 +926,39 @@ class VsitePHP extends BaseController {
             $memory_limit_choices_select = $factory->getMultiChoice("memory_limit",array_values($memory_limit_choices));
             $memory_limit_choices_select->setSelected($PHPVsiteObj['memory_limit'], true);
             $block->addFormField($memory_limit_choices_select,$factory->getLabel("memory_limit"), $defaultPage);
+
+            if ($vsite_php['fpm_enabled'] == '1') {
+            // PHP-FPM process manager and pool settings:
+            $fpm_process_manager_choices = array('ondemand', 'dynamic');
+            $fpm_process_manager_Field = $factory->getMultiChoice('fpm_process_manager', $fpm_process_manager_choices);
+            $fpm_process_manager_Field->setSelected($fpm_effective['fpm_process_manager'], true);
+            $block->addFormField($fpm_process_manager_Field, $factory->getLabel('fpm_process_manager'), $defaultPage);
+
+            $fpm_start_servers_Field = $factory->getInteger('fpm_start_servers', $fpm_effective['fpm_start_servers'], '1', '255');
+            $fpm_start_servers_Field->setWidth(3);
+            $fpm_start_servers_Field->showBounds(1);
+            $block->addFormField($fpm_start_servers_Field, $factory->getLabel('fpm_start_servers'), $defaultPage);
+
+            $fpm_min_spare_servers_Field = $factory->getInteger('fpm_min_spare_servers', $fpm_effective['fpm_min_spare_servers'], '1', '255');
+            $fpm_min_spare_servers_Field->setWidth(3);
+            $fpm_min_spare_servers_Field->showBounds(1);
+            $block->addFormField($fpm_min_spare_servers_Field, $factory->getLabel('fpm_min_spare_servers'), $defaultPage);
+
+            $fpm_max_spare_servers_Field = $factory->getInteger('fpm_max_spare_servers', $fpm_effective['fpm_max_spare_servers'], '1', '255');
+            $fpm_max_spare_servers_Field->setWidth(3);
+            $fpm_max_spare_servers_Field->showBounds(1);
+            $block->addFormField($fpm_max_spare_servers_Field, $factory->getLabel('fpm_max_spare_servers'), $defaultPage);
+
+            $fpm_process_idle_timeout_Field = $factory->getInteger('fpm_process_idle_timeout', $fpm_effective['fpm_process_idle_timeout'], '1', '3600');
+            $fpm_process_idle_timeout_Field->setWidth(4);
+            $fpm_process_idle_timeout_Field->showBounds(1);
+            $block->addFormField($fpm_process_idle_timeout_Field, $factory->getLabel('fpm_process_idle_timeout'), $defaultPage);
+
+            $fpm_max_requests_Field = $factory->getInteger('fpm_max_requests', $fpm_effective['fpm_max_requests'], '0', '100000');
+            $fpm_max_requests_Field->setWidth(6);
+            $fpm_max_requests_Field->showBounds(1);
+            $block->addFormField($fpm_max_requests_Field, $factory->getLabel('fpm_max_requests'), $defaultPage);
+            }
 
         }
         else {

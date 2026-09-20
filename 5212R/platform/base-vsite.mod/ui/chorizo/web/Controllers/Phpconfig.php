@@ -188,6 +188,14 @@ class Phpconfig extends BaseController {
                 $enabledExtraPHPversions = scalar_to_array($attributes['extraPHPversions']);
                 unset($attributes['extraPHPversions']);
             }
+            if (isset($attributes['fpm_process_manager']) && $attributes['fpm_process_manager'] == 'dynamic') {
+                $fpm_max_children = isset($attributes['fpm_max_children']) ? $attributes['fpm_max_children'] : 15;
+                if (($attributes['fpm_start_servers'] > $fpm_max_children) ||
+                    ($attributes['fpm_min_spare_servers'] > $attributes['fpm_max_spare_servers']) ||
+                    ($attributes['fpm_max_spare_servers'] > $fpm_max_children)) {
+                    $errors[] = ErrorMessage($i18n->get('[[base-vsite.fpm_invalid_pool_settings]]'));
+                }
+            }
         }
 
         //
@@ -700,6 +708,31 @@ class Phpconfig extends BaseController {
             $factory->getLabel("fpm_max_children"),
             "php_ini_security_settings"
         );
+
+        // PHP-FPM pool defaults:
+        $fpm_process_manager_choices = array('ondemand', 'dynamic');
+        if (!isset($CODBDATA['fpm_process_manager']) || !in_array($CODBDATA['fpm_process_manager'], $fpm_process_manager_choices)) {
+            $CODBDATA['fpm_process_manager'] = 'ondemand';
+        }
+        $fpm_process_manager_Field = $factory->getMultiChoice('fpm_process_manager', $fpm_process_manager_choices);
+        $fpm_process_manager_Field->setSelected($CODBDATA['fpm_process_manager'], true);
+        $block->addFormField($fpm_process_manager_Field, $factory->getLabel('fpm_process_manager'), 'php_ini_security_settings');
+
+        foreach (array(
+            'fpm_start_servers' => array('3', '1', '255'),
+            'fpm_min_spare_servers' => array('2', '1', '255'),
+            'fpm_max_spare_servers' => array('5', '1', '255'),
+            'fpm_process_idle_timeout' => array('30', '1', '3600'),
+            'fpm_max_requests' => array('500', '0', '100000'),
+        ) as $fpm_key => $fpm_bounds) {
+            if (!isset($CODBDATA[$fpm_key]) || $CODBDATA[$fpm_key] === '') {
+                $CODBDATA[$fpm_key] = $fpm_bounds[0];
+            }
+            $fpm_field = $factory->getInteger($fpm_key, $CODBDATA[$fpm_key], $fpm_bounds[1], $fpm_bounds[2]);
+            $fpm_field->setWidth(6);
+            $fpm_field->showBounds(1);
+            $block->addFormField($fpm_field, $factory->getLabel($fpm_key), 'php_ini_security_settings');
+        }
 
         //
         //--- php_ini_expert_mode

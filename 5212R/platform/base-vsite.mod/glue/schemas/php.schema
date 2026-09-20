@@ -1,7 +1,7 @@
 <!-- Author: Michael Stauber mstauber@solarspeed.net -->
 <!-- Copyright 2006-2023, Team BlueOnyx. All rights reserved. -->
 
-<class name="PHP" version="3.3" createacl="ruleCapable(adminUser)">
+<class name="PHP" version="3.4" createacl="ruleCapable(adminUser)">
        <property name="PHP_version_os"
             type="scalar"
             default=""
@@ -158,6 +158,42 @@
        <property name="fpm_max_children"
             type="int"
             default="15"
+            optional="false"
+            writeacl="ruleCapable(adminUser)"
+        />
+       <property name="fpm_process_manager"
+            type="scalar"
+            default="ondemand"
+            optional="false"
+            writeacl="ruleCapable(adminUser)"
+        />
+       <property name="fpm_start_servers"
+            type="int"
+            default="3"
+            optional="false"
+            writeacl="ruleCapable(adminUser)"
+        />
+       <property name="fpm_min_spare_servers"
+            type="int"
+            default="2"
+            optional="false"
+            writeacl="ruleCapable(adminUser)"
+        />
+       <property name="fpm_max_spare_servers"
+            type="int"
+            default="5"
+            optional="false"
+            writeacl="ruleCapable(adminUser)"
+        />
+       <property name="fpm_process_idle_timeout"
+            type="int"
+            default="30"
+            optional="false"
+            writeacl="ruleCapable(adminUser)"
+        />
+       <property name="fpm_max_requests"
+            type="int"
+            default="500"
             optional="false"
             writeacl="ruleCapable(adminUser)"
         />

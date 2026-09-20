@@ -458,7 +458,7 @@ sub feedthemonster {
         # Check if the values in both hashes are identical or if we need to update CODB:
         $codb_update_needed = '0';
         # Keys we ignore in our check between new data and previous CODB state:
-        @ignore_keys = ('show_safemode', 'applicable', 'safe_mode_exception', 'force_update', 'CLASS', 'fpm_max_children', 'OID', 'register_globals_exception', 'CLASSVER', 'PHP_version');
+        @ignore_keys = ('show_safemode', 'applicable', 'safe_mode_exception', 'force_update', 'CLASS', 'fpm_max_children', 'fpm_process_manager', 'fpm_start_servers', 'fpm_min_spare_servers', 'fpm_max_spare_servers', 'fpm_process_idle_timeout', 'fpm_max_requests', 'OID', 'register_globals_exception', 'CLASSVER', 'PHP_version');
 
         foreach my $key (keys %$sys) {
             if ($sys->{$key} ne $new_data->{$key}) {

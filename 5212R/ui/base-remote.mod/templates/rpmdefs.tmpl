@@ -80,7 +80,7 @@ if [ -d "/usr/sausalito/yumcce" ];then
 fi
 
 # Shellinabox authorization records are written by AdmServ PHP.
-/usr/bin/install -d -o admserv -g admserv -m 0700 /usr/sausalito/sessions/shellinabox-tokens || exit 1
+/usr/bin/install -d -o admserv -g admserv -m 0700 /usr/sausalito/sessions/shellinabox-tokens || :
 
 <end glue>
 <begin ui>
@@ -128,6 +128,10 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+
+* Mon Sep 21 2026 Michael Stauber <mstauber@blueonyx.it> 1.6.0-7
+- Added base-admserv-capstone as a package dependency so that the
+  AdmServ user and group are available before the glue post-install runs.
 
 * Sun Aug 30 2026 BlueOnyx Team <team@blueonyx.it> 1.6.0-6
 - Added session-derived Shellinabox authorization with scoped cookie.

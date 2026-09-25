@@ -1837,6 +1837,56 @@ class BxPage extends Controller {
             }
 
             //
+            //-- Persistent notices (shown above the page content, in the standard layout)
+            //
+            // Read from /usr/sausalito/notices/. Deliberately NOT the session-flash error
+            // mechanism: BxPage::render() clears that as the page is drawn, so a flash
+            // cannot persist. Notices are read from files on every render, so they persist
+            // by construction and appear without per-controller work.
+            // Reads files only — no CCE — so it is unaffected by the cceClient->bye() above.
+            //
+            // Only the standard layout echoes this (elmer_full_view), so the read is
+            // skipped on the branches that select another layout (style_override: the
+            // wizard and the out-of-style frames). That avoids a directory scan and JSON
+            // decode whose result could never be displayed.
+            // Only the standard layout echoes this, so skip the read (and its directory
+            // scan) on the branches that select another layout.
+            $NoticeDisplay = '';
+            if (!isset($this->style_override)) {
+                // Who is loading this page, so a notice's audience can be matched. The
+                // class is resolved from the session's CAPABILITIES, not from a name:
+                // 'admin' is not "the user called admin".
+                //
+                // The administrator is decided by the systemAdministrator flag. A reseller
+                // is the 'adminUser' class — but ONLY when not a systemAdministrator, since
+                // the platform does not treat a reseller as adminUser unless it also carries
+                // the systemAdministrator flag (BaseController::getAllowed says exactly this).
+                // That also keeps the two classes from nesting: a systemAdministrator's access
+                // list contains EVERY capability, so membership of $access alone cannot tell
+                // the classes apart.
+                $noticeIsAdmin    = (isset($user['systemAdministrator']) && $user['systemAdministrator'] === '1');
+                $noticeIsReseller = (!$noticeIsAdmin) && in_array('adminUser', $access);
+
+                // Whether this viewer may clear a notice: clearing is host-wide, so it stays
+                // with the site-management capability the clear endpoint itself requires
+                // (getAllowed('manageSite')). This mirrors that gate from the access list
+                // BxPage already holds rather than calling getAllowed(), which redirects and
+                // exits on an expired session and would be unsafe at render time. The
+                // systemAdministrator may always clear (getAllowed() fast-paths to yes); for
+                // everyone else it is the 'manageSite' capability. Audience decides
+                // VISIBILITY, never permission — this only governs whether the click is
+                // OFFERED, so nobody is given a click whose only outcome is a refusal.
+                $noticeCanClear   = $noticeIsAdmin || in_array('manageSite', $access);
+
+                $NoticeDisplay = \App\Libraries\BxNotice::render([
+                    'loginName'  => (string) ($user['name'] ?? ''),
+                    'isAdmin'    => $noticeIsAdmin,
+                    'isReseller' => $noticeIsReseller,
+                    'canClear'   => $noticeCanClear,
+                ]);
+            }
+
+            //
             //-- Daemon.pm Icon Spinner (shows pending transactions)
             //
 
@@ -1988,6 +2038,7 @@ class BxPage extends Controller {
                 'vsite_and_user_quicksearch_menu' => $vsite_and_user_quicksearch_menu,
                 'vsite_and_user_quicksearch_html' => $vsite_and_user_quicksearch_html,
                 'ActiveMonitorDisplay' => $ActiveMonitorDisplay,
+                'NoticeDisplay' => $NoticeDisplay,
                 'Categories_text' => $Categories_text,
                 'Options_text' => $Options_text,
                 'daemon_spinner_element' => $daemon_spinner_element,

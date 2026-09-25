@@ -23,3 +23,7 @@ $routes->add('gui/datepicker', 'Gui\Controllers\Datepicker::index');
 $routes->add('gui/fullcalendar', 'Gui\Controllers\Fullcalendar::index');
 $routes->add('gui/metrics', 'Gui\Controllers\Metrics::index');
 $routes->add('gui/services', 'Gui\Controllers\DaemonServices::index');
+// Persistent notices: clear endpoint for notices with clearOnClick=true.
+// The notice id is appended as the final segment.
+$routes->add('gui/notice/clear', 'Gui\Controllers\NoticeClear::index');
+$routes->add('gui/notice/clear/(:segment)', 'Gui\Controllers\NoticeClear::index/$1');

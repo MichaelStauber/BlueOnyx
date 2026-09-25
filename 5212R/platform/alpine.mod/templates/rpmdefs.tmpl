@@ -70,6 +70,7 @@ information for [VENDOR]-[SERVICE].
 %attr(0700,admserv,admserv) %{RootDir}/capcache
 #%attr(0700,admserv,admserv) %{RootDir}/sessions
 %attr(0755,admserv,admserv) %{RootDir}/ui/chorizo/ci4/writable
+%dir %attr(0755,admserv,admserv) %{RootDir}/notices
 %attr(0644,root,root) %{RootDir}/ui/chorizo/ci4/.env
 %attr(0644,root,root) %{RootDir}/ui/chorizo/ci4/.env.bx
 %attr(0644,root,root) %{RootDir}/ui/chorizo/ci4/.gitignore
@@ -128,6 +129,37 @@ if [ ! -d /usr/sausalito/license ];then
   /bin/mkdir /usr/sausalito/license 
   /bin/chmod 700 /usr/sausalito/license/ 
   /bin/chown admserv:admserv /usr/sausalito/license
+fi
+
+# Persistent notices directory. Deliberately separate from /usr/sausalito/license/:
+# that dir is mode 700 admserv:admserv.
+#
+# Ownership matters here and is not the obvious choice. The directory is owned by
+# admserv:admserv (the GUI user) because:
+#   - clearOnClick=true deletes a notice file, and deleting requires WRITE permission
+#     on the DIRECTORY, not the file. Only admserv can do that from the GUI.
+#   - the GUI must also read and list the directory.
+# root still writes notices freely (root bypasses permission checks), so the poller
+# that populates this directory is unaffected by the ownership.
+#
+# If this is ever re-owned to root, clearOnClick will silently stop working.
+# Repair ownership on upgrade, but do NOT reset the mode here. An earlier release, or a
+# manual mkdir as root, could leave this root-owned, which breaks clearOnClick — so
+# ownership is reasserted every install. The MODE is only set when we create the
+# directory.
+#
+# NOTE: this script's restraint does not by itself preserve a tightened mode. The %files
+# entry declares %attr(0755,admserv,admserv) for this directory, and rpm re-applies
+# declared attributes on every install/upgrade — so hardening this directory (e.g. to
+# 0750) will NOT survive a package upgrade. Changing that would mean removing the mode
+# from %attr and owning the mode entirely here.
+if [ ! -d /usr/sausalito/notices ];then 
+  /bin/mkdir /usr/sausalito/notices 
+  /bin/chmod 755 /usr/sausalito/notices/ 
+fi
+
+if [ -d /usr/sausalito/notices ];then 
+  /bin/chown admserv:admserv /usr/sausalito/notices
 fi
 
 if [ ! -d /usr/sausalito/capcache ];then 

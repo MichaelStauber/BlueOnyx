@@ -178,6 +178,20 @@ fi
 
 <begin $CHANGELOG>
 
+* Sat Sep 26 2026 Michael Stauber <mstauber@solarspeed.net> 2.2.8-6
+- Honor GUI enableSMTP for Postfix port 25 (do not enable postscreen
+  when SMTP is off). Honor enableSMTPAuth for SASL on 25/587/465.
+- Toggle submission/smtps via whitespace-tolerant master.cf helpers
+  instead of exact-spacing sed.
+- glue/handlers/enable.pl: dnl confAUTH_OPTIONS when SMTP Auth is off.
+
+* Sat Sep 26 2026 Michael Stauber <mstauber@solarspeed.net> 2.2.8-5
+- Modified glue/bin/blueonyx-postfix-confgen to toggle Postscreen vs
+  smtpd on port 25 without relying on exact master.cf spacing. Also
+  comments leftover smtp inet smtpd stanzas (including -o SASL lines)
+  when DNSBL/Postscreen is enabled, and applies Dovecot SASL to
+  smtpd/pass instead of a second smtp/inet listener.
+
 * Thu Aug 28 2026 Michael Stauber <mstauber@blueonyx.it> - 2.2.8-4
 - Fixed EmailAutoconfig: Removed premature CCE connection teardown
   (double bye()/destructor() calls) inside thunderbird() and autodiscover()

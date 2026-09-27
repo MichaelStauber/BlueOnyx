@@ -2,6 +2,206 @@
 
 NOMAILMAN=$(grep -E '5211R|5212R' /etc/build | wc -l)
 
+_bx_mastercf_awk_lib='
+    function stripc(s,    x) {
+        x = s
+        sub(/^[[:space:]]+/, "", x)
+        sub(/^#+[[:space:]]?/, "", x)
+        return x
+    }
+    function is_commented(s) { return (s ~ /^[[:space:]]*#/) }
+    function comment_line(s) {
+        if (is_commented(s)) return s
+        return "#" s
+    }
+    function uncomment_line(s,    x) {
+        x = s
+        sub(/^[[:space:]]*#[[:space:]]?/, "", x)
+        return x
+    }
+    function is_cont(s,    x) {
+        x = stripc(s)
+        return (x ~ /^-o([=\t ]|$)/)
+    }
+    function nfields(s) {
+        return split(stripc(s), F, /[[:space:]]+/)
+    }
+    function svc_match(s, name, type, cmd,    n) {
+        if (is_cont(s)) return 0
+        n = nfields(s)
+        if (n < 8) return 0
+        return (F[1] == name && F[2] == type && F[n] == cmd)
+    }
+'
+
+bx_mastercf_rewrite() {
+    local mf="/etc/postfix/master.cf"
+    local tmp
+    [ -f "$mf" ] || return 0
+    tmp=$(mktemp) || return 1
+    awk "$@" "$mf" > "$tmp"
+    if [ -s "$tmp" ]; then
+        cat "$tmp" > "$mf"
+    else
+        logger "WARNING: master.cf rewrite produced empty file — left original in place"
+    fi
+    rm -f "$tmp"
+}
+
+# $1=name $2=type $3=cmd $4=on|off
+bx_mastercf_set_svc() {
+    local name="$1" type="$2" cmd="$3" mode="$4"
+    bx_mastercf_rewrite -v name="$name" -v type="$type" -v cmd="$cmd" -v mode="$mode" \
+        "$_bx_mastercf_awk_lib"'
+    BEGIN { cont_act = "" }
+    {
+        if (cont_act != "") {
+            if (is_cont($0)) {
+                if (cont_act == "comment") print comment_line($0)
+                else if (cont_act == "uncomment") print uncomment_line($0)
+                else print $0
+                next
+            }
+            cont_act = ""
+        }
+        if (svc_match($0, name, type, cmd)) {
+            if (mode == "on") { print uncomment_line($0); cont_act = "uncomment" }
+            else { print comment_line($0); cont_act = "comment" }
+            next
+        }
+        print $0
+    }
+    '
+}
+
+bx_mastercf_ensure_opt() {
+    local name="$1" type="$2" cmd="$3" opt="$4"
+    bx_mastercf_rewrite -v name="$name" -v type="$type" -v cmd="$cmd" -v opt="$opt" \
+        "$_bx_mastercf_awk_lib"'
+    BEGIN { placed = 0; want_scan = 0; saw_opt = 0; svc_line = ""; buf = "" }
+    {
+        if (want_scan) {
+            if (is_cont($0)) {
+                x = stripc($0)
+                if (index(x, "-o " opt) == 1 || index(x, "-o" opt) == 1) saw_opt = 1
+                buf = buf $0 "\n"
+                next
+            }
+            if (!saw_opt && !is_commented(svc_line)) {
+                print svc_line
+                n = split(buf, L, "\n")
+                for (i = 1; i < n; i++) print L[i]
+                print "  -o " opt
+            } else {
+                print svc_line
+                printf "%s", buf
+            }
+            want_scan = 0
+            placed = 1
+        }
+        if (!placed && svc_match($0, name, type, cmd) && !is_commented($0)) {
+            svc_line = $0
+            buf = ""
+            saw_opt = 0
+            want_scan = 1
+            next
+        }
+        print $0
+    }
+    END {
+        if (want_scan) {
+            if (!saw_opt && !is_commented(svc_line)) {
+                print svc_line
+                n = split(buf, L, "\n")
+                for (i = 1; i < n; i++) print L[i]
+                print "  -o " opt
+            } else {
+                print svc_line
+                printf "%s", buf
+            }
+        }
+    }
+    '
+}
+
+bx_mastercf_remove_opt() {
+    local name="$1" type="$2" cmd="$3" opt="$4"
+    bx_mastercf_rewrite -v name="$name" -v type="$type" -v cmd="$cmd" -v opt="$opt" \
+        "$_bx_mastercf_awk_lib"'
+    BEGIN { in_svc = 0 }
+    {
+        if (in_svc) {
+            if (is_cont($0)) {
+                x = stripc($0)
+                if (index(x, "-o " opt) == 1 || index(x, "-o" opt) == 1) next
+                print $0
+                next
+            }
+            in_svc = 0
+        }
+        if (svc_match($0, name, type, cmd)) in_svc = 1
+        print $0
+    }
+    '
+}
+
+# on = postscreen, off = one smtpd, closed = no port 25 inet listener
+bx_mastercf_smtp25() {
+    local mode="$1"
+    bx_mastercf_rewrite -v mode="$mode" \
+        "$_bx_mastercf_awk_lib"'
+    BEGIN { cont_act = ""; smtpd_off = 0 }
+    {
+        if (cont_act != "") {
+            if (is_cont($0)) {
+                if (cont_act == "comment") print comment_line($0)
+                else if (cont_act == "uncomment") print uncomment_line($0)
+                else print $0
+                next
+            }
+            cont_act = ""
+        }
+        if (svc_match($0, "smtp", "inet", "smtpd")) {
+            if (mode == "off" && smtpd_off == 0) { print uncomment_line($0); cont_act = "uncomment"; smtpd_off = 1 }
+            else { print comment_line($0); cont_act = "comment" }
+            next
+        }
+        if (svc_match($0, "smtp", "inet", "postscreen")) {
+            if (mode == "on") { print uncomment_line($0); cont_act = "uncomment" }
+            else { print comment_line($0); cont_act = "comment" }
+            next
+        }
+        if (svc_match($0, "smtpd", "pass", "smtpd") || svc_match($0, "dnsblog", "unix", "dnsblog") || svc_match($0, "tlsproxy", "unix", "tlsproxy")) {
+            if (mode == "on") { print uncomment_line($0); cont_act = "uncomment" }
+            else { print comment_line($0); cont_act = "comment" }
+            next
+        }
+        print $0
+    }
+    '
+    n=$(grep -cE "^[[:space:]]*smtp[[:space:]]+inet" /etc/postfix/master.cf || true)
+    if [ "${n:-0}" -gt 1 ]; then
+        logger "WARNING: ${n} active smtp inet services in master.cf after smtp25 toggle (mode=$mode)"
+    fi
+}
+
+bx_mc_port_on() {
+    local port="$1"
+    local pat
+    if [ "$port" = "smtp" ]; then
+        pat="Port=smtp,"
+    else
+        pat="Port=${port}"
+    fi
+    grep -E "^[[:space:]]*DAEMON_OPTIONS" /etc/mail/sendmail.mc 2>/dev/null \
+        | grep -F "$pat" | grep -v "^[[:space:]]*dnl" | grep -c . || true
+}
+
+bx_mc_auth_on() {
+    grep -E "^[[:space:]]*define\(\`confAUTH_OPTIONS'" /etc/mail/sendmail.mc 2>/dev/null \
+        | grep -v "^[[:space:]]*dnl" | grep -c . || true
+}
+
 if [ -d /etc/postfix ]; then
 
     logger "Auto-Configure of Postfix via /usr/sausalito/bin/blueonyx-postfix-confgen"
@@ -144,12 +344,15 @@ if [ -d /etc/postfix ]; then
     # Mailbox size (0 = unlimited)
     postconf -e 'mailbox_size_limit = 0'
 
-    # Submission port:
-    SUBMISSION=$(cat /etc/mail/sendmail.mc | grep DAEMON_OPTIONS | grep Port=submission | grep dnl | wc -l)
-    if [ "$SUBMISSION" -eq "0" ]; then
-        sed -i 's@^#submission inet n       -       n       -       -       smtpd$@submission inet n       -       n       -       -       smtpd@g' /etc/postfix/master.cf
+    SMTP_ON=$(bx_mc_port_on smtp)
+    AUTH_ON=$(bx_mc_auth_on)
+
+    # Submission port (587):
+    SUBMISSION_ON=$(bx_mc_port_on submission)
+    if [ "${SUBMISSION_ON:-0}" -gt 0 ]; then
+        bx_mastercf_set_svc submission inet smtpd on
     else
-        sed -i 's@^submission inet n       -       n       -       -       smtpd$@#submission inet n       -       n       -       -       smtpd@g' /etc/postfix/master.cf
+        bx_mastercf_set_svc submission inet smtpd off
     fi
 
     #
@@ -159,7 +362,7 @@ if [ -d /etc/postfix ]; then
     # 1 means: NOT hiding headers
     # 0 means: we HIDE headers
 
-    HAVECLEANUP=$(cat /etc/postfix/master.cf | grep "^  -o cleanup_service_name=subcleanup" | wc -l)
+    HAVECLEANUP=$(grep -cE '^[[:space:]]+-o[[:space:]]+cleanup_service_name=subcleanup' /etc/postfix/master.cf || true)
     HAVESUBCLEANUP_A=$(cat /etc/postfix/master.cf | grep "^subcleanup unix n       -       -       -       0       cleanup" | wc -l)
     HAVESUBCLEANUP_B=$(cat /etc/postfix/master.cf | grep "^  -o header_checks=regexp:/etc/postfix/submission_header_checks" | wc -l)
 
@@ -168,7 +371,7 @@ if [ -d /etc/postfix ]; then
 
         if [ "$HAVECLEANUP" -eq "0" ]; then
             echo "Adding 'subcleanup' to submission service"
-            sed -i 's@^submission inet n       -       n       -       -       smtpd@submission inet n       -       n       -       -       smtpd\n  -o cleanup_service_name=subcleanup@g' /etc/postfix/master.cf
+            bx_mastercf_ensure_opt submission inet smtpd "cleanup_service_name=subcleanup"
         else
             echo "The 'subcleanup' in submission service ARE present"
         fi
@@ -190,8 +393,8 @@ if [ -d /etc/postfix ]; then
         echo "We are NOT hiding headers!"
 
         echo "Removing 'subcleanup' from submission service"
-        if [ "$HAVECLEANUP" -eq "1" ]; then
-            sed -i '/^  -o cleanup_service_name=subcleanup$/d' /etc/postfix/master.cf
+        if [ "${HAVECLEANUP:-0}" -ge 1 ]; then
+            bx_mastercf_remove_opt submission inet smtpd "cleanup_service_name=subcleanup"
         fi
 
         echo "Removing 'subcleanup' lines"
@@ -211,17 +414,14 @@ if [ -d /etc/postfix ]; then
     #
     ### smtps port:
     #
-    SMTPS=$(cat /etc/mail/sendmail.mc | grep DAEMON_OPTIONS | grep Port=smtps | grep dnl | wc -l)
-    if [ "$SMTPS" -eq "0" ]; then
-        sed -i 's@^#smtps     inet  n       -       n       -       -       smtpd$@smtps     inet  n       -       n       -       -       smtpd@g' /etc/postfix/master.cf
-        sed -i 's@^#  -o syslog_name=postfix/submission$@  -o syslog_name=postfix/submission@g' /etc/postfix/master.cf
-        sed -i 's@^#  -o smtpd_tls_wrappermode=yes$@  -o smtpd_tls_wrappermode=yes@g' /etc/postfix/master.cf
-        sed -i 's@^#  -o smtpd_sasl_auth_enable=yes$@  -o smtpd_sasl_auth_enable=yes@g' /etc/postfix/master.cf
+    SMTPS_ON=$(bx_mc_port_on smtps)
+    if [ "${SMTPS_ON:-0}" -gt 0 ]; then
+        bx_mastercf_set_svc smtps inet smtpd on
+        bx_mastercf_ensure_opt smtps inet smtpd "syslog_name=postfix/smtps"
+        bx_mastercf_ensure_opt smtps inet smtpd "smtpd_tls_wrappermode=yes"
+        bx_mastercf_ensure_opt smtps inet smtpd "smtpd_sasl_auth_enable=yes"
     else
-        sed -i 's@^smtps     inet  n       -       n       -       -       smtpd$@#smtps     inet  n       -       n       -       -       smtpd@g' /etc/postfix/master.cf
-        sed -i 's@^  -o syslog_name=postfix/submission$@#  -o syslog_name=postfix/submission@g' /etc/postfix/master.cf
-        sed -i 's@^  -o smtpd_tls_wrappermode=yes$@#  -o smtpd_tls_wrappermode=yes@g' /etc/postfix/master.cf
-        sed -i 's@^  -o smtpd_sasl_auth_enable=yes$@#  -o smtpd_sasl_auth_enable=yes@g' /etc/postfix/master.cf
+        bx_mastercf_set_svc smtps inet smtpd off
     fi
 
     #
@@ -395,19 +595,20 @@ if [ -d /etc/postfix ]; then
         RBLS=$(cat /etc/mail/sendmail.mc |grep dnsbl|grep -v dnl|cut -d \` -f 2|cut -d \' -f1| tr '\n' ', '|sed 's@,$@@g')
         postconf -e "postscreen_dnsbl_sites = $RBLS"
         postconf -e 'postscreen_dnsbl_action = enforce'
-        sed -i 's@^smtp      inet  n       -       n       -       -       smtpd$@#smtp      inet  n       -       n       -       -       smtpd@g' /etc/postfix/master.cf
-        sed -i 's@^#smtp      inet  n       -       n       -       1       postscreen$@smtp      inet  n       -       n       -       1       postscreen@g' /etc/postfix/master.cf
-        sed -i 's@^#smtpd     pass  -       -       n       -       -       smtpd$@smtpd     pass  -       -       n       -       -       smtpd@g' /etc/postfix/master.cf
-        sed -i 's@^#dnsblog   unix  -       -       n       -       0       dnsblog$@dnsblog   unix  -       -       n       -       0       dnsblog@g' /etc/postfix/master.cf
-        sed -i 's@^#tlsproxy  unix  -       -       n       -       0       tlsproxy$@tlsproxy  unix  -       -       n       -       0       tlsproxy@g' /etc/postfix/master.cf
+        if [ "${SMTP_ON:-0}" -gt 0 ]; then
+            bx_mastercf_smtp25 on
+        else
+            logger "Postfix: SMTP (port 25) disabled in GUI; not enabling postscreen"
+            bx_mastercf_smtp25 closed
+        fi
     else
         postconf -e "postscreen_dnsbl_sites ="
         postconf -e 'postscreen_dnsbl_action = ignore'
-        sed -i 's@^#smtp      inet  n       -       n       -       -       smtpd$@smtp      inet  n       -       n       -       -       smtpd@g' /etc/postfix/master.cf
-        sed -i 's@^smtp      inet  n       -       n       -       1       postscreen$@#smtp      inet  n       -       n       -       1       postscreen@g' /etc/postfix/master.cf
-        sed -i 's@^smtpd     pass  -       -       n       -       -       smtpd$@#smtpd     pass  -       -       n       -       -       smtpd@g' /etc/postfix/master.cf
-        sed -i 's@^dnsblog   unix  -       -       n       -       0       dnsblog$@#dnsblog   unix  -       -       n       -       0       dnsblog@g' /etc/postfix/master.cf
-        sed -i 's@^tlsproxy  unix  -       -       n       -       0       tlsproxy$@#tlsproxy  unix  -       -       n       -       0       tlsproxy@g' /etc/postfix/master.cf
+        if [ "${SMTP_ON:-0}" -gt 0 ]; then
+            bx_mastercf_smtp25 off
+        else
+            bx_mastercf_smtp25 closed
+        fi
     fi
 
     #
@@ -528,57 +729,54 @@ if [ -d /etc/postfix ]; then
     #
     if command -v postconf >/dev/null 2>&1; then
 
-        #
-        # smtp (25): IMPORTANT — if postscreen is enabled, AUTH happens in smtpd/pass
-        #
-        if command -v postconf >/dev/null 2>&1; then
-            if grep -q '^smtp[[:space:]]\+inet[[:space:]].*[[:space:]]postscreen$' /etc/postfix/master.cf; then
-                logger "Postfix: postscreen active on port 25; forcing SASL backend for smtpd/pass to dovecot (private/auth)"
+        AUTH_ON=$(bx_mc_auth_on)
+        if [ "${AUTH_ON:-0}" -gt 0 ]; then
+            postconf -e 'smtpd_sasl_auth_enable = yes'
+            postconf -e 'smtpd_sasl_authenticated_header = yes'
+            postconf -e 'smtpd_sasl_security_options = noanonymous'
+            if grep -qE '^[[:space:]]*smtp[[:space:]]+inet[[:space:]].*[[:space:]]postscreen[[:space:]]*$' /etc/postfix/master.cf; then
+                logger "Postfix: postscreen active; SASL on smtpd/pass (AUTH enabled)"
                 postconf -P 'smtpd/pass/smtpd_sasl_type=dovecot' >/dev/null 2>&1 || logger "WARNING: postconf -P smtpd/pass/smtpd_sasl_type failed"
                 postconf -P 'smtpd/pass/smtpd_sasl_path=private/auth' >/dev/null 2>&1 || logger "WARNING: postconf -P smtpd/pass/smtpd_sasl_path failed"
                 postconf -P 'smtpd/pass/broken_sasl_auth_clients=yes' >/dev/null 2>&1 || logger "WARNING: postconf -P smtpd/pass/broken_sasl_auth_clients failed"
-            else
-                # no postscreen => smtpd runs directly in smtp/inet
-                if grep -q '^smtp[[:space:]]\+inet' /etc/postfix/master.cf; then
-                    logger "Postfix: forcing smtp(25) SASL backend to dovecot (private/auth)"
-                    postconf -P 'smtp/inet/smtpd_sasl_type=dovecot' >/dev/null 2>&1 || logger "WARNING: postconf -P smtp/inet/smtpd_sasl_type failed"
-                    postconf -P 'smtp/inet/smtpd_sasl_path=private/auth' >/dev/null 2>&1 || logger "WARNING: postconf -P smtp/inet/smtpd_sasl_path failed"
-                    postconf -P 'smtp/inet/broken_sasl_auth_clients=yes' >/dev/null 2>&1 || logger "WARNING: postconf -P smtp/inet/broken_sasl_auth_clients failed"
-                fi
+                postconf -P 'smtpd/pass/smtpd_sasl_auth_enable=yes' >/dev/null 2>&1 || :
+                postconf -P 'smtp/inet/smtpd_sasl_type=' >/dev/null 2>&1 || :
+                postconf -P 'smtp/inet/smtpd_sasl_path=' >/dev/null 2>&1 || :
+                postconf -P 'smtp/inet/broken_sasl_auth_clients=' >/dev/null 2>&1 || :
+            elif grep -qE '^[[:space:]]*smtp[[:space:]]+inet' /etc/postfix/master.cf; then
+                logger "Postfix: SASL on smtp/inet (AUTH enabled)"
+                postconf -P 'smtp/inet/smtpd_sasl_type=dovecot' >/dev/null 2>&1 || logger "WARNING: postconf -P smtp/inet/smtpd_sasl_type failed"
+                postconf -P 'smtp/inet/smtpd_sasl_path=private/auth' >/dev/null 2>&1 || logger "WARNING: postconf -P smtp/inet/smtpd_sasl_path failed"
+                postconf -P 'smtp/inet/broken_sasl_auth_clients=yes' >/dev/null 2>&1 || logger "WARNING: postconf -P smtp/inet/broken_sasl_auth_clients failed"
+                postconf -P 'smtp/inet/smtpd_sasl_auth_enable=yes' >/dev/null 2>&1 || :
             fi
-        fi
-
-        # submission (587): only if enabled
-        if grep -q '^submission inet ' /etc/postfix/master.cf; then
-            logger "Postfix: forcing submission SASL backend to dovecot (private/auth)"
-            postconf -P 'submission/inet/smtpd_sasl_type=dovecot' >/dev/null 2>&1 || logger "WARNING: postconf -P submission/inet/smtpd_sasl_type failed"
-            postconf -P 'submission/inet/smtpd_sasl_path=private/auth' >/dev/null 2>&1 || logger "WARNING: postconf -P submission/inet/smtpd_sasl_path failed"
-
-            # Require TLS before AUTH on 587 (recommended)
-            # This only affects the submission service stanza.
-            postconf -P 'submission/inet/smtpd_tls_auth_only=no' >/dev/null 2>&1 || logger "WARNING: postconf -P submission/inet/smtpd_tls_auth_only failed"
-
-            # Helps with older MUAs
-            postconf -P 'submission/inet/broken_sasl_auth_clients=yes' >/dev/null 2>&1 || logger "WARNING: postconf -P submission/inet/broken_sasl_auth_clients failed"
-
-            # Make STARTTLS available, just not mandatory for AUTH:
-            postconf -P 'submission/inet/smtpd_tls_security_level=may' >/dev/null 2>&1 || logger "WARNING: postconf -P submission/inet/smtpd_tls_security_level failed"
-
-            # Optional but sane: enforce TLS on submission (you currently leave it commented)
-            # If you want to force encryption on 587, uncomment the next line:
-            # postconf -P 'submission/inet/smtpd_tls_security_level=encrypt' >/dev/null 2>&1 || logger "WARNING: postconf -P submission/inet/smtpd_tls_security_level failed"
+            if grep -qE '^[[:space:]]*submission[[:space:]]+inet' /etc/postfix/master.cf; then
+                logger "Postfix: submission SASL to dovecot (AUTH enabled)"
+                postconf -P 'submission/inet/smtpd_sasl_type=dovecot' >/dev/null 2>&1 || logger "WARNING: postconf -P submission/inet/smtpd_sasl_type failed"
+                postconf -P 'submission/inet/smtpd_sasl_path=private/auth' >/dev/null 2>&1 || logger "WARNING: postconf -P submission/inet/smtpd_sasl_path failed"
+                postconf -P 'submission/inet/smtpd_sasl_auth_enable=yes' >/dev/null 2>&1 || :
+                postconf -P 'submission/inet/smtpd_tls_auth_only=no' >/dev/null 2>&1 || logger "WARNING: postconf -P submission/inet/smtpd_tls_auth_only failed"
+                postconf -P 'submission/inet/broken_sasl_auth_clients=yes' >/dev/null 2>&1 || logger "WARNING: postconf -P submission/inet/broken_sasl_auth_clients failed"
+                postconf -P 'submission/inet/smtpd_tls_security_level=may' >/dev/null 2>&1 || logger "WARNING: postconf -P submission/inet/smtpd_tls_security_level failed"
+            else
+                logger "Postfix: submission disabled; skipping SASL overrides"
+            fi
+            if grep -qE '^[[:space:]]*smtps[[:space:]]+inet' /etc/postfix/master.cf; then
+                logger "Postfix: smtps SASL to dovecot (AUTH enabled)"
+                postconf -P 'smtps/inet/smtpd_sasl_type=dovecot' >/dev/null 2>&1 || logger "WARNING: postconf -P smtps/inet/smtpd_sasl_type failed"
+                postconf -P 'smtps/inet/smtpd_sasl_path=private/auth' >/dev/null 2>&1 || logger "WARNING: postconf -P smtps/inet/smtpd_sasl_path failed"
+                postconf -P 'smtps/inet/broken_sasl_auth_clients=yes' >/dev/null 2>&1 || logger "WARNING: postconf -P smtps/inet/broken_sasl_auth_clients failed"
+                postconf -P 'smtps/inet/smtpd_sasl_auth_enable=yes' >/dev/null 2>&1 || :
+            else
+                logger "Postfix: smtps disabled; skipping SASL overrides"
+            fi
         else
-            logger "Postfix: submission service disabled; skipping dovecot SASL overrides for submission"
-        fi
-
-        # smtps (465): only if enabled
-        if grep -q '^smtps[[:space:]]\+inet' /etc/postfix/master.cf; then
-            logger "Postfix: forcing smtps SASL backend to dovecot (private/auth)"
-            postconf -P 'smtps/inet/smtpd_sasl_type=dovecot' >/dev/null 2>&1 || logger "WARNING: postconf -P smtps/inet/smtpd_sasl_type failed"
-            postconf -P 'smtps/inet/smtpd_sasl_path=private/auth' >/dev/null 2>&1 || logger "WARNING: postconf -P smtps/inet/smtpd_sasl_path failed"
-            postconf -P 'smtps/inet/broken_sasl_auth_clients=yes' >/dev/null 2>&1 || logger "WARNING: postconf -P smtps/inet/broken_sasl_auth_clients failed"
-        else
-            logger "Postfix: smtps service disabled; skipping dovecot SASL overrides for smtps"
+            logger "Postfix: SMTP AUTH disabled in GUI; SASL off on smtp/submission/smtps"
+            postconf -e 'smtpd_sasl_auth_enable = no'
+            postconf -P 'smtp/inet/smtpd_sasl_auth_enable=no' >/dev/null 2>&1 || :
+            postconf -P 'smtpd/pass/smtpd_sasl_auth_enable=no' >/dev/null 2>&1 || :
+            postconf -P 'submission/inet/smtpd_sasl_auth_enable=no' >/dev/null 2>&1 || :
+            postconf -P 'smtps/inet/smtpd_sasl_auth_enable=no' >/dev/null 2>&1 || :
         fi
 
         # Debug trace (optional): log what we actually set

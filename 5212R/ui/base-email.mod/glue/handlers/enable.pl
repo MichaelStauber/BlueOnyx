@@ -361,7 +361,7 @@ sub make_sendmail_mc {
 
     my $auth_options_line = $enableSMTPAuth
         ? "define(`confAUTH_OPTIONS', `A')dnl\n"
-        : "define(`confAUTH_OPTIONS', `A')dnl\n";
+        : "dnl define(`confAUTH_OPTIONS', `A')dnl\n";
 
     my $saw_auth_options     = 0;
     my $wrote_auth_options   = 0;

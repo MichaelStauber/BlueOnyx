@@ -239,6 +239,9 @@
                 <!-- End: header_view.php --> 
 <?php echo $debug; ?>
 
+                <!-- Persistent Notices: rendered from /usr/sausalito/notices/ on every page -->
+<?php echo $NoticeDisplay; ?>
+
                 <!-- GUI Content -->
                 <div class="row">
 <?php echo $page_body; ?>

@@ -91,6 +91,7 @@ install: install_perl install_config install_crons
 	$(INSTALL_BIN) -o root -g root bin/bx-zap-gui-cache.php $(CCEDIR)/bin/bx-zap-gui-cache.php
 	$(MKDIR) $(CCEDIR)/license
 	$(MKDIR) $(CCEDIR)/capcache
+	$(MKDIR) $(CCEDIR)/notices
 	$(MKDIR) $(CCEDIR)/ui/chorizo/ci4/writable
 
 install_config:

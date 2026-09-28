@@ -259,5 +259,11 @@
         writeacl="ruleCapable(serverEmail)"
     />
 
+    <!-- Postscreen DNSBL score at which to reject (Postfix only) -->
+    <property
+        name="dnsbl_threshold" type="int" default="1" optional="true"
+        writeacl="ruleCapable(serverEmail)"
+    />
+
 </class>
 

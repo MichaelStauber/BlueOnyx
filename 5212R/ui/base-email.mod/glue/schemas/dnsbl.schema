@@ -13,4 +13,8 @@
         	name="active" type="boolean" default="0"
         	writeacl="ruleCapable(serverEmail)"
     	/>
+	<property
+		name="weight" type="int" default="1"
+		writeacl="ruleCapable(serverEmail)"
+	/>
 </class>

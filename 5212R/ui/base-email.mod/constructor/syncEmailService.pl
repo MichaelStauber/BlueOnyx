@@ -332,6 +332,8 @@ if ($System['productBuild'] == '5210R') {
     }
 }
 
+Email::write_bxrbls($cce);
+
 $cce->bye('SUCCESS');
 exit 0;
 

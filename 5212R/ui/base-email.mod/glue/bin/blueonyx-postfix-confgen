@@ -590,9 +590,45 @@ if [ -d /etc/postfix ]; then
     #
     ### Handle RBL Blacklists:
     #
+    # Weights/threshold live in /etc/sysconfig/bxrbls (written from CODB).
+    # Confgen must not talk to CCE. Missing/invalid file => defaults.
+    BX_RBL_THRESHOLD=1
+    BX_RBL_SITES=""
+    if [ -r /etc/sysconfig/bxrbls ]; then
+        while IFS= read -r _bxrbl_line || [ -n "$_bxrbl_line" ]; do
+            case "$_bxrbl_line" in
+                '#'*|'' ) continue ;;
+                THRESHOLD=*|SITES=*)
+                    _bxrbl_k=${_bxrbl_line%%=*}
+                    _bxrbl_v=${_bxrbl_line#*=}
+                    _bxrbl_v=${_bxrbl_v#\"}
+                    _bxrbl_v=${_bxrbl_v%\"}
+                    _bxrbl_v=${_bxrbl_v#\'}
+                    _bxrbl_v=${_bxrbl_v%\'}
+                    ;;
+                *) continue ;;
+            esac
+            case "$_bxrbl_k" in
+                THRESHOLD) BX_RBL_THRESHOLD="$_bxrbl_v" ;;
+                SITES) BX_RBL_SITES="$_bxrbl_v" ;;
+            esac
+        done < /etc/sysconfig/bxrbls
+        unset _bxrbl_line _bxrbl_k _bxrbl_v
+    fi
+    if ! [[ "$BX_RBL_THRESHOLD" =~ ^[0-9]+$ ]] || [ "$BX_RBL_THRESHOLD" -lt 1 ]; then
+        BX_RBL_THRESHOLD=1
+    fi
+    if [ "$BX_RBL_THRESHOLD" -gt 99 ]; then
+        BX_RBL_THRESHOLD=99
+    fi
+
     HAVEVBL=$(cat /etc/mail/sendmail.mc | grep dnsbl | grep -v dnl | wc -l)
     if [ "$HAVEVBL" -gt "0" ]; then
-        RBLS=$(cat /etc/mail/sendmail.mc |grep dnsbl|grep -v dnl|cut -d \` -f 2|cut -d \' -f1| tr '\n' ', '|sed 's@,$@@g')
+        if [ -n "$BX_RBL_SITES" ]; then
+            RBLS="$BX_RBL_SITES"
+        else
+            RBLS=$(cat /etc/mail/sendmail.mc |grep dnsbl|grep -v dnl|cut -d \` -f 2|cut -d \' -f1| tr '\n' ', '|sed 's@,$@@g')
+        fi
         postconf -e "postscreen_dnsbl_sites = $RBLS"
         postconf -e 'postscreen_dnsbl_action = enforce'
         if [ "${SMTP_ON:-0}" -gt 0 ]; then
@@ -835,7 +871,7 @@ if [ -d /etc/postfix ]; then
     #
     ### RBL threshold (for postscreen):
     #
-    postconf -e 'postscreen_dnsbl_threshold = 3'
+    postconf -e "postscreen_dnsbl_threshold = ${BX_RBL_THRESHOLD:-1}"
 
     #
     ### We don't have UTF-8 email addresses:

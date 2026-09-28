@@ -183,6 +183,13 @@ class Emailsettings extends BaseController {
             //$attributes['queueTime'] = $queueTimeMap[$attributes['queueTime']];
             $attributes['queueTime'] = 'immediate';
 
+            if (isset($attributes['dnsbl_threshold'])) {
+                $t = intval($attributes['dnsbl_threshold']);
+                if ($t < 1) { $t = 1; }
+                if ($t > 99) { $t = 99; }
+                $attributes['dnsbl_threshold'] = strval($t);
+            }
+
             $maxRecipientsPerMessageMap = 
                 array(
                 "unlimited" => "0", 
@@ -751,23 +758,24 @@ class Emailsettings extends BaseController {
 
         $addmod = '/email/blacklist';
 
-        $blacklist = $factory->getScrollList("blackList", array("blackList", "activated", " "), array()); 
-        $blacklist->setAlignments(array("left", "left", "right"));
+        $blacklist = $factory->getScrollList("blackList", array("blackList", "weightCol", "activated", " "), array()); 
+        $blacklist->setAlignments(array("left", "left", "left", "right"));
         $blacklist->setDefaultSortedIndex('0');
         $blacklist->setSortOrder('ascending');
-        $blacklist->setSortDisabled(array('2'));
+        $blacklist->setSortDisabled(array('3'));
         $blacklist->setPaginateDisabled(FALSE);
         $blacklist->setSearchDisabled(FALSE);
         $blacklist->setSelectorDisabled(FALSE);
         $blacklist->enableAutoWidth(FALSE);
         $blacklist->setInfoDisabled(FALSE);
-        $blacklist->setColumnWidths(array("*", "200", "120")); // Max: 739px
+        $blacklist->setColumnWidths(array("*", "80", "160", "120")); // Max: 739px
 
         for($i=0; $i < count($oids); $i++) {
             $oid = $oids[$i];
             $hosts = $CI->cceClient->get($oid);
             $host = $hosts['blacklistHost'];
             $active = $hosts['active'];
+            $rblWeight = (isset($hosts['weight']) && $hosts['weight'] !== "") ? $hosts['weight'] : "1";
 
             // State icon:
             if ($active) {
@@ -806,6 +814,7 @@ class Emailsettings extends BaseController {
 
             $blacklist->addEntry(array(
                         $host,
+                        $rblWeight,
                         $activeStatus,
                         $buttonContainer_rbl
                         ));
@@ -827,6 +836,14 @@ class Emailsettings extends BaseController {
         $block->addFormField(
             $xxx,
             $factory->getLabel("blackList"),
+            "blacklist"
+        );
+
+        $dnsbl_threshold = (isset($email["dnsbl_threshold"]) && $email["dnsbl_threshold"] !== "") ? $email["dnsbl_threshold"] : "1";
+        $xxx = $factory->getInteger("dnsbl_threshold", $dnsbl_threshold, "1", "99");
+        $block->addFormField(
+            $xxx,
+            $factory->getLabel("dnsbl_threshold"),
             "blacklist"
         );
 

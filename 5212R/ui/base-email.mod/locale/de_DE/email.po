@@ -519,6 +519,25 @@ msgstr "Dienst aktivieren"
 msgid "activeField_help"
 msgstr "Wählen Sie diese Option, wenn Sie diese Blacklist-Dienst aktivieren möchten."
 
+msgid "weightField"
+msgstr "Gewichtung"
+
+msgid "weightField_help"
+msgstr "Punkte, die zum Postscreen-DNSBL-Score addiert werden, wenn diese Liste die verbindende IP als gelistet meldet. Vorgabe ist 1. Postscreen lehnt den Client erst ab, wenn die Summe der Gewichtungen aller treffenden Listen den Schwellwert auf dem Reiter Blacklisting erreicht. Eine vertrauenswürdige Liste kann eine höhere Gewichtung bekommen, damit ein einzelner Treffer auch bei höherem Schwellwert reicht. Die Gewichtung gilt für Postfix/Postscreen; Sendmail ignoriert sie."
+
+msgid "weightCol"
+msgstr "Gewicht"
+
+msgid "weightCol_help"
+msgstr "DNSBL-Gewichtung dieser Liste (Postfix/Postscreen)."
+
+msgid "dnsbl_threshold"
+msgstr "DNSBL-Schwellwert"
+
+msgid "dnsbl_threshold_help"
+msgstr "Postscreen lehnt eingehende SMTP-Clients ab, wenn die Summe der DNSBL-Gewichtungen ihrer IP mindestens diesen Wert erreicht. Vorgabe ist 1: ein Treffer auf einer aktiven Liste mit Gewicht 1 reicht zum Blocken. Erhöhen Sie den Wert, wenn mehrere Listen laufen und erst bei Übereinstimmung blockiert werden soll. Gilt nur für Postfix/Postscreen; bei Sendmail ohne Wirkung."
+
+
 msgid "enableZpushField"
 msgstr "Enable Z-Push"
 

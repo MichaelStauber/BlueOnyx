@@ -89,6 +89,7 @@ class Blacklist extends BaseController {
               $blacklistHost = $oid["blacklistHost"];
               $deferTemporary = $oid["deferTemporary"];
               $active = $oid["active"];
+              $weight = (isset($oid["weight"]) && $oid["weight"] !== "") ? $oid["weight"] : "1";
             }
             else {
                 // These are not the droids we are looking for!
@@ -102,6 +103,7 @@ class Blacklist extends BaseController {
             $deferTemporary = 1;
             $blacklistHost = "";
             $active = "";
+            $weight = "1";
          }
 
         // Get TARGET of Delete request:
@@ -204,13 +206,21 @@ class Blacklist extends BaseController {
                     $deferTemporary = "0";
                 }
 
+                $weightField = "1";
+                if (isset($form_data['weight']) && ctype_digit(strval($form_data['weight']))) {
+                    $weightField = strval(intval($form_data['weight']));
+                    if (intval($weightField) < 1) { $weightField = "1"; }
+                    if (intval($weightField) > 99) { $weightField = "99"; }
+                }
+
                 if (!$errors) {
                     if (isset($form_data['_TARGET'])) {
                       $oid = $form_data['_TARGET'];
                       $vals = array(
                             "blacklistHost" => $form_data['blacklistHost'], 
                             "deferTemporary" => $deferTemporary,
-                            "active" => $activeField);
+                            "active" => $activeField,
+                            "weight" => $weightField);
                       
                       $CI->cceClient->set($oid, "", $vals);
                     } 
@@ -219,7 +229,8 @@ class Blacklist extends BaseController {
                              array(
                                    "blacklistHost" => $form_data['blacklistHost'], 
                                    "deferTemporary" => $deferTemporary,
-                                   "active" => $activeField));
+                                   "active" => $activeField,
+                                   "weight" => $weightField));
                     }
                 }
             }
@@ -295,6 +306,15 @@ class Blacklist extends BaseController {
                      $defaultPage
                      );
 
+        if (!isset($weight) || $weight === "") {
+            $weight = "1";
+        }
+        $xxx = $factory->getInteger("weight", $weight, "1", "99");
+        $block->addFormField(
+                     $xxx,
+                     $factory->getLabel("weightField"),
+                     $defaultPage
+                     );
 
         if (isset($get_form_data['_TARGET'])) {
             $target = $factory->getTextField('_TARGET', $get_form_data['_TARGET'], '');

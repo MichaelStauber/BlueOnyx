@@ -178,6 +178,13 @@ fi
 
 <begin $CHANGELOG>
 
+* Mon Sep 28 2026 Michael Stauber <mstauber@solarspeed.net> 2.2.8-7
+- Postscreen DNSBL: per-list weight (default 1) and GUI block threshold
+  (default 1) instead of a hardcoded postscreen_dnsbl_threshold of 3.
+  CODB stores the values; handlers write /etc/sysconfig/bxrbls for
+  blueonyx-postfix-confgen (no CCE in the shell). Missing or invalid
+  file falls back to threshold 1 and unweighted sites from sendmail.mc.
+
 * Sat Sep 26 2026 Michael Stauber <mstauber@solarspeed.net> 2.2.8-6
 - Honor GUI enableSMTP for Postfix port 25 (do not enable postscreen
   when SMTP is off). Honor enableSMTPAuth for SASL on 25/587/465.

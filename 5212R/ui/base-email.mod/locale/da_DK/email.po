@@ -626,6 +626,25 @@ msgstr "Aktiver tjeneste"
 msgid "activeField_help"
 msgstr "Vælg denne mulighed, hvis du ønsker at aktivere denne blackliste service."
 
+msgid "weightField"
+msgstr "Vægt"
+
+msgid "weightField_help"
+msgstr "Point, der lægges til Postscreen-DNSBL-scoren, når denne liste rapporterer den forbindende IP som listet. Standard er 1. Postscreen afviser først klienten, når summen af vægte fra alle matchende lister når tærsklen under fanen Blacklisting. Giv en pålidelig liste en højere vægt, hvis et enkelt hit skal være nok. Bruges af Postfix/Postscreen; Sendmail ignorerer den."
+
+msgid "weightCol"
+msgstr "Vægt"
+
+msgid "weightCol_help"
+msgstr "DNSBL-vægt for denne liste (Postfix/Postscreen)."
+
+msgid "dnsbl_threshold"
+msgstr "DNSBL-blokeringsgrænse"
+
+msgid "dnsbl_threshold_help"
+msgstr "Postscreen afviser indgående SMTP-klienter, når summen af DNSBL-vægte for deres IP er mindst dette tal. Standard er 1: én listing på en aktiv liste med vægt 1 er nok. Forøg værdien, hvis du bruger flere lister og kun vil blokere ved enighed. Kun Postfix/Postscreen."
+
+
 msgid "enableZpushField"
 msgstr "Aktiver Z-Push"
 

@@ -470,6 +470,25 @@ msgstr "サービスをアクティブにする"
 msgid "activeField_help"
 msgstr "このブラックリストのサービスを有効にする場合は、このオプションを選択します。"
 
+msgid "weightField"
+msgstr "重み"
+
+msgid "weightField_help"
+msgstr "このリストが接続元IPを掲載済みと報告したときに Postscreen の DNSBL スコアへ加算する点数です。既定値は 1 です。一致したリストの重みの合計が「ブラックリスト」タブのしきい値に達したときだけ拒否します。信頼できるリストは重みを上げると、しきい値が高くても1件のヒットで足ります。Postfix/Postscreen 向けです。Sendmail では無視されます。"
+
+msgid "weightCol"
+msgstr "重み"
+
+msgid "weightCol_help"
+msgstr "このリストの DNSBL 重み（Postfix/Postscreen）。"
+
+msgid "dnsbl_threshold"
+msgstr "DNSBL ブロックしきい値"
+
+msgid "dnsbl_threshold_help"
+msgstr "接続元IPの DNSBL 重みの合計がこの値以上になると Postscreen は SMTP クライアントを拒否します。既定値は 1 で、有効なリスト（重み 1）に1件載っていればブロックします。複数リストを使い、複数一致のときだけブロックしたい場合は値を上げてください。Postfix/Postscreen のみ。Sendmail では無効です。"
+
+
 msgid "vacationSubject"
 msgstr "からの自動返信"
 

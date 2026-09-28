@@ -470,6 +470,25 @@ msgstr "Activar el servicio"
 msgid "activeField_help"
 msgstr "Seleccione esta opción si desea activar este servicio Blacklist."
 
+msgid "weightField"
+msgstr "Peso"
+
+msgid "weightField_help"
+msgstr "Puntos que se suman a la puntuación DNSBL de Postscreen cuando esta lista marca la IP conectada. El valor predeterminado es 1. Postscreen rechaza el cliente solo cuando la suma de pesos de las listas coincidentes alcanza el umbral de la pestaña Blacklisting. Asigne un peso mayor a una lista de confianza si un solo acierto debe bastar. Lo usa Postfix/Postscreen; Sendmail lo ignora."
+
+msgid "weightCol"
+msgstr "Peso"
+
+msgid "weightCol_help"
+msgstr "Peso DNSBL de esta lista (Postfix/Postscreen)."
+
+msgid "dnsbl_threshold"
+msgstr "Umbral de bloqueo DNSBL"
+
+msgid "dnsbl_threshold_help"
+msgstr "Postscreen rechaza clientes SMTP entrantes cuando la suma de pesos DNSBL de su IP es al menos este número. El valor predeterminado es 1: un listado en cualquier lista activa con peso 1 basta. Auméntelo si usa varias listas y solo quiere bloquear cuando coinciden. Solo Postfix/Postscreen."
+
+
 msgid "vacationSubject"
 msgstr "Respuesta automática de"
 

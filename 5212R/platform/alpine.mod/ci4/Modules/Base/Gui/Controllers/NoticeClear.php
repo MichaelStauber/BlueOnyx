@@ -178,7 +178,7 @@ class NoticeClear extends BaseController {
 }
 
 /*
-Copyright (c) 2008-2026 Michael Stauber, SOLARSPEED.NET
+Copyright (c) 2008-2026 Greg Kuhnert (Compass Networks)
 Copyright (c) 2008-2026 Team BlueOnyx, BLUEONYX.IT
 All Rights Reserved.
 

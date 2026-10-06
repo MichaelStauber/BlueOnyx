@@ -39,6 +39,7 @@ install_httpdconf:
 	install -o root -g root -m 755 httpd/00-default-vsite.pl $(PREFIX)/etc/httpd/conf.perl/00-default-vsite.pl
 	install -o root -g root -m 644 httpd/nginx-ssl-proxy.conf $(PREFIX)/etc/httpd/conf.d
 	install -o root -g root -m 644 httpd/email-autoconfigure.conf $(PREFIX)/etc/httpd/conf.d
+	install -o root -g root -m 644 httpd/zz-modperl-no-request-phase.conf $(PREFIX)/etc/httpd/conf.d
 
 	# Install robots.txt's:
 	install -o root -g root -m 644 httpd/robots.txt $(PREFIX)/var/www/html/robots.txt

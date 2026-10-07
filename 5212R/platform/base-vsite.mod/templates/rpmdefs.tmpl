@@ -161,6 +161,13 @@ fi
 
 <begin $CHANGELOG>
 
+
+* Mon Oct 06 2026 Michael Stauber <mstauber@solarspeed.net> 4.10-2
+- Added GUI and handlers to enable or disable the ionCube Loader per
+  installed PHP version on /vsite/phpconfig. Versions without a matching
+  loader .so are omitted. Default remains enabled when a loader exists.
+
+
 * Fri Sep 18 2026 Michael Stauber <mstauber@solarspeed.net> 4.10-1
 - Added configurable PHP-FPM process manager and pool settings to the
   server PHP defaults and per-Vsite PHP settings.

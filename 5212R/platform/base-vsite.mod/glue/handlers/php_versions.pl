@@ -84,11 +84,21 @@ if (defined($PHPObject[0])) {
             chomp($reportedVersion);
             $known_php_versions_reverse{$reportedVersion} = $phpVer;
         }
+        $ioncube_so = '/home/solarspeed/ioncube/ioncube_loader_lin_' . $known_php_versions{$phpVer} . '.so';
+        $ioncube_present = (-f $ioncube_so) ? '1' : '0';
         if (( -f $phpFpmPath) && ( -f $phpBinaryPath)) {
-            ($ok) = $cce->update($PHPObject[0], "$phpVer", { 'present' => '1', 'version' => $reportedVersion });
+            ($ok, $PHPns) = $cce->get($PHPObject[0], "$phpVer");
+            my %ns_upd = ( 'present' => '1', 'version' => $reportedVersion, 'ioncube_present' => $ioncube_present );
+            if ($ioncube_present eq '0') {
+                $ns_upd{'ioncube'} = '0';
+            }
+            elsif ((!defined($PHPns->{'ioncube'})) || ($PHPns->{'ioncube'} eq '')) {
+                $ns_upd{'ioncube'} = '1';
+            }
+            ($ok) = $cce->update($PHPObject[0], "$phpVer", \%ns_upd);
         }
         else {
-            ($ok) = $cce->update($PHPObject[0], "$phpVer", { 'present' => '0', 'enabled' => '0', 'version' => "" });
+            ($ok) = $cce->update($PHPObject[0], "$phpVer", { 'present' => '0', 'enabled' => '0', 'version' => "", 'ioncube_present' => '0', 'ioncube' => '0' });
         }
     }
 }
@@ -101,7 +111,20 @@ else {
 # Find out which version of PHP the OS is running and store it in CCE:
 $PHP_version = `/usr/bin/php -v|/bin/grep ^PHP | /bin/awk '\{print \$2\}'`;
 chomp($PHP_version);
-($ok) = $cce->update($PHPObject[0], '', { 'PHP_version_os' => $PHP_version });
+$os_majmin = '';
+if ($PHP_version =~ /^(\d+\.\d+)/) {
+    $os_majmin = $1;
+}
+$os_ioncube_so = '/home/solarspeed/ioncube/ioncube_loader_lin_' . $os_majmin . '.so';
+$os_ioncube_present = (( $os_majmin ne '') && ( -f $os_ioncube_so)) ? '1' : '0';
+my %os_upd = ( 'PHP_version_os' => $PHP_version, 'ioncube_present' => $os_ioncube_present );
+if ($os_ioncube_present eq '0') {
+    $os_upd{'ioncube'} = '0';
+}
+elsif ((!defined($PHP->{'ioncube'})) || ($PHP->{'ioncube'} eq '')) {
+    $os_upd{'ioncube'} = '1';
+}
+($ok) = $cce->update($PHPObject[0], '', \%os_upd);
 
 # Check if the OS supplied PHP is any different than the PHP that Apache DSO is currently using:
 if ($PHP_version ne $PHP->{PHP_version}) {

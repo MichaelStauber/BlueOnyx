@@ -93,6 +93,7 @@ class Phpconfig extends BaseController {
 
         // Start clean:
         $enabledExtraPHPversions = array();
+        $enabledIoncubePHPversions = array();
 
         //
         //--- Handle form validation:
@@ -188,6 +189,11 @@ class Phpconfig extends BaseController {
                 $enabledExtraPHPversions = scalar_to_array($attributes['extraPHPversions']);
                 unset($attributes['extraPHPversions']);
             }
+            // Same shuttle format as extraPHPversions: "&PHP73&PHP74&PHPOS&..."
+            if (isset($attributes['extraIoncubePHPversions'])) {
+                $enabledIoncubePHPversions = scalar_to_array($attributes['extraIoncubePHPversions']);
+                unset($attributes['extraIoncubePHPversions']);
+            }
             if (isset($attributes['fpm_process_manager']) && $attributes['fpm_process_manager'] == 'dynamic') {
                 $fpm_max_children = isset($attributes['fpm_max_children']) ? $attributes['fpm_max_children'] : 15;
                 if (($attributes['fpm_start_servers'] > $fpm_max_children) ||
@@ -212,6 +218,21 @@ class Phpconfig extends BaseController {
                 }
                 else {
                     $CI->cceClient->setObject("PHP", array('enabled' => '0'), "$NSkey" );
+                }
+            }
+
+            // Enable / Disable ionCube Loader per PHP version that actually has a loader:
+            $osIoncubeNs = $CI->cceClient->getObject("PHP");
+            if ($osIoncubeNs['ioncube_present'] == '1') {
+                $osOn = (in_array('PHPOS', $enabledIoncubePHPversions) || in_array($osIoncubeNs['PHP_version_os'], $enabledIoncubePHPversions)) ? '1' : '0';
+                $CI->cceClient->setObject("PHP", array('ioncube' => $osOn));
+            }
+            foreach ($known_php_versions as $NSkey => $NSvalue) {
+                $nsIon = $CI->cceClient->get($osIoncubeNs['OID'], $NSkey);
+                if ($nsIon['ioncube_present'] == '1') {
+                    $ver = isset($nsIon['version']) ? $nsIon['version'] : '';
+                    $on = (in_array($NSkey, $enabledIoncubePHPversions) || (($ver !== '') && in_array($ver, $enabledIoncubePHPversions))) ? '1' : '0';
+                    $CI->cceClient->setObject("PHP", array('ioncube' => $on), "$NSkey");
                 }
             }
 
@@ -361,8 +382,10 @@ class Phpconfig extends BaseController {
                 $factory->getLabel("Spacer"),
                 "php_ini_security_settings"
             );
+        }
 
-            // If a PHP-5.3 is present, we show the checkbox that allows to sets its 'register_globals_exception' to on:
+
+        if (count($extraPHPs) > "0") {
             if (isset($extraPHPs['PHP53'])) {
                 if ($permitted_php_versions['PHP53'] == '1') {
                     $xxx = $factory->getBoolean('register_globals_exception', $CODBDATA['register_globals_exception'], "rw");
@@ -383,6 +406,71 @@ class Phpconfig extends BaseController {
             $factory->getLabel("php_ini_location"),
             "php_ini_security_settings"
         );
+
+        // Dual-list: ionCube Loader on/off. Only PHP versions with a matching loader .so.
+        $ion_all_ns = array();
+        $ion_all_labels = array();
+        $ion_on_labels = array();
+        $ion_on_ns = array();
+        $ion_all_keys = array();
+        if ($CODBDATA['ioncube_present'] == '1') {
+            $ion_all_ns[] = 'PHPOS';
+            $ion_all_labels[] = $CODBDATA['PHP_version_os'];
+            $ion_all_keys[] = 'PHPOS';
+            if ($CODBDATA['ioncube'] == '1') {
+                $ion_on_ns[] = 'PHPOS';
+                $ion_on_labels['PHPOS'] = $CODBDATA['PHP_version_os'];
+            }
+        }
+        foreach ($extraPHPs as $NSkey => $NSvalue) {
+            if ($NSvalue['ioncube_present'] == '1') {
+                $ion_all_ns[] = $NSvalue['NAMESPACE'];
+                $ion_all_labels[] = $NSvalue['version'];
+                $ion_all_keys[] = $NSvalue['NAMESPACE'];
+                if ($NSvalue['ioncube'] == '1') {
+                    $ion_on_ns[] = $NSvalue['NAMESPACE'];
+                    $ion_on_labels[$NSvalue['NAMESPACE']] = $NSvalue['version'];
+                }
+            }
+        }
+        if (count($ion_all_ns) > 0) {
+            $extraIoncubePHPversions = $factory->getSetSelector('extraIoncubePHPversions',
+                    $CI->cceClient->array_to_scalar($ion_on_labels),
+                    $CI->cceClient->array_to_scalar($ion_all_labels),
+                    'allowedIoncubePHPversions', 'disallowedIoncubePHPversions',
+                    "rw",
+                    $CI->cceClient->array_to_scalar($ion_on_ns),
+                    $CI->cceClient->array_to_scalar($ion_all_keys)
+                );
+            $extraIoncubePHPversions->setOptional(true);
+            $block->addFormField($extraIoncubePHPversions,
+                    $factory->getLabel('extraIoncubePHPversions'),
+                    "php_ini_security_settings"
+                );
+            $placeHolderIon = $factory->getRawHTML("SpacerIoncube", '<IMG BORDER="0" WIDTH="120" HEIGHT="0" SRC="/libImage/spaceHolder.gif">');
+            $block->addFormField(
+                $placeHolderIon,
+                $factory->getLabel("Spacer"),
+                "php_ini_security_settings"
+            );
+            $BxPage->setExtraFooters('
+            <script>
+              $(document).ready(function () {
+                $("form").on("submit", function () {
+                  var $ms = $("#extraIoncubePHPversions");
+                  if (!$ms.length) { return; }
+                  $ms.find("option").prop("selected", false);
+                  $("#ms-extraIoncubePHPversions .ms-selection li.ms-selected").each(function () {
+                    var v = $(this).data("ms-value");
+                    if (v) {
+                      $ms.find("option").filter(function () { return this.value == v; }).prop("selected", true);
+                    }
+                  });
+                });
+              });
+            </script>
+            ');
+        }
 
         if ($platform < "5.4") {
             // Register Globals (only shown if PHP version is smaller than 5.4):

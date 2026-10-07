@@ -1189,6 +1189,18 @@ msgstr "[[base-apache.extraPHPversions]]"
 msgid "extraPHPversions_help"
 msgstr "[[base-apache.extraPHPversions_help]]"
 
+msgid "extraIoncubePHPversions"
+msgstr "[[base-apache.extraIoncubePHPversions]]"
+
+msgid "extraIoncubePHPversions_help"
+msgstr "[[base-apache.extraIoncubePHPversions_help]]"
+
+msgid "allowedIoncubePHPversions"
+msgstr "[[base-apache.allowedIoncubePHPversions]]"
+
+msgid "disallowedIoncubePHPversions"
+msgstr "[[base-apache.disallowedIoncubePHPversions]]"
+
 msgid "register_globals_exception"
 msgstr "[[base-apache.register_globals_exception]]"
 

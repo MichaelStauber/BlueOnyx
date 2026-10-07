@@ -778,6 +778,18 @@ msgstr "PHP versions available for virtual sites:"
 msgid "extraPHPversions_help"
 msgstr "If you have multiple PHP versions installed, then you can choose which ones are available for usage on virtual sites. If you have a PHP version installed that you no longer wish to use, then you can move it to the right side of the table below. All virtual sites that are currently using it will then be reverted to the OS supplied PHP version. Additionally the disabled PHP version is then no longer selectable during the creation of new virtual sites."
 
+msgid "extraIoncubePHPversions"
+msgstr "Enable IonCube Loader:"
+
+msgid "extraIoncubePHPversions_help"
+msgstr "The ionCube Loader is a Zend extension. It is enabled by default for every installed PHP version that has a matching loader. Move a version to the right to disable ionCube for that PHP version (all virtual sites using it). Versions without a loader (for example PHP 8.0) are not listed. Changing this restarts the corresponding PHP-FPM service."
+
+msgid "allowedIoncubePHPversions"
+msgstr "Enabled"
+
+msgid "disallowedIoncubePHPversions"
+msgstr "Disabled"
+
 msgid "register_globals_exception"
 msgstr "PHP-5.3 exception"
 

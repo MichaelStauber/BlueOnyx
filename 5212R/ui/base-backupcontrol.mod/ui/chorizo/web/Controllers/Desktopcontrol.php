@@ -76,7 +76,7 @@ class Desktopcontrol extends BaseController {
             $form_data = $BxPage->FORM_POST;
 
             // Form fields that are required to have input:
-            $required_keys = array('csrf_protection', 'csrf_expire', 'csrf_regenerate', 'ddos_protection', 'ddos_attempts', 'ddos_window', 'ddos_expire');
+            $required_keys = array('csrf_protection', 'csrf_expire', 'csrf_regenerate', 'ddos_protection', 'ddos_attempts', 'ddos_window', 'ddos_expire', 'opcache_memory_consumption', 'opcache_interned_strings_buffer', 'opcache_max_accelerated_files', 'opcache_revalidate_freq', 'opcache_max_wasted_percentage');
 
             // Empty array for key => values we want to submit to CCE:
             $attributes = array();
@@ -207,6 +207,42 @@ class Desktopcontrol extends BaseController {
 
                     unset($attributes['default_gui_theme']);
                     unset($attributes['allowed_themes']);
+                }
+
+                $dc_extra = array();
+                if (isset($attributes['gui_debug'])) {
+                    $dc_extra['gui_debug'] = ($attributes['gui_debug'] == '1' || $attributes['gui_debug'] === 1 || $attributes['gui_debug'] === true) ? '1' : '0';
+                    unset($attributes['gui_debug']);
+                }
+                $opc_bools = array('admserv_opcache', 'opcache_enable_cli', 'opcache_validate_timestamps', 'opcache_save_comments', 'opcache_fast_shutdown');
+                $opc_ints = array(
+                    'opcache_memory_consumption' => array(64, 2048, 256),
+                    'opcache_interned_strings_buffer' => array(4, 128, 16),
+                    'opcache_max_accelerated_files' => array(2000, 1000000, 30000),
+                    'opcache_revalidate_freq' => array(0, 86400, 60),
+                    'opcache_max_wasted_percentage' => array(1, 50, 5),
+                );
+                foreach ($opc_bools as $okey) {
+                    if (isset($attributes[$okey])) {
+                        $dc_extra[$okey] = ($attributes[$okey] == '1' || $attributes[$okey] === 1 || $attributes[$okey] === true) ? '1' : '0';
+                        unset($attributes[$okey]);
+                    }
+                }
+                foreach ($opc_ints as $okey => $bounds) {
+                    if (isset($attributes[$okey])) {
+                        $val = intval($attributes[$okey]);
+                        if ($val < $bounds[0]) { $val = $bounds[0]; }
+                        if ($val > $bounds[1]) { $val = $bounds[1]; }
+                        $dc_extra[$okey] = strval($val);
+                        unset($attributes[$okey]);
+                    }
+                }
+                if ((count($errors) === 0) && (count($dc_extra) > 0)) {
+                    $CI->cceClient->set($System['OID'], "DesktopControl", $dc_extra);
+                    $CCEerrors = $CI->cceClient->errors();
+                    foreach ($CCEerrors as $object => $objData) {
+                        $errors[] = ErrorMessage($i18n->get($objData->message, true, array('key' => $objData->key)) . '<br>&nbsp;');
+                    }
                 }
 
                 $lock_script = '/usr/sausalito/sbin/cce_lock.pl';
@@ -391,6 +427,72 @@ class Desktopcontrol extends BaseController {
             $GUI_URLs_Field,
             $factory->getLabel("GUI_URLs")
         );
+
+        $gui_debug = $factory->getBoolean("gui_debug", $CODBDATA['gui_debug']);
+        $block->addFormField(
+            $gui_debug,
+            $factory->getLabel("gui_debug")
+        );
+
+        // AdmServ OPcache (master switch + tunables, same pattern as CSRF):
+        $opc_on = ($CODBDATA['admserv_opcache'] === '0' || $CODBDATA['admserv_opcache'] === 0) ? '0' : '1';
+        $opc_cli = (isset($CODBDATA['opcache_enable_cli']) && ($CODBDATA['opcache_enable_cli'] == '1')) ? '1' : '0';
+        $opc_validate = (!isset($CODBDATA['opcache_validate_timestamps']) || $CODBDATA['opcache_validate_timestamps'] === '0' || $CODBDATA['opcache_validate_timestamps'] === 0) ? '0' : '1';
+        if (!isset($CODBDATA['opcache_validate_timestamps'])) { $opc_validate = '1'; }
+        $opc_comments = (!isset($CODBDATA['opcache_save_comments']) || $CODBDATA['opcache_save_comments'] === '0') ? '0' : '1';
+        if (!isset($CODBDATA['opcache_save_comments'])) { $opc_comments = '1'; }
+        $opc_fast = (!isset($CODBDATA['opcache_fast_shutdown']) || $CODBDATA['opcache_fast_shutdown'] === '0') ? '0' : '1';
+        if (!isset($CODBDATA['opcache_fast_shutdown'])) { $opc_fast = '1'; }
+
+        $admserv_opcache = $factory->getMultiChoice('admserv_opcache');
+        $opc_opt = $factory->getOption('admserv_opcache', $opc_on, 'rw');
+        $opc_lbl = $factory->getLabel('admserv_opcache', false);
+        $opc_opt->setLabel($opc_lbl);
+        $admserv_opcache->addOption($opc_opt);
+
+        $opcache_enable_cli = $factory->getBoolean('opcache_enable_cli', $opc_cli, 'rw');
+        $opc_opt->addFormField($opcache_enable_cli, $factory->getLabel('opcache_enable_cli'));
+
+        $mem = (isset($CODBDATA['opcache_memory_consumption']) && $CODBDATA['opcache_memory_consumption'] !== '') ? $CODBDATA['opcache_memory_consumption'] : '256';
+        $opcache_memory_consumption = $factory->getInteger('opcache_memory_consumption', $mem, '64', '2048', 'rw');
+        $opcache_memory_consumption->setWidth(7);
+        $opcache_memory_consumption->showBounds(1);
+        $opc_opt->addFormField($opcache_memory_consumption, $factory->getLabel('opcache_memory_consumption'));
+
+        $interned = (isset($CODBDATA['opcache_interned_strings_buffer']) && $CODBDATA['opcache_interned_strings_buffer'] !== '') ? $CODBDATA['opcache_interned_strings_buffer'] : '16';
+        $opcache_interned_strings_buffer = $factory->getInteger('opcache_interned_strings_buffer', $interned, '4', '128', 'rw');
+        $opcache_interned_strings_buffer->setWidth(7);
+        $opcache_interned_strings_buffer->showBounds(1);
+        $opc_opt->addFormField($opcache_interned_strings_buffer, $factory->getLabel('opcache_interned_strings_buffer'));
+
+        $maxfiles = (isset($CODBDATA['opcache_max_accelerated_files']) && $CODBDATA['opcache_max_accelerated_files'] !== '') ? $CODBDATA['opcache_max_accelerated_files'] : '30000';
+        $opcache_max_accelerated_files = $factory->getInteger('opcache_max_accelerated_files', $maxfiles, '2000', '1000000', 'rw');
+        $opcache_max_accelerated_files->setWidth(8);
+        $opcache_max_accelerated_files->showBounds(1);
+        $opc_opt->addFormField($opcache_max_accelerated_files, $factory->getLabel('opcache_max_accelerated_files'));
+
+        $opcache_validate_timestamps = $factory->getBoolean('opcache_validate_timestamps', $opc_validate, 'rw');
+        $opc_opt->addFormField($opcache_validate_timestamps, $factory->getLabel('opcache_validate_timestamps'));
+
+        $refreq = (isset($CODBDATA['opcache_revalidate_freq']) && $CODBDATA['opcache_revalidate_freq'] !== '') ? $CODBDATA['opcache_revalidate_freq'] : '60';
+        $opcache_revalidate_freq = $factory->getInteger('opcache_revalidate_freq', $refreq, '0', '86400', 'rw');
+        $opcache_revalidate_freq->setWidth(7);
+        $opcache_revalidate_freq->showBounds(1);
+        $opc_opt->addFormField($opcache_revalidate_freq, $factory->getLabel('opcache_revalidate_freq'));
+
+        $opcache_save_comments = $factory->getBoolean('opcache_save_comments', $opc_comments, 'rw');
+        $opc_opt->addFormField($opcache_save_comments, $factory->getLabel('opcache_save_comments'));
+
+        $waste = (isset($CODBDATA['opcache_max_wasted_percentage']) && $CODBDATA['opcache_max_wasted_percentage'] !== '') ? $CODBDATA['opcache_max_wasted_percentage'] : '5';
+        $opcache_max_wasted_percentage = $factory->getInteger('opcache_max_wasted_percentage', $waste, '1', '50', 'rw');
+        $opcache_max_wasted_percentage->setWidth(5);
+        $opcache_max_wasted_percentage->showBounds(1);
+        $opc_opt->addFormField($opcache_max_wasted_percentage, $factory->getLabel('opcache_max_wasted_percentage'));
+
+        $opcache_fast_shutdown = $factory->getBoolean('opcache_fast_shutdown', $opc_fast, 'rw');
+        $opc_opt->addFormField($opcache_fast_shutdown, $factory->getLabel('opcache_fast_shutdown'));
+
+        $block->addFormField($admserv_opcache, $factory->getLabel('admserv_opcache'));
 
         // Hardwire theme choice to 'elmer';
         $System['allowed_themes'] = 'elmer';

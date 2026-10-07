@@ -1,3 +1,14 @@
-<class name="System" namespace="DesktopControl" version="1.0">
+<class name="System" namespace="DesktopControl" version="1.2">
 	<property name="lock" type="boolean" default="0" writeacl="ruleCapable(serverServerDesktop)" readacl="ruleAll" />
+	<property name="gui_debug" type="boolean" default="0" writeacl="ruleCapable(serverServerDesktop)" readacl="ruleAll" />
+	<property name="admserv_opcache" type="boolean" default="1" writeacl="ruleCapable(serverServerDesktop)" readacl="ruleAll" />
+	<property name="opcache_enable_cli" type="boolean" default="0" writeacl="ruleCapable(serverServerDesktop)" readacl="ruleAll" />
+	<property name="opcache_memory_consumption" type="int" default="256" writeacl="ruleCapable(serverServerDesktop)" readacl="ruleAll" />
+	<property name="opcache_interned_strings_buffer" type="int" default="16" writeacl="ruleCapable(serverServerDesktop)" readacl="ruleAll" />
+	<property name="opcache_max_accelerated_files" type="int" default="30000" writeacl="ruleCapable(serverServerDesktop)" readacl="ruleAll" />
+	<property name="opcache_validate_timestamps" type="boolean" default="1" writeacl="ruleCapable(serverServerDesktop)" readacl="ruleAll" />
+	<property name="opcache_revalidate_freq" type="int" default="60" writeacl="ruleCapable(serverServerDesktop)" readacl="ruleAll" />
+	<property name="opcache_save_comments" type="boolean" default="1" writeacl="ruleCapable(serverServerDesktop)" readacl="ruleAll" />
+	<property name="opcache_max_wasted_percentage" type="int" default="5" writeacl="ruleCapable(serverServerDesktop)" readacl="ruleAll" />
+	<property name="opcache_fast_shutdown" type="boolean" default="1" writeacl="ruleCapable(serverServerDesktop)" readacl="ruleAll" />
 </class>

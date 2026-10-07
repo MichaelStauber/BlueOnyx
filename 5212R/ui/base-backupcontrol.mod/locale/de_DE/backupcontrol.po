@@ -136,3 +136,84 @@ msgstr "Der angegebene GUI-Port wird bereits von einem anderen Dienst verwendet.
 
 msgid "GUI_URLs_minimum_fail"
 msgstr "Es muss mindestens ein Apache-Alias angegeben werden, der zum GUI-Interface umleitet."
+
+msgid "gui_debug"
+msgstr "GUI-Debug aktivieren"
+
+msgid "gui_debug_help"
+msgstr "Wenn aktiv, läuft die GUI mit CI_ENVIRONMENT=development (ausführliche Fehler). Auf Produktivsystemen aus lassen."
+
+msgid "admserv_opcache"
+msgstr "Opcache aktivieren"
+
+msgid "admserv_opcache_help"
+msgstr "PHP-OPcache für den AdmServ-GUI-PHP-FPM-Pool. Empfohlen an. Eine Änderung startet admserv-php-fpm neu. Die Unterfelder schreiben opcache.ini."
+
+msgid "opcache_enable_cli"
+msgstr "OPcache für CLI"
+
+msgid "opcache_enable_cli_help"
+msgstr "opcache.enable_cli. Aus lassen, außer CLI von AdmServ-PHP braucht OPcache."
+
+msgid "opcache_memory_consumption"
+msgstr "Speicherverbrauch (MB)"
+
+msgid "opcache_memory_consumption_help"
+msgstr "opcache.memory_consumption. Shared Memory in Megabyte (64–2048). Standard 256."
+
+msgid "opcache_interned_strings_buffer"
+msgstr "Interned-Strings-Puffer (MB)"
+
+msgid "opcache_interned_strings_buffer_help"
+msgstr "opcache.interned_strings_buffer. Standard 16."
+
+msgid "opcache_max_accelerated_files"
+msgstr "Max. gecachte Dateien"
+
+msgid "opcache_max_accelerated_files_help"
+msgstr "opcache.max_accelerated_files. Wie viele Scripts im Cache. Standard 30000."
+
+msgid "opcache_validate_timestamps"
+msgstr "Zeitstempel prüfen"
+
+msgid "opcache_validate_timestamps_help"
+msgstr "opcache.validate_timestamps. Wenn an, prüft PHP die mtime der Scripts. Für GUI-Updates an lassen."
+
+msgid "opcache_revalidate_freq"
+msgstr "Prüfintervall (Sekunden)"
+
+msgid "opcache_revalidate_freq_help"
+msgstr "opcache.revalidate_freq. Wie oft Zeitstempel geprüft werden. 0 = jeder Request. Standard 60."
+
+msgid "opcache_save_comments"
+msgstr "Kommentare speichern"
+
+msgid "opcache_save_comments_help"
+msgstr "opcache.save_comments. PHPDoc im Cache behalten. Standard an."
+
+msgid "opcache_max_wasted_percentage"
+msgstr "Max. verschwendeter Speicher (%)"
+
+msgid "opcache_max_wasted_percentage_help"
+msgstr "opcache.max_wasted_percentage. Cache-Reset wenn mehr als dieser Anteil verschwendet ist. Standard 5."
+
+msgid "opcache_fast_shutdown"
+msgstr "Fast Shutdown"
+
+msgid "opcache_fast_shutdown_help"
+msgstr "opcache.fast_shutdown. Bei modernem PHP wirkungslos, bleibt der Kompatibilität wegen. Standard an."
+
+msgid "gui_debug_env_missing"
+msgstr "Die GUI-.env-Datei fehlt. Debug-Modus kann nicht umgeschaltet werden."
+
+msgid "gui_debug_env_edit_fail"
+msgstr "Die GUI-.env-Datei konnte nicht aktualisiert werden."
+
+msgid "admserv_opcache_so_missing"
+msgstr "opcache.so unter /home/solarspeed/admserv-php/ wurde nicht gefunden."
+
+msgid "admserv_opcache_ini_dir_missing"
+msgstr "Das php.d-Verzeichnis von AdmServ-PHP fehlt."
+
+msgid "admserv_opcache_ini_write_fail"
+msgstr "Die AdmServ-OPcache-Konfiguration konnte nicht geschrieben werden."

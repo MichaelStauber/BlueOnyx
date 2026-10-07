@@ -107,6 +107,22 @@ fi
 
 <begin $CHANGELOG>
 
+* Tue Oct 06 2026 Michael Stauber <mstauber@solarspeed.net> 1.2.3-6
+- Added constructor/sync_gui_debug.pl to sync DesktopControl.gui_debug from
+  the Chorizo .env via CCE update() (no-op if unchanged).
+
+
+* Tue Oct 06 2026 Michael Stauber <mstauber@solarspeed.net> 1.2.3-5
+- Made AdmServ OPcache ini tunables editable on /backupcontrol/desktopcontrol
+  (integers/booleans nested under Enable Opcache).
+
+
+* Tue Oct 06 2026 Michael Stauber <mstauber@solarspeed.net> 1.2.3-4
+- Added GUI Debug and AdmServ OPcache toggles on /backupcontrol/desktopcontrol.
+- Handlers update chorizo .env CI_ENVIRONMENT and admserv-php opcache.ini
+  (opcache.so path auto-detected). Restarts admserv-php-fpm via Sauce::Service.
+
+
 * Tue Jul 21 2026 Michael Stauber <mstauber@solarspeed.net> 1.2.3-3
 - Modified ui/chorizo/web/Controllers/Desktopcontrol.php to allow empty
   'GUI Aliases'.

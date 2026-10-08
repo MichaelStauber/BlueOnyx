@@ -45,6 +45,7 @@ my ($ok, $obj) = $cce->get($oid);
 
 # Get "System" . "Web":
 my ($ok, $objWeb) = $cce->get($oid, 'Web');
+my ($ok, $objNginx) = $cce->get($oid, 'Nginx');
 
 # HTTP and SSL ports:
 $httpPort = "80";
@@ -141,11 +142,16 @@ if (!$param->{ipaddr}) {
 	$param->{ipaddr} = "127.0.0.1"; 
 }
 
+    my $http_protocols = 'Protocols h2 http/1.1';
+    if ($objNginx->{enabled} eq '1') {
+        $http_protocols = 'Protocols http/1.1';
+    }
+
     my $preview_conf =<<END;
 # /etc/httpd/conf/vhost/preview
 #NameVirtualHost $param->{ipaddr}:$httpPort
 <VirtualHost $param->{ipaddr}:$httpPort>
-Protocols h2 http/1.1
+$http_protocols
 ServerName $param->{fqdn}
 DocumentRoot /var/www/html
 

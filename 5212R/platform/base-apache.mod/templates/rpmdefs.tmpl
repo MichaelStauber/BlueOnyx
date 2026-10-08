@@ -255,6 +255,14 @@ fi
 <begin $CHANGELOG>
 
 
+* Wed Oct 07 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.9-4
+- Generate port-80 VirtualHosts with Protocols http/1.1 only while
+  Nginx is the SSL proxy, so Apache does not send Upgrade: h2 on the
+  cleartext backend. Without Nginx, port 80 keeps Protocols h2 http/1.1.
+  HTTPS vhosts always use Protocols h2 http/1.1 (ALPN).
+- Updated Nginx_Info_Text in all locales: Apache serves HTTP/2 natively
+  on 5211R/5212R; Nginx as SSL proxy is optional and not recommended.
+
 * Mon Oct 06 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.9-3
 - Added ionCube Loader enable/disable labels for /vsite/phpconfig.
 

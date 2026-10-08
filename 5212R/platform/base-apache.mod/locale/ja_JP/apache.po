@@ -565,7 +565,7 @@ msgid "GENERAL_NGINX_DIVIDER"
 msgstr "SSLプロキシとしてのNginx："
 
 msgid "Nginx_Info_Text"
-msgstr "BlueOnyxに付属しているApache Webサーバーは、従来のHTTPページを提供するのには良い仕事をしますが、HTTPSの点ではHTTP / 2要求に答えることができず、サポートされているTLS暗号も可能ではありませんHTTP / 2が大幅に改善され、TLS接続の品質とセキュリティが最高になるようにするために、ApacheはHTTPリクエストの配信を継続し、Nginx転送を介してすべてのHTTPS接続をルーティングできるようになりましたこのチェックボックスをオンにすると、このサーバはApacheがHTTPSページを提供する権限を失い、NginxがHTTPSを引き継ぐように再設定されます。この機能は、チェックボックスを再び解除するだけでいつでも元に戻すことができます。"
+msgstr "BlueOnyx 5211R および 5212R では、Apache が HTTP/2 をネイティブに提供できます。mod_php と mod_ruid2 を廃止したことで、event MPM と HTTP/2 が利用できます。HTTP/2 のために Nginx を SSL プロキシとして使う必要はなく、推奨しません。HTTPS を Apache だけで提供する方が単純で、リソースも少なく、わずかに高速です。Nginx SSL プロキシは特別な用途のために残しています。下のチェックボックスをオンにすると、Apache は HTTPS の提供をやめ、Nginx が TLS を終端します。チェックを外せばいつでも元に戻せます。"
 
 msgid "NGINX_CFG_DIVIDER"
 msgstr "Nginxの設定："

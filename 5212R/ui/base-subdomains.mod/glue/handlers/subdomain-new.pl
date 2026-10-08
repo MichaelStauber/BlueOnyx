@@ -419,12 +419,17 @@ else {
     $ip_rewrite_cond_https .= 'RewriteCond %{HTTP_HOST}                !^' . $vsite->{ipaddr} . '(:' . $sslPort . ')?$';
 }
 
+my $http_protocols = '  Protocols h2 http/1.1';
+if ($Nginx->{enabled} eq '1') {
+    $http_protocols = '  Protocols http/1.1';
+}
+
 $site_config = "#NameVirtualHost $ipadd:$httpPort
 ServerRoot /etc/httpd
 
 <VirtualHost $http_ipline>
   ServerName  $fqdn
-  Protocols h2 http/1.1
+$http_protocols
   ServerAdmin admin
   DocumentRoot $web_dir
   # BEGIN WebScripting SECTION.  DO NOT EDIT MARKS OR IN BETWEEN.

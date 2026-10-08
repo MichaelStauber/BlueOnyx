@@ -578,7 +578,7 @@ msgid "GENERAL_NGINX_DIVIDER"
 msgstr "Nginx als SSL-Proxy:"
 
 msgid "Nginx_Info_Text"
-msgstr "Der Apache-Webserver der mit BlueOnyx ausgeliefert wird leistet gute Arbeit bei der Auslieferung traditioneller HTTP-Inhalte. Bei der Auslieferung von HTTPS-Inhalten zeigen sich jedoch einige Schwächen. So kann der von RedHat/CentOS derweil bereitgestellte Apache kein HTTP/2 und die unterstützten und möglichen TLS-Chiffren sind auch nicht die beste Wahl. Da HTTP/2 eine erhebliche Verbesserung darstellt und wir Wert auf bestmöglicher Qualität und Sicherheit bei TLS-Verbindungen legen, bieten wir nun die Möglichkeit an, dass der Apache weiterhin HTTP-Anfragen bedient und alle HTTPS-Verbindungen über eine Nginx-Forwarding-Proxy leitet. Wenn Sie das Kontrollkästchen aktivieren, wird Ihr Server so umkonfiguriert, dass Apache die Verfügungsgewalt für HTTPS-Seiten verliert und Nginx die Auslieferung von Webinhalten per HTTPS übernimmt. Diese Funktion kann jederzeit wieder rückgängig gemacht werden indem Sie das Kontrollkästchen einfach wieder deaktivieren."
+msgstr "Unter BlueOnyx 5211R und 5212R kann Apache HTTP/2 nativ ausliefern. mod_php und mod_ruid2 entfallen, wodurch Event-MPM und HTTP/2 möglich sind. Nginx als SSL-Proxy ist für HTTP/2 nicht mehr nötig und nicht empfohlen: HTTPS direkt mit Apache ist einfacher, sparsamer und etwas schneller. Der Nginx-SSL-Proxy bleibt für Sonderfälle verfügbar. Wenn Sie das Kontrollkästchen aktivieren, gibt Apache die HTTPS-Auslieferung ab und Nginx terminiert TLS. Das lässt sich jederzeit durch Deaktivieren des Kontrollkästchens rückgängig machen."
 
 msgid "NGINX_CFG_DIVIDER"
 msgstr "Nginx Konfiguration:"

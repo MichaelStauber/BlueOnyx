@@ -120,6 +120,11 @@ fi
 
 <begin $CHANGELOG>
 
+* Wed Oct 07 2026 Michael Stauber <mstauber@solarspeed.net> 2.7.1-3
+- Generate cleartext subdomain vhosts with Protocols http/1.1 only
+  while Nginx is the SSL proxy, so Apache does not send Upgrade: h2
+  through Nginx HTTP/2 (Safari). Without Nginx, keep Protocols h2.
+
 * Mon Jan 05 2025 Michael Stauber <mstauber@solarspeed.net> 2.7.1-2
 - Modified glue/handlers/subdomain-new.pl to only insert PHP DSO
   flags on 5210R.

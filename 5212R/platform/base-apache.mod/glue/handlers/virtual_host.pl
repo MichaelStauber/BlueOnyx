@@ -981,6 +981,14 @@ sub edit_vhost
         $ip_rewrite_cond_https .= 'RewriteCond %{HTTP_HOST}                !^' . $vhost->{ipaddr} . '(:' . $sslPort . ')?$';
     }
 
+# Nginx SSL proxy talks HTTP/1.1 to Apache on port 80. Offering h2 there
+# makes Apache send Upgrade: h2, which Nginx forwards into HTTP/2 (Safari).
+# Native Apache (no proxy) keeps HTTP/2 on the cleartext vhost as well.
+my $http_protocols = 'Protocols h2 http/1.1';
+if ($Nginx->{enabled} eq '1') {
+    $http_protocols = 'Protocols http/1.1';
+}
+
 my $apache_forwarded_for = '';
 if ($Nginx->{enabled} eq '1') {
     $apache_forwarded_for .= "RemoteIPHeader X-Forwarded-For\n";
@@ -1029,7 +1037,7 @@ else {
 ServerRoot $Base::Httpd::server_root
 
 <VirtualHost $http_ipline>
-Protocols h2 http/1.1
+$http_protocols
 ServerName $vhost->{fqdn}
 $ServerAlias
 ServerAdmin $vhost->{serverAdmin}

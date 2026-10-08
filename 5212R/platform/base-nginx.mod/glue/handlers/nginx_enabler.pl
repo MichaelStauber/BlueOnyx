@@ -33,6 +33,13 @@ else {
         });
 }
 
+# When Nginx terminates TLS it talks HTTP/1.1 to Apache on port 80.
+# Apache would otherwise answer with Upgrade: h2, which Nginx forwards
+# into the HTTP/2 response (illegal; Safari/curl fail). Only emit this
+# drop-in while the SSL proxy is enabled so native Apache HTTPS HTTP/2
+# is unchanged.
+&sync_h2upgrade_off($Nginx->{enabled});
+
 # Find all Vsites:
 @vhosts = ();
 (@vhosts) = $cce->findx('Vsite');
@@ -85,6 +92,38 @@ exit(0);
 #
 ### Subroutines:
 #
+
+sub sync_h2upgrade_off {
+    my $enabled = shift;
+    my $file = '/etc/httpd/conf.d/zz-h2upgrade-off.conf';
+
+    if ($enabled eq '1') {
+        if (open(my $fh, '>', $file)) {
+            print $fh <<'END';
+#
+# Written by nginx_enabler.pl only while Nginx is the SSL proxy.
+# Removed again when the proxy is disabled.
+#
+# Nginx talks HTTP/1.1 to Apache on port 80. Without this, Apache
+# answers with Upgrade: h2, which Nginx forwards into HTTP/2
+# (RFC 9113 8.2.2 — Safari/curl treat that as malformed).
+# Native HTTPS HTTP/2 via ALPN is unaffected.
+#
+<IfModule http2_module>
+    H2Upgrade Off
+</IfModule>
+END
+            close($fh);
+            chmod 0644, $file;
+        }
+        else {
+            &debug_msg("Could not write $file\n");
+        }
+    }
+    elsif (-f $file) {
+        unlink $file;
+    }
+}
 
 sub debug_msg {
     if ($DEBUG) {

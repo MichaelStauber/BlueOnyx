@@ -375,10 +375,15 @@ foreach my $vsite_oid (@suspended_sites) {
     $vsite_Basedir = $vsite->{'basedir'};
     $vsite_CertDir = $vsite_Basedir . '/wwwroot/certs';
 
+    my $http_protocols = '    Protocols h2 http/1.1';
+    if ($objNginx->{enabled} eq '1') {
+        $http_protocols = '    Protocols http/1.1';
+    }
+
     # HTTP:
 $config .= <<CONFIG;
     <VirtualHost $vsite_ip:$httpPort>
-    Protocols h2 http/1.1
+$http_protocols
     ServerName $fqdn
     $aliasLine
 

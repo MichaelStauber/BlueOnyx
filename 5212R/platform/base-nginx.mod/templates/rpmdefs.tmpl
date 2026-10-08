@@ -113,6 +113,13 @@ fi
 
 <begin $CHANGELOG>
 
+* Wed Oct 07 2026 Michael Stauber <mstauber@solarspeed.net> 1.1.0-4
+- Write /etc/httpd/conf.d/zz-h2upgrade-off.conf (H2Upgrade Off) only
+  while Nginx is the SSL proxy, and remove it when the proxy is
+  disabled. Stops Apache from sending Upgrade: h2 through Nginx HTTP/2
+  (Safari/curl). Handler: nginx_enabler.pl; constructor:
+  h2upgrade_for_nginx.pl for already-enabled systems on RPM update.
+
 * Wed Aug 20 2025 Michael Stauber <mstauber@solarspeed.net> 1.1.0-3
 - Modified glue/handlers/nginx_defaults.pl as syntax for enabling HTTP/2 
   changed on 5212R.

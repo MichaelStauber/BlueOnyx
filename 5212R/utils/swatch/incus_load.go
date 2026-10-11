@@ -46,6 +46,62 @@ func formatTime(days, hours, minutes int) string {
     return fmt.Sprintf("%dd:%02dh:%02dmin", days, hours, minutes)
 }
 
+func cpuIOLine() string {
+    readCPU := func() []uint64 {
+        data, err := os.ReadFile("/proc/stat")
+        if err != nil {
+            return nil
+        }
+        for _, line := range strings.Split(string(data), "\n") {
+            if strings.HasPrefix(line, "cpu ") {
+                fields := strings.Fields(line)
+                out := make([]uint64, 8)
+                for i := 0; i < 8 && i+1 < len(fields); i++ {
+                    v, _ := strconv.ParseUint(fields[i+1], 10, 64)
+                    out[i] = v
+                }
+                return out
+            }
+        }
+        return nil
+    }
+    a := readCPU()
+    time.Sleep(1 * time.Second)
+    b := readCPU()
+    if a == nil || b == nil {
+        return "IO: n/a"
+    }
+    var d [8]uint64
+    var tot uint64
+    for i := 0; i < 8; i++ {
+        if b[i] >= a[i] {
+            d[i] = b[i] - a[i]
+        }
+        tot += d[i]
+    }
+    if tot == 0 {
+        tot = 1
+    }
+    pct := func(n uint64) float64 { return float64(n) * 100 / float64(tot) }
+    us := pct(d[0] + d[1])
+    sy := pct(d[2] + d[5] + d[6])
+    id := pct(d[3])
+    wa := pct(d[4])
+
+    blocked := "0"
+    if data, err := os.ReadFile("/proc/stat"); err == nil {
+        for _, line := range strings.Split(string(data), "\n") {
+            if strings.HasPrefix(line, "procs_blocked") {
+                fields := strings.Fields(line)
+                if len(fields) >= 2 {
+                    blocked = fields[1]
+                }
+            }
+        }
+    }
+    return fmt.Sprintf("IO: wa=%.1f%% us=%.1f%% sy=%.1f%% id=%.1f%%  blocked=%s", wa, us, sy, id, blocked)
+}
+
 func loadContainers() ([]Container, error) {
     out, err := exec.Command("/usr/bin/incus", "list", "--format=json").Output()
     if err != nil {
@@ -159,6 +215,7 @@ func main() {
     node, _ := os.Hostname()
     fmt.Println("NODE:")
     fmt.Println(node, uptime)
+    fmt.Println(cpuIOLine())
     fmt.Println()
 
     containers, err := loadContainers()

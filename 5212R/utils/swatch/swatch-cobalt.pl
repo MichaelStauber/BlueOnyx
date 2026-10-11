@@ -317,6 +317,14 @@ sub do_monitor {
     }
     elsif ( -x $am ) {
         print "running $am\n" if ($DEBUG_ME);
+        # Export scalar CCE properties so AM scripts see thresholds (rThreshhold, ioYellow, ...)
+        foreach my $k (keys %$object) {
+            next unless defined $object->{$k};
+            next if ref $object->{$k};
+            next if $k !~ /^[A-Za-z_][A-Za-z0-9_]*$/;
+            next if $object->{$k} =~ /[\r\n]/;
+            $ENV{$k} = $object->{$k};
+        }
         $ret = `PATH=/bin:/sbin:/usr/sbin:/usr/bin LANG=$system_lang $am`;
         $state = $? >> 8;
     }
@@ -353,8 +361,10 @@ sub do_monitor {
             if ($object->{currentMessage}) {
                 print "CPU is/was in moderate or heavy useage - generating 'top' report\n" if ($DEBUG_ME);
 
+                $cpu_msg .= "\n\n";
+                $cpu_msg .= io_snapshot();
+
                 if ((-e '/usr/sausalito/sbin/incus_load') && (-e '/usr/bin/incus')) {
-                    $cpu_msg .= "\n\n";
                     $cpu_msg .= `/usr/sausalito/sbin/incus_load`;
                 }
 
@@ -379,3 +389,118 @@ sub do_monitor {
     }
     return ($state, $ret, $msg);
 }
+
+# Cheap I/O snapshot for CPU AM emails: 1s /proc/stat sample, D-state, diskstats.
+sub io_snapshot {
+    my $out = '';
+    $out .= "-------------------------------------------\n";
+    $out .= "I/O wait snapshot:\n";
+    $out .= "-------------------------------------------\n";
+
+    my $read_cpu = sub {
+        if (open my $fh, '<', '/proc/stat') {
+            while (<$fh>) {
+                if (/^cpu\s+/) {
+                    my @f = split;
+                    close $fh;
+                    return map { $_ || 0 } @f[1 .. 8];
+                }
+            }
+            close $fh;
+        }
+        return (0, 0, 0, 0, 0, 0, 0, 0);
+    };
+
+    my @a = $read_cpu->();
+    select(undef, undef, undef, 1.0);
+    my @b = $read_cpu->();
+    my @d;
+    my $tot = 0;
+    for my $i (0 .. 7) {
+        $d[$i] = ($b[$i] || 0) - ($a[$i] || 0);
+        $d[$i] = 0 if $d[$i] < 0;
+        $tot += $d[$i];
+    }
+    $tot = 1 if $tot < 1;
+    my $pct = sub { sprintf('%.1f', ($_[0] * 100) / $tot) };
+    my $us = $pct->($d[0] + $d[1]);
+    my $sy = $pct->($d[2] + $d[5] + $d[6]);
+    my $id = $pct->($d[3]);
+    my $wa = $pct->($d[4]);
+    my $st = $pct->($d[7]);
+
+    my $blocked = 0;
+    if (open my $fh, '<', '/proc/stat') {
+        while (<$fh>) {
+            $blocked = $1 if /^procs_blocked\s+(\d+)/;
+        }
+        close $fh;
+    }
+
+    my ($l1, $l5, $l15) = ('?', '?', '?');
+    if (open my $fh, '<', '/proc/loadavg') {
+        my $load = <$fh>;
+        close $fh;
+        ($l1, $l5, $l15) = split(/\s+/, $load) if defined $load;
+    }
+
+    $out .= "cpu (1s): us=$us sy=$sy id=$id wa=$wa st=$st\n";
+    $out .= "loadavg: $l1 $l5 $l15   blocked=$blocked\n";
+
+    my $ps = `ps -eo pid,stat,wchan:24,comm --no-headers 2>/dev/null`;
+    my @dlines;
+    for my $line (split /\n/, $ps) {
+        next unless $line =~ /^\s*\d+\s+\S*D/;
+        push @dlines, $line;
+        last if @dlines >= 15;
+    }
+    if (@dlines) {
+        $out .= "D-state (uninterruptible I/O wait):\n";
+        $out .= sprintf("  %-8s %-6s %-24s %s\n", 'PID', 'STAT', 'WCHAN', 'CMD');
+        for my $line (@dlines) {
+            $out .= "  $line\n";
+        }
+    }
+    else {
+        $out .= "D-state: none\n";
+    }
+
+    my $uptime_s = 1;
+    if (open my $fh, '<', '/proc/uptime') {
+        my $l = <$fh>;
+        close $fh;
+        ($uptime_s) = split(/\s+/, $l) if defined $l;
+        $uptime_s = 1 if !$uptime_s || $uptime_s < 1;
+    }
+
+    my @disks;
+    if (open my $fh, '<', '/proc/diskstats') {
+        while (<$fh>) {
+            my @f = split;
+            next unless @f >= 14;
+            my $name = $f[2];
+            next if $name =~ /^(loop|ram|sr|fd)/;
+            next if $name =~ /^(sd[a-z]|vd[a-z]|hd[a-z]|xvd[a-z])\d+$/;
+            next if $name =~ /^nvme\d+n\d+p\d+$/;
+            my $reads  = $f[3]  || 0;
+            my $rtime  = $f[6]  || 0;
+            my $writes = $f[7]  || 0;
+            my $wtime  = $f[10] || 0;
+            my $iotime = $f[12] || 0;
+            next if ($reads + $writes) < 100;
+            my $r_await = $reads  ? sprintf('%.1f', $rtime  / $reads)  : '0.0';
+            my $w_await = $writes ? sprintf('%.1f', $wtime  / $writes) : '0.0';
+            my $util    = sprintf('%.1f', ($iotime / ($uptime_s * 1000)) * 100);
+            push @disks, sprintf("  %-12s r_await=%6sms  w_await=%6sms  util~=%6s%%  (since boot)",
+                $name, $r_await, $w_await, $util);
+        }
+        close $fh;
+    }
+    if (@disks) {
+        $out .= "Disk latency (since boot):\n";
+        $out .= join("\n", @disks) . "\n";
+    }
+    $out .= "\n";
+    return $out;
+}
+

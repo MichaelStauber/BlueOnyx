@@ -25,6 +25,44 @@ def format_time(days, hours, minutes):
     """Format uptime with leading zeros."""
     return f"{days}d:{hours:02}h:{minutes:02}min"
 
+def get_cpu_io_line():
+    """1s /proc/stat sample: iowait vs CPU."""
+    def read_cpu():
+        try:
+            with open("/proc/stat") as f:
+                for line in f:
+                    if line.startswith("cpu "):
+                        parts = line.split()
+                        vals = [int(x) for x in parts[1:9]]
+                        while len(vals) < 8:
+                            vals.append(0)
+                        return vals
+        except Exception:
+            return None
+        return None
+
+    a = read_cpu()
+    time.sleep(1)
+    b = read_cpu()
+    if not a or not b:
+        return "IO: n/a"
+    d = [max(0, b[i] - a[i]) for i in range(8)]
+    tot = sum(d) or 1
+    us = (d[0] + d[1]) * 100 / tot
+    sy = (d[2] + d[5] + d[6]) * 100 / tot
+    idle = d[3] * 100 / tot
+    wa = d[4] * 100 / tot
+    blocked = "0"
+    try:
+        with open("/proc/stat") as f:
+            for line in f:
+                if line.startswith("procs_blocked"):
+                    blocked = line.split()[1]
+                    break
+    except Exception:
+        pass
+    return f"IO: wa={wa:.1f}% us={us:.1f}% sy={sy:.1f}% id={idle:.1f}%  blocked={blocked}"
+
 def map_processes_to_containers(max_container_width):
     """Map processes to containers and display their information with dynamic width."""
     print(f"{'PID':<10}{'CPU%':<6}{'MEM%':<6}{'COMMAND':<23}{'CONTAINER':<{max_container_width}}")
@@ -84,6 +122,7 @@ def main():
 
     print("NODE:")
     print(uname, get_uptime())
+    print(get_cpu_io_line())
     print()
 
     if not os.path.exists("/usr/bin/incus"):

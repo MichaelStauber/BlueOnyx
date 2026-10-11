@@ -4,7 +4,7 @@
 -->
 
 <!-- This is the AM Namespace for monitoring CPU -->
-<class name="ActiveMonitor" namespace="CPU" version="1.3">
+<class name="ActiveMonitor" namespace="CPU" version="1.4">
     <property name="enabled"            type="boolean"  default="1"/>
     <property name="monitor"	writeACL="ruleCapable(serverActiveMonitor)"
 	type="boolean"  default="1"/>
@@ -23,6 +23,8 @@
     <property name="UIGroup"		type="scalar"   default="system"/>
     <property name="yThreshhold"	type="scalar"	default="4.0"/>
     <property name="rThreshhold"	type="scalar"	default="6.0"/>
+    <property name="ioYellow"	type="scalar"	default="25"/>
+    <property name="ioRed"	type="scalar"	default="40"/>
 </class>
 
 <!-- This is the AM Namespace for monitoring Memory -->

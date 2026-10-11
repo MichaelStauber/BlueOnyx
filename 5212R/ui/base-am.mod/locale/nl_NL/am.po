@@ -122,6 +122,18 @@ msgstr "De CPU wordt matig gebruikt. Dit kan te wijten zijn aan een tijdelijke t
 msgid "amCPUWarning_heavy"
 msgstr "De CPU wordt intensief gebruikt. Dit leidt tot merkbaar prestatieverlies. Overwegen te verhuizen enkele diensten naar andere servers, of het verminderen van de complexiteit van de CGI-scripts die op de server zelf."
 
+msgid "amCPUWarning_heavy_iowait"
+msgstr "De serverbelasting is hoog, maar komt vooral door I/O-wachttijd, niet door CPU. Processen wachten op schijf of storage. Controleer schijf-/RAID-latentie, back-ups en logrotatie."
+
+msgid "amCPUWarning_moderate_iowait"
+msgstr "De serverbelasting is matig hoog, grotendeels door I/O-wachttijd in plaats van CPU. Dit kan een tijdelijke piek zijn door schijfactiviteit zoals back-ups of logrotatie."
+
+msgid "amCPUWarning_heavy_mixed"
+msgstr "De server staat onder zware belasting door zowel CPU-gebruik als I/O-wachttijd. Zowel storage-latentie als CPU-intensieve diensten dragen bij. Controleer schijf-/RAID-status en lopende processen."
+
+msgid "amCPUWarning_moderate_mixed"
+msgstr "De serverbelasting is matig hoog; zowel CPU-gebruik als I/O-wachttijd dragen bij. Dit kan een tijdelijke toename van activiteit zijn."
+
 msgid "amUseLight"
 msgstr "licht"
 

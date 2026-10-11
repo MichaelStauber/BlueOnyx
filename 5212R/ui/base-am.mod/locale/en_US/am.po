@@ -122,6 +122,18 @@ msgstr "The CPU is being moderately used. This might be due to a temporary incre
 msgid "amCPUWarning_heavy"
 msgstr "The CPU is being heavily used. This will result in noticeable performance loss. Consider moving some of the services to other servers, or reduce the complexity of the CGI scripts running on the server itself."
 
+msgid "amCPUWarning_heavy_iowait"
+msgstr "The server load is high, but this is mostly I/O wait rather than CPU use. Processes are blocked on disk or storage, not on computation. Check disk/RAID latency, backups, and log rotation."
+
+msgid "amCPUWarning_moderate_iowait"
+msgstr "The server load is moderately high, largely due to I/O wait rather than CPU use. This may be a temporary spike from disk activity such as backups or log rotation."
+
+msgid "amCPUWarning_heavy_mixed"
+msgstr "The server is under heavy load from both CPU use and I/O wait. Storage latency and CPU-heavy services are both contributing. Investigate disk/RAID health as well as running processes."
+
+msgid "amCPUWarning_moderate_mixed"
+msgstr "The server load is moderately high, with both CPU use and I/O wait contributing. This may be a temporary increase in activity."
+
 msgid "amUseLight"
 msgstr "lightly"
 

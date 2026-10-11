@@ -2,7 +2,7 @@ Summary: Binaries and scripts used by the Active Monitor subsytem
 Name: am-bins
 Version: 1.2.0
 Vendor: %{vendor}
-Release: 0BX01%{?dist}
+Release: 0BX02%{?dist}
 License: Sun modified BSD
 Group: System Environment/BlueOnyx
 Source: am-bins.tar.gz
@@ -31,6 +31,10 @@ Monitor subsystem.  These include programs to check the state of the CPU
 and memory usage.  Also, this includes the AM::Util perl module.
 
 %changelog
+* Sun Oct 11 2026 Michael Stauber <mstauber@solarspeed.net> 1.2.0-0BX02
+- am_cpu.sh now distinguishes I/O wait from CPU-bound loadavg
+  (D-state inflates load average; previous text always said "CPU").
+
 * Wed Dec 04 2013 Michael Stauber <mstauber@solarspeed.net> 1.2.0-0BX01
 - Resolved the issue that free memory calculation isn't added Cached. 
 - Remove .svn directory from rpm package. 

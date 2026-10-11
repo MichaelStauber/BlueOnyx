@@ -122,6 +122,18 @@ msgstr "現在、CPU の負荷は中程度です。これは、一時的な需�
 msgid "amCPUWarning_heavy"
 msgstr "現在、CPU にかなり高い負荷がかかっています。サーバのパフォーマンスに悪影響を及ぼす恐れがありますので、サービスの一部を他のサーバに移行する、CGI スクリプトを簡素化する、などの対策を直ちに講じてください。"
 
+msgid "amCPUWarning_heavy_iowait"
+msgstr "サーバの負荷は高いですが、主な原因は CPU ではなく I/O 待ちです。プロセスは計算ではなくディスクやストレージでブロックされています。ディスク/RAID の遅延、バックアップ、ログローテーションを確認してください。"
+
+msgid "amCPUWarning_moderate_iowait"
+msgstr "サーバの負荷は中程度ですが、主な原因は CPU ではなく I/O 待ちです。バックアップやログローテーションなど、一時的なディスク負荷の可能性があります。"
+
+msgid "amCPUWarning_heavy_mixed"
+msgstr "サーバは CPU 使用と I/O 待ちの両方で高い負荷状態です。ストレージ遅延と CPU 負荷の高いサービスの両方が影響しています。ディスク/RAID の状態と実行中のプロセスを確認してください。"
+
+msgid "amCPUWarning_moderate_mixed"
+msgstr "サーバの負荷は中程度で、CPU 使用と I/O 待ちの両方が影響しています。一時的な需要の増加である可能性があります。"
+
 msgid "amUseLight"
 msgstr "軽度"
 

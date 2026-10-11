@@ -122,6 +122,18 @@ msgstr "A CPU está a ser usado de forma moderada. Isto pode ser devido a um aum
 msgid "amCPUWarning_heavy"
 msgstr "A CPU está sendo muito utilizado. Isto irá resultar na perda de desempenho notável. Considere mover alguns dos serviços para outros servidores, ou reduzir a complexidade dos scripts CGI em execução no próprio servidor."
 
+msgid "amCPUWarning_heavy_iowait"
+msgstr "A carga do servidor está alta, mas deve-se sobretudo a espera de I/O e não à CPU. Os processos estão bloqueados em disco ou armazenamento. Verifique a latência de disco/RAID, as cópias de segurança e a rotação de logs."
+
+msgid "amCPUWarning_moderate_iowait"
+msgstr "A carga do servidor está moderadamente alta, em grande parte devido a espera de I/O e não à CPU. Pode ser um pico temporário de atividade de disco, como cópias de segurança ou rotação de logs."
+
+msgid "amCPUWarning_heavy_mixed"
+msgstr "O servidor está sob carga elevada tanto por uso de CPU como por espera de I/O. A latência de armazenamento e serviços intensivos de CPU contribuem. Verifique o estado do disco/RAID e os processos em execução."
+
+msgid "amCPUWarning_moderate_mixed"
+msgstr "A carga do servidor está moderadamente alta, com contribuição tanto do uso de CPU como da espera de I/O. Pode dever-se a um aumento temporário de atividade."
+
 msgid "amUseLight"
 msgstr "levemente"
 

@@ -109,6 +109,18 @@ msgstr "Dette er det tidsinterval denne server har været tændt og aktiv."
 
 msgid "amCPUWarning_heavy"
 msgstr ""
+
+msgid "amCPUWarning_heavy_iowait"
+msgstr "Serverbelastningen er høj, men skyldes mest I/O-ventetid frem for CPU. Processer venter på disk eller storage. Tjek disk-/RAID-latens, backups og logrotation."
+
+msgid "amCPUWarning_moderate_iowait"
+msgstr "Serverbelastningen er moderat forhøjet, primært pga. I/O-ventetid og ikke CPU. Det kan være et midlertidigt spike fra diskaktivitet som backups eller logrotation."
+
+msgid "amCPUWarning_heavy_mixed"
+msgstr "Serveren er under høj belastning både fra CPU-brug og I/O-ventetid. Både storage-latens og CPU-tunge tjenester bidrager. Tjek disk-/RAID-helbred og kørende processer."
+
+msgid "amCPUWarning_moderate_mixed"
+msgstr "Serverbelastningen er moderat forhøjet, med bidrag fra både CPU-brug og I/O-ventetid. Det kan skyldes en midlertidig stigning i aktivitet."
 "CPUen bliver kraftigt benyttet. Dette vil resultere i noterbar tab af "
 "ydeevne. Overvej at flytte nogle tjenester til andre servere, eller reducer "
 "kompleksitet af CGI scripts o.l. der kører på serveren."

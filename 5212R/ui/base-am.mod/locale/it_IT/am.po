@@ -111,6 +111,18 @@ msgstr "Questo è il periodo di tempo da quando il server è in funzionamento."
 
 msgid "amCPUWarning_heavy"
 msgstr ""
+
+msgid "amCPUWarning_heavy_iowait"
+msgstr "Il carico del server è alto, ma è dovuto soprattutto all'attesa di I/O, non alla CPU. I processi sono bloccati su disco o storage. Controllare latenza disco/RAID, backup e rotazione dei log."
+
+msgid "amCPUWarning_moderate_iowait"
+msgstr "Il carico del server è moderatamente alto, in gran parte per attesa di I/O e non per CPU. Può essere un picco temporaneo di attività disco, ad esempio backup o rotazione dei log."
+
+msgid "amCPUWarning_heavy_mixed"
+msgstr "Il server è sotto carico elevato sia per uso CPU sia per attesa di I/O. Contribuiscono la latenza dello storage e i servizi intensivi di CPU. Verificare lo stato di disco/RAID e i processi in esecuzione."
+
+msgid "amCPUWarning_moderate_mixed"
+msgstr "Il carico del server è moderatamente alto; contribuiscono sia l'uso della CPU sia l'attesa di I/O. Può trattarsi di un aumento temporaneo di attività."
 "La CPU è molto utilizzata. Questo potrebbe portare un calo di prestazioni "
 "notevole. E' consigliato il trasferimento di alcuni servizi su altri server, "
 "o ridurre la complessità degli script CGI in esecuzione sul server stesso."

@@ -698,9 +698,14 @@ $REALSTATE->{'CONFIG'}->{'nw_update'} = time();
 # Release the lock and close the file before triggering the actual network update via 'System' 'nw_update':
 close $fh or die "Cannot close lock file: $!";
 
-# Conditionally update the 'System' object if we have changes:
+# Conditionally update the 'System' object if we have changes.
+# bootproto / primary_network_interface belong on Network, not System —
+# leaving them in the SET can fail the whole update (gateway/dns stay empty).
 debug_msg("Conditionally updating the 'System' Object.\n");
-my ($ok) = $cce->update($sysoid, '', $REALSTATE->{'CONFIG'});
+my $OUT_HASH = { %{ $REALSTATE->{'CONFIG'} } };
+delete $OUT_HASH->{'bootproto'};
+delete $OUT_HASH->{'primary_network_interface'};
+my ($ok) = $cce->update($sysoid, '', $OUT_HASH);
 if (!$ok) {
     debug_msg("Updating of 'System' object failed!\n");
 }

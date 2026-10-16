@@ -25,14 +25,65 @@ if [ -f /dev/incus/sock ]; then
   exit 0
 fi
 
-# Wait for constructors
+# Wait until CCEd constructors have actually started AND finished.
+# pgrep-only is a race: if cce_construct has not started yet, it looks "done".
 waitForCceConstruct() {
-  local waitFor="cce_construct"
-  while pgrep -f "$waitFor" >/dev/null; do
-    echo "75" | dialog --nocancel --backtitle "${CDTITLE}" --title "Waiting" --gauge "Please wait for CCEd Constructors to finish ..." 10 70 0
+  local timeout=900
+  local elapsed=0
+  local lockfile='/var/lock/subsys/cce_construct.lock'
+  local socket='/usr/sausalito/cced.socket'
+  local construct_bin='/usr/sausalito/bin/cce_construct'
+
+  gauge() {
+    echo "$1" | dialog --nocancel --backtitle "${CDTITLE}" --title "Waiting" --gauge "$2" 10 70 0
+  }
+
+  construct_running() {
+    pgrep -f "$construct_bin" >/dev/null 2>&1 && return 0
+    [ -f "$lockfile" ] && return 0
+    local st
+    st=$(systemctl is-active cced.construct.service 2>/dev/null || true)
+    [ "$st" = "activating" ] && return 0
+    return 1
+  }
+
+  construct_started_once() {
+    local st
+    st=$(systemctl is-active cced.construct.service 2>/dev/null || true)
+    case "$st" in
+      active|activating|failed) return 0 ;;
+    esac
+    [ -f "$lockfile" ] && return 0
+    pgrep -f "$construct_bin" >/dev/null 2>&1 && return 0
+    return 1
+  }
+
+  construct_done() {
+    construct_running && return 1
+    getent passwd admin >/dev/null 2>&1 && return 0
+    [ -d /home/.users/admin ] && return 0
+    return 1
+  }
+
+  while [ ! -S "$socket" ] && [ "$elapsed" -lt "$timeout" ]; do
+    gauge 5 "Waiting for CCEd to start ..."
     sleep 2
+    elapsed=$((elapsed + 2))
   done
-  echo "100" | dialog --nocancel --backtitle "${CDTITLE}" --title "Waiting" --gauge "CCEd Constructors finished." 10 70 0
+
+  while ! construct_started_once && [ "$elapsed" -lt "$timeout" ]; do
+    gauge 20 "Waiting for CCEd Constructors to start ..."
+    sleep 2
+    elapsed=$((elapsed + 2))
+  done
+
+  while ! construct_done && [ "$elapsed" -lt "$timeout" ]; do
+    gauge 75 "Please wait for CCEd Constructors to finish ..."
+    sleep 2
+    elapsed=$((elapsed + 2))
+  done
+
+  gauge 100 "CCEd Constructors finished."
   sleep 2
 
   local wait_count=0
@@ -45,6 +96,39 @@ waitForCceConstruct() {
   tput reset 2>/dev/null || true
 }
 
+syncNetworkToCodb() {
+  cecho "Applying configuration and saving it to CODB ..."
+  local tries=0
+  while [ "$tries" -lt 3 ]; do
+    if /usr/sausalito/constructor/base/network/30_addNetwork.pl >/dev/null 2>&1; then
+      return 0
+    fi
+    tries=$((tries + 1))
+    sleep 3
+  done
+  cecho "Warning: could not save network settings to CODB."
+  return 1
+}
+
+finishFirstBoot() {
+  cecho "Running Active Monitor component Swatch to make sure all services are up ..."
+  systemctl enable swatch.service --now &>/dev/null || :
+  sleep 2
+  /usr/sausalito/sbin/swatch.sh &>/dev/null || :
+
+  cecho "\n=== Setup Complete ==="
+  IP=$(ip -4 addr show "$PRIMARY" | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -1)
+  [ -z "$IP" ] && IP=$(hostname -I | awk '{print $1}' | head -1)
+  [ -z "$IP" ] && IP="your-server-ip"
+  SERVERNAME=$(uname -n | head -1)
+  cecho "Server Name : $SERVERNAME"
+  cecho "Current IP  : $IP"
+  cecho "GUI         : https://$IP:81/"
+  cecho "Enjoy BlueOnyx ${BX_VERSION}!"
+
+  grep -v "network_settings.sh" /root/.bashrc > /tmp/.bashrc && mv /tmp/.bashrc /root/.bashrc || true
+}
+
 waitForCceConstruct
 
 # Detect primary interface
@@ -53,6 +137,8 @@ PRIMARY=$(ip -o link show | awk -F': ' '{print $2}' | grep -E -v '^(lo|vir|incus
 
 cecho "\n\e[1;37m=== BlueOnyx ${BX_VERSION} Network Setup ===\e[0m\n"
 cecho "Primary interface detected: $PRIMARY"
+
+SKIP_NMTUI=0
 
 # Quick connectivity check
 if ping -c1 -W3 8.8.8.8 >/dev/null 2>&1 && nslookup blueonyx.it >/dev/null 2>&1; then
@@ -66,43 +152,23 @@ if ping -c1 -W3 8.8.8.8 >/dev/null 2>&1 && nslookup blueonyx.it >/dev/null 2>&1;
   read -n1 -s -r -p "Keep this configuration? [Y/n] " keep
   echo
   if [[ $keep =~ ^[Yy]$ ]] || [ -z "$keep" ]; then
-    cecho "Keeping current configuration and saving it to CODB ..."
-    /usr/sausalito/constructor/base/network/30_addNetwork.pl >/dev/null 2>&1 || true
-    cecho "Enjoy BlueOnyx ${BX_VERSION}!"
-    exit 0
+    cecho "Keeping current configuration ..."
+    SKIP_NMTUI=1
   fi
 fi
 
-cecho "Network needs configuration. Launching nmtui (NetworkManager TUI)..."
-clear
-nmtui
+if [ "$SKIP_NMTUI" -eq 0 ]; then
+  cecho "Network needs configuration. Launching nmtui (NetworkManager TUI)..."
+  clear
+  nmtui
+  clear
+  nmcli connection reload
+  sleep 4
+fi
 
-# After nmtui exits
-clear
-cecho "Applying configuration and saving it to CODB ..."
-nmcli connection reload
-sleep 4
-/usr/sausalito/constructor/base/network/30_addNetwork.pl >/dev/null 2>&1 || true
-
-cecho "Running Active Monitor component Swatch to make sure all services are up ..."
-# Enable swatch:
-systemctl enable swatch.service --now &>/dev/null || :
-sleep 2
-# Run Swatch
-/usr/sausalito/sbin/swatch.sh &>/dev/null || :
-
-cecho "\n=== Setup Complete ==="
-IP=$(ip -4 addr show "$PRIMARY" | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -1)
-[ -z "$IP" ] && IP=$(hostname -I | awk '{print $1}' | head -1)
-[ -z "$IP" ] && IP="your-server-ip"
-SERVERNAME=$(uname -n | head -1)
-cecho "Server Name : $SERVERNAME"
-cecho "Current IP  : $IP"
-cecho "GUI         : https://$IP:81/"
-cecho "Enjoy BlueOnyx ${BX_VERSION}!"
-
-# Final cleanup
-grep -v "network_settings.sh" /root/.bashrc > /tmp/.bashrc && mv /tmp/.bashrc /root/.bashrc || true
+waitForCceConstruct
+syncNetworkToCodb
+finishFirstBoot
 exit 0
 
 #

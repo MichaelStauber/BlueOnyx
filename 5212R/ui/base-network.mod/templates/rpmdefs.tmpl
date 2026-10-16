@@ -126,6 +126,11 @@ fi
 
 <begin $CHANGELOG>
 
+* Fri Oct 16 2026 Michael Stauber <mstauber@solarspeed.net> 3.0.21-7
+- constructor/30_addNetwork.pl: drop bootproto and primary_network_interface
+  from the System object SET (Network-schema keys); a failed SET left
+  gateway/dns empty and looped the first-boot GUI wizard.
+
 * Fri Jul 31 2026 Michael Stauber <mstauber@solarspeed.net> 3.0.21-6
 - Modified glue/handlers/Network.pm to ignore NM devices without UUID
 

@@ -299,6 +299,11 @@ fi
 
 <begin $CHANGELOG>
 
+* Fri Oct 16 2026 Michael Stauber <mstauber@solarspeed.net> 8.20261016-7
+- Fixed /root/network_settings.sh DHCP-keep path: wait until cce_construct
+  has started and finished, then share the nmtui finish path (CODB sync,
+  swatch, .bashrc cleanup) instead of exiting early.
+
 * Fri Feb 20 2026 Michael Stauber <mstauber@solarspeed.net> 8.20260220-6
 - Added swatch run to end of /root/network_settings.sh to make AM happy.
 

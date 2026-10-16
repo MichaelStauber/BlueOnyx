@@ -413,7 +413,8 @@ abstract class BaseController extends Controller
         }
 
         // Popuplate 'BX_SESSION' with DDOS protection state from CODB 'System' object:
-        if ($this->BX_System['ddos_protection'] == '1') {
+        // BX_System is null when CCEd/getObject('System') is not ready yet (first boot).
+        if (isset($this->BX_System['ddos_protection']) && $this->BX_System['ddos_protection'] == '1') {
             $this->GUI_Login_DDOS_Protection = $this->BX_System['ddos_protection'];
             $this->GUI_Login_MAX_Attempts = $this->BX_System['ddos_attempts'];
             $this->GUI_Login_MAX_Attempts_TimeFrame = $this->BX_System['ddos_window'];

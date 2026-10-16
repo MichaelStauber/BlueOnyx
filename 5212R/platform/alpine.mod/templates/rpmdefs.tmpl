@@ -226,6 +226,10 @@ fi
 
 <begin $CHANGELOG>
 
+* Fri Oct 16 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-37
+- Guarded ddos_protection in BaseController.php with isset() like csrf_protection.
+  When CCEd is not up yet, getObject('System') is null and PHP 8 would 500 the GUI.
+
 * Sun Sep 27 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-36
 - Merged pull request from Greg Kuhnert to add persistent console messages.
 

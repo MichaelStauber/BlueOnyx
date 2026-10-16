@@ -117,6 +117,15 @@ if (test $ISPRESENT = 0 ); then
   cat /etc/dovecot/conf.d/10-ssl.conf.bx > /etc/dovecot/conf.d/10-ssl.conf
 fi
 
+# First-boot / missing-file only: 10-ssl.conf.bx sets
+# ssl_ca = </etc/pki/dovecot/certs/ca.pem before constructors run.
+# Never overwrite existing Dovecot certs on DNF update.
+mkdir -p /etc/pki/dovecot/certs /etc/pki/dovecot/private
+if [ ! -f /etc/pki/dovecot/certs/ca.pem ]; then
+  touch /etc/pki/dovecot/certs/ca.pem
+  chmod 0600 /etc/pki/dovecot/certs/ca.pem
+fi
+
 # Create 4096 Bit DH:
 if [ -f /var/lib/dovecot/ssl-parameters.dat ] && [ ! -f /etc/dovecot/dh.pem ];then
   dd if=/var/lib/dovecot/ssl-parameters.dat bs=1 skip=88 | openssl dhparam -inform der > /etc/dovecot/dh.pem
@@ -177,6 +186,11 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+
+* Thu Oct 15 2026 Michael Stauber <mstauber@solarspeed.net> 2.2.8-8
+- First-boot: create empty /etc/pki/dovecot/certs/ca.pem if missing so
+  Dovecot can start before constructors run. Existing cert files are
+  never overwritten (DNF-safe).
 
 * Mon Sep 28 2026 Michael Stauber <mstauber@solarspeed.net> 2.2.8-7
 - Postscreen DNSBL: per-list weight (default 1) and GUI block threshold

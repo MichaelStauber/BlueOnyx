@@ -690,11 +690,11 @@ class WizardElmerProper extends BaseController {
             $page_module = 'gui';
 
             $step_1 = 'wizard_locale_header';
-            $step_2 = 'wizard_license_header';
+            //$step_2 = 'wizard_license_header';
             $step_3 = $i18n->get("serverconfig", "base-alpine");
             $step_4 = $i18n->get("wiz_finalize", "base-wizard");
 
-            $block = $factory->getPagedBlock($setup_desc, array($step_1, $step_2, $step_3, $step_4));
+            $block = $factory->getPagedBlock($setup_desc, array($step_1, $step_3, $step_4));
 
             //$block->setToggle("#");
             $block->setSideTabs(FALSE);
@@ -716,79 +716,7 @@ class WizardElmerProper extends BaseController {
             );
 
             //
-            //--- Step 2: License:
-            //
-
-            $licenseClick = $factory->getRawHTML("licenseClick", '<h6>' . $i18n->get("licenseClick") . '</h6><br>');
-            $block->addFormField(
-              $licenseClick,
-              $factory->getLabel("licenseClick"), 
-              $step_2
-            );
-
-            $license = $factory->getRawHTML("license", '<hr style="margin-botton: 10px"><p>' . $i18n->get("license") . '</p><hr style="margin-botton: 10px">', 'html');
-            $block->addFormField(
-              $license,
-              $factory->getLabel("license"), 
-              $step_2
-            );
-
-            $Year = date('Y');
-
-            $licTextBody =<<<HTML
-            ------ SUN-modified-BSD-License for BlueOnyx: ------
-            Copyright (c) 2008-$Year Michael Stauber, SOLARSPEED.NET
-            Copyright (c) 2008-$Year Team BlueOnyx, BLUEONYX.IT
-            Copyright (c) 2003 Sun Microsystems, Inc. 
-            All Rights Reserved.
-
-            1. Redistributions of source code must retain the above copyright 
-               notice, this list of conditions and the following disclaimer.
-
-            2. Redistributions in binary form must reproduce the above copyright 
-               notice, this list of conditions and the following disclaimer in 
-               the documentation and/or other materials provided with the 
-               distribution.
-
-            3. Neither the name of the copyright holder nor the names of its 
-               contributors may be used to endorse or promote products derived 
-               from this software without specific prior written permission.
-
-            THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
-            "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
-            LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
-            FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
-            COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
-            INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-            BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
-            LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
-            CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
-            LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
-            ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
-            POSSIBILITY OF SUCH DAMAGE.
-
-            You acknowledge that this software is not designed or intended for 
-            use in the design, construction, operation or maintenance of any 
-            nuclear facility.
-            HTML;
-
-            $licText = $factory->getHtmlField("licText", '<pre>' . $licTextBody . '</pre>', 'html');
-            $licText->setLabelType("nolabel");
-            $block->addFormField(
-              $licText,
-              $factory->getLabel("licText"), 
-              $step_2
-            );
-
-            $license_accept_block = $factory->getBoolean("license_acceptance", '0');
-            $block->addFormField(
-              $license_accept_block,
-              $factory->getLabel("license_acceptance"), 
-              $step_2
-            );
-
-            //
-            //--- Step 2: System Settings:
+            //--- Step 3: System Settings:
             //
 
             // Network settings
@@ -1372,6 +1300,78 @@ class WizardElmerProper extends BaseController {
             $BxPage->setLabel('ntpAddress', $i18n->get("[[base-time.ntpAddress]]"), $i18n->get("[[base-time.ntpAddress_help]]"));
 
             //
+            //--- Step 4: License:
+            //
+
+            $licenseClick = $factory->getRawHTML("licenseClick", '<h6>' . $i18n->get("licenseClick") . '</h6><br>');
+            $block->addFormField(
+              $licenseClick,
+              $factory->getLabel("licenseClick"), 
+              $step_4
+            );
+
+            $license = $factory->getRawHTML("license", '<hr style="margin-botton: 10px"><p>' . $i18n->get("license") . '</p><hr style="margin-botton: 10px">', 'html');
+            $block->addFormField(
+              $license,
+              $factory->getLabel("license"), 
+              $step_4
+            );
+
+            $Year = date('Y');
+
+            $licTextBody =<<<HTML
+            ------ SUN-modified-BSD-License for BlueOnyx: ------
+            Copyright (c) 2008-$Year Michael Stauber, SOLARSPEED.NET
+            Copyright (c) 2008-$Year Team BlueOnyx, BLUEONYX.IT
+            Copyright (c) 2003 Sun Microsystems, Inc. 
+            All Rights Reserved.
+
+            1. Redistributions of source code must retain the above copyright 
+               notice, this list of conditions and the following disclaimer.
+
+            2. Redistributions in binary form must reproduce the above copyright 
+               notice, this list of conditions and the following disclaimer in 
+               the documentation and/or other materials provided with the 
+               distribution.
+
+            3. Neither the name of the copyright holder nor the names of its 
+               contributors may be used to endorse or promote products derived 
+               from this software without specific prior written permission.
+
+            THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
+            "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+            LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+            FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
+            COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
+            INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+            BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+            LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+            CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+            LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
+            ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+            POSSIBILITY OF SUCH DAMAGE.
+
+            You acknowledge that this software is not designed or intended for 
+            use in the design, construction, operation or maintenance of any 
+            nuclear facility.
+            HTML;
+
+            $licText = $factory->getHtmlField("licText", '<pre>' . $licTextBody . '</pre>', 'html');
+            $licText->setLabelType("nolabel");
+            $block->addFormField(
+              $licText,
+              $factory->getLabel("licText"), 
+              $step_4
+            );
+
+            $license_accept_block = $factory->getBoolean("license_acceptance", '0');
+            $block->addFormField(
+              $license_accept_block,
+              $factory->getLabel("license_acceptance"), 
+              $step_4
+            );
+
+            //
             //-- Step #4: Finalize
             //
 
@@ -1484,8 +1484,8 @@ class WizardElmerProper extends BaseController {
 }
 
 /*
-Copyright (c) 2008-2025 Michael Stauber, SOLARSPEED.NET
-Copyright (c) 2008-2025 Team BlueOnyx, BLUEONYX.IT
+Copyright (c) 2008-2026 Michael Stauber, SOLARSPEED.NET
+Copyright (c) 2008-2026 Team BlueOnyx, BLUEONYX.IT
 All Rights Reserved.
 
 1. Redistributions of source code must retain the above copyright 

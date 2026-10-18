@@ -1,7 +1,7 @@
 Summary: Cobalt UI Library
 Name: sausalito-palette
 Version: 0.9.9
-Release: 15%{?dist}
+Release: 16%{?dist}
 Vendor: Project BlueOnyx
 License: Sun modified BSD
 Group: System Environment/BlueOnyx
@@ -58,6 +58,9 @@ fi
 /usr/share/doc/blueonyx-release-520XR/*
 
 %changelog
+
+* Sat Oct 17 2026 Michael Stauber <mstauber@solarspeed.net> 0.9.9-16
+- Added receive_bytes_total_br0 and transmit_bytes_total_br0 in all locales.
 
 * Tue Jan 06 2026 Michael Stauber <mstauber@solarspeed.net> 0.9.9-0BX15
 - Modified web/libJs/ajax_lib.js to make it compatible with modern browsers

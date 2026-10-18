@@ -3783,6 +3783,12 @@ msgstr "Bytes Recebidos eth0"
 msgid "transmit_bytes_total_eth0"
 msgstr "Bytes Enviados eth0"
 
+msgid "receive_bytes_total_br0"
+msgstr "Bytes Recebidos br0"
+
+msgid "transmit_bytes_total_br0"
+msgstr "Bytes Enviados br0"
+
 msgid "receive_bytes_total_eth1"
 msgstr "Bytes Recebidos eth1"
 

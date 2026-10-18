@@ -33,6 +33,7 @@ class PieChart extends HtmlComponent {
     var $data_labels;
     var $xlabels;
     var $xaxisLabels;
+    var $showSliceLabels;
 
     //
     // public methods
@@ -43,6 +44,7 @@ class PieChart extends HtmlComponent {
     public function __construct($BxPage, $id, $data) {
         $this->BxPage = $BxPage;
         $this->id = $id;
+        $this->showSliceLabels = false;
 
         // Find out how many Graphs our $data contains:
         $this->numgraphs = count(array_keys($data));
@@ -64,7 +66,7 @@ class PieChart extends HtmlComponent {
             // jQuery expects dots as delimiter. So we give it dots:
             $value = preg_replace('/,/', '.', $value);
 
-            $this->graph .= '                                       { label: "' . $key . '",  data: ' . $value . ' }';
+            $this->graph .= '                                       { label: ' . json_encode((string)$key, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . ',  data: ' . $value . ' }';
             $entry++;
             if ($entry < $endentry) {
                 $this->graph .= ", \n";
@@ -99,6 +101,12 @@ class PieChart extends HtmlComponent {
 
     function setXLabel($label) {
         $this->Xlabel = $label;
+    }
+
+    // On-slice percent labels. Default off: existing pies (email, etc.)
+    // stay legend-only. Hover tooltips are always on.
+    function setShowSliceLabels($show) {
+        $this->showSliceLabels = ($show) ? true : false;
     }
 
     function setSize($width = "739", $height = "450") {
@@ -154,6 +162,7 @@ class PieChart extends HtmlComponent {
         }
 
         $height = $this->getHeight();
+        $sliceLabelShow = (!empty($this->showSliceLabels)) ? 'true' : 'false';
 
         $out_script =<<<HTML
                             <script>
@@ -161,21 +170,66 @@ class PieChart extends HtmlComponent {
 
                                     $this->graph
 
-                                    // Options for the Pie Chart
+                                    function formatPieValue(bytes) {
+                                        var n = Number(bytes);
+                                        if (!isFinite(n)) {
+                                            return String(bytes);
+                                        }
+                                        var abs = Math.abs(n);
+                                        if (abs >= 1073741824) {
+                                            return (n / 1073741824).toFixed(2) + ' GiB';
+                                        }
+                                        if (abs >= 1048576) {
+                                            return (n / 1048576).toFixed(1) + ' MiB';
+                                        }
+                                        if (abs >= 1024) {
+                                            return (n / 1024).toFixed(1) + ' KiB';
+                                        }
+                                        if (abs === Math.floor(abs)) {
+                                            return String(n) + ' B';
+                                        }
+                                        return n.toFixed(2);
+                                    }
+
+                                    function pieSliceText(label, series) {
+                                        var val = (series.data && series.data[0]) ? series.data[0][1] : 0;
+                                        var pct = (typeof series.percent === 'number') ? series.percent.toFixed(1) : '0.0';
+                                        return label + ': ' + formatPieValue(val) + ' (' + pct + '%)';
+                                    }
+
                                     var options = {
                                         series: {
                                             pie: {
-                                                show: true
+                                                show: true,
+                                                radius: 1,
+                                                innerRadius: 0,
+                                                label: {
+                                                    show: $sliceLabelShow,
+                                                    radius: 0.65,
+                                                    formatter: function (label, series) {
+                                                        return '<div style="font-size:11px;text-align:center;padding:3px 5px;color:#fff;">' +
+                                                            label + '<br>' + series.percent.toFixed(1) + '%</div>';
+                                                    },
+                                                    background: { opacity: 0.55, color: '#000' }
+                                                }
                                             }
                                         },
                                         legend: {
                                             show: true
+                                        },
+                                        grid: {
+                                            hoverable: true,
+                                            clickable: false
                                         }
                                     };
 
                                     var chartId = '$this->id';
                                     var retries = 0;
                                     var maxRetries = 25;
+                                    var \$pieTip = $('#uifc2-pie-tooltip');
+                                    if (!\$pieTip.length) {
+                                        \$pieTip = $('<div id="uifc2-pie-tooltip" class="flot-tooltip"></div>').appendTo('body');
+                                    }
 
                                     function tryRenderPieChart() {
                                         var \$target = $('#' + chartId);
@@ -193,6 +247,25 @@ class PieChart extends HtmlComponent {
 
                                         try {
                                             $.plot('#' + chartId, data, options);
+                                            \$target.off('plothover.uifc2pie mouseleave.uifc2pie')
+                                                .on('plothover.uifc2pie', function (event, pos, item) {
+                                                    if (!item || !item.series) {
+                                                        \$pieTip.hide();
+                                                        return;
+                                                    }
+                                                    \$pieTip.html(pieSliceText(item.series.label, item.series))
+                                                        .css({
+                                                            top: (pos.pageY + 12) + 'px',
+                                                            left: (pos.pageX + 12) + 'px',
+                                                            position: 'absolute',
+                                                            display: 'block',
+                                                            zIndex: 1040
+                                                        })
+                                                        .show();
+                                                })
+                                                .on('mouseleave.uifc2pie', function () {
+                                                    \$pieTip.hide();
+                                                });
                                         } catch (e) {
                                             if (retries < maxRetries) {
                                                 retries++;

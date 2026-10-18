@@ -3865,6 +3865,12 @@ msgstr "Octets Reçus eth0"
 msgid "transmit_bytes_total_eth0"
 msgstr "Octets Transmis eth0"
 
+msgid "receive_bytes_total_br0"
+msgstr "Octets Reçus br0"
+
+msgid "transmit_bytes_total_br0"
+msgstr "Octets Transmis br0"
+
 msgid "receive_bytes_total_eth1"
 msgstr "Octets Reçus eth1"
 

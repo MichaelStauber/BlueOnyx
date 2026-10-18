@@ -32,6 +32,34 @@ msgstr "Red"
 msgid "netusageDescription"
 msgstr "Estadísticas de uso de la red"
 
+msgid "netLiveTitle"
+msgstr "Live (since last hourly reset)"
+
+msgid "netHistoryTitle"
+msgstr "Last 24 hours"
+
+msgid "netLiveList"
+msgstr "Per IP"
+
+msgid "netIp"
+msgstr "IP address"
+
+msgid "netIn"
+msgstr "Inbound"
+
+msgid "netOut"
+msgstr "Outbound"
+
+msgid "netTotal"
+msgstr "Total"
+
+msgid "netNoData"
+msgstr "No network accounting data yet. Counters appear after log_traffic has run once."
+
+msgid "netLoopbackNote"
+msgstr "Loopback (127.0.0.0/8) is omitted."
+
+
 msgid "webusage"
 msgstr "Web"
 

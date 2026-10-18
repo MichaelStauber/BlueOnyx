@@ -50,6 +50,7 @@ information for [VENDOR]-[SERVICE].
 %attr(0755,root,root)/usr/local/sbin/break-smrsh-loop.pl
 %attr(0644,root,root)/etc/cron.d/break-smrsh-loop.cron
 %attr(0644,root,root)/etc/dovecot/conf.d/10-ssl.conf.bx
+%config(noreplace) %attr(0644,root,root)/etc/dovecot/dh.pem
 %attr(0755,root,root)/etc/cron.daily/mboxfix.pl
 %attr(0755,root,root)/usr/sausalito/bin/remove_domain.pl
 %attr(0755,root,root)/usr/sausalito/bin/findalias.pl
@@ -126,9 +127,12 @@ if [ ! -f /etc/pki/dovecot/certs/ca.pem ]; then
   chmod 0600 /etc/pki/dovecot/certs/ca.pem
 fi
 
-# Create 4096 Bit DH:
-if [ -f /var/lib/dovecot/ssl-parameters.dat ] && [ ! -f /etc/dovecot/dh.pem ];then
+# Packaged /etc/dovecot/dh.pem is installed by %files (noreplace).
+# Do not generate DH params here — openssl dhparam is too slow for %post.
+# Legacy upgrade path only: convert ssl-parameters.dat if still missing.
+if [ ! -f /etc/dovecot/dh.pem ] && [ -f /var/lib/dovecot/ssl-parameters.dat ]; then
   dd if=/var/lib/dovecot/ssl-parameters.dat bs=1 skip=88 | openssl dhparam -inform der > /etc/dovecot/dh.pem
+  chmod 0644 /etc/dovecot/dh.pem || :
 fi
 
 # Disable NetworkManager check in /usr/libexec/dovecot/prestartscript:
@@ -186,6 +190,11 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+
+* Sat Oct 17 2026 Michael Stauber <mstauber@solarspeed.net> 2.2.8-9
+- Ship a pre-generated 2048-bit /etc/dovecot/dh.pem (%config noreplace)
+  so first-boot Dovecot sees ssl_dh before constructors. Do not generate
+  DH params in %post.
 
 * Thu Oct 15 2026 Michael Stauber <mstauber@solarspeed.net> 2.2.8-8
 - First-boot: create empty /etc/pki/dovecot/certs/ca.pem if missing so

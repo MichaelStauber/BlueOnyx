@@ -126,6 +126,10 @@ fi
 
 <begin $CHANGELOG>
 
+* Sat Oct 17 2026 Michael Stauber <mstauber@solarspeed.net> 3.0.21-8
+- AM Network details traffic chart uses aggnet_chart_labels() so the
+  legend matches the default-route interface (br0 vs eth0).
+
 * Fri Oct 16 2026 Michael Stauber <mstauber@solarspeed.net> 3.0.21-7
 - constructor/30_addNetwork.pl: drop bootproto and primary_network_interface
   from the System object SET (Network-schema keys); a failed SET left

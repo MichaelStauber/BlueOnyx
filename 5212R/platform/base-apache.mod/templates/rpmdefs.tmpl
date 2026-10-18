@@ -255,6 +255,16 @@ fi
 <begin $CHANGELOG>
 
 
+* Sat Oct 17 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.9-6
+- php-fpm.service: add RuntimeDirectory=php-fpm so /run/php-fpm exists
+  on first boot. Distro unit has PIDFile/listen under /run/php-fpm but
+  never creates the directory; constructors/swatch mkdir too late.
+
+* Fri Oct 16 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.9-5
+- Removed boot-time PEAR installs from constructor/fix_php_conf.pl.
+  RoundCube ships its own Mail_Mime/Net_SMTP/Net_IDNA2 stack; hitting
+  pear.php.net during cce_construct stalled first boot by ~70s.
+
 * Wed Oct 07 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.9-4
 - Generate port-80 VirtualHosts with Protocols http/1.1 only while
   Nginx is the SSL proxy, so Apache does not send Upgrade: h2 on the

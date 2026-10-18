@@ -3835,3 +3835,10 @@ msgstr "Ontvangen bytes"
 
 msgid "transmit_bytes_total"
 msgstr "Verzonden bytes"
+
+
+msgid "receive_bytes_total_br0"
+msgstr "Ontvangen bytes br0"
+
+msgid "transmit_bytes_total_br0"
+msgstr "Verzonden bytes br0"

@@ -103,6 +103,17 @@ information for [VENDOR]-[SERVICE].
 
 <begin $CHANGELOG>
 
+* Sat Oct 17 2026 Michael Stauber <mstauber@solarspeed.net> 3.0.1-9
+- Wizard wait check must run after factory admin auth. dns/gateway are
+  admin-ACL; unauthenticated getObject never sees them, so the wait page
+  looped forever. Auth failure before license still waits, not /login.
+
+* Fri Oct 16 2026 Michael Stauber <mstauber@solarspeed.net> 3.0.1-8
+- Run the constructor-readiness check in WizardElmerProper.php,
+  Wizard.php and WizardElmer.php before default admin auth, so a
+  not-yet-constructed box shows the wait page instead of bouncing
+  to /login (session expired).
+
 * Thu Oct 15 2026 Michael Stauber <mstauber@solarspeed.net> 3.0.1-7
 - Modified ui/chorizo/web/Controllers/WizardElmerProper.php to remove
   the 'License' tab and to move its content to the 'Finalize'-tab.

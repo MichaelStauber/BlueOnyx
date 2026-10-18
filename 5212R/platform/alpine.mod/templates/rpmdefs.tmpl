@@ -226,6 +226,17 @@ fi
 
 <begin $CHANGELOG>
 
+* Sat Oct 17 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-39
+- aggnet charts use the default-route interface (br0 on a bridge), not
+  eth0+br0 together. Legend looks up palette.receive_bytes_total_<iface>.
+
+* Sat Oct 17 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-38
+- UIFC2 BarGraph: JSON-encode X-axis tick labels so non-numeric labels
+  (IP addresses, date stamps) are valid JavaScript and Flot can render.
+- UIFC2 PieChart: hover tooltips show label, formatted value and percent.
+  On-slice labels stay off by default (setShowSliceLabels) so existing
+  pies keep legend-only layout.
+
 * Fri Oct 16 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-37
 - Guarded ddos_protection in BaseController.php with isset() like csrf_protection.
   When CCEd is not up yet, getObject('System') is null and PHP 8 would 500 the GUI.

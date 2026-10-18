@@ -101,7 +101,12 @@ class BarGraph extends HtmlComponent {
             $counter = "0";
             $maxlabels = count($this->xlabels);
             foreach ($this->xlabels as $key => $value) {
-                $this->xaxisLabels .= "[" . $key . ", " . $value . "]";
+                // Tick labels must be valid JS. IPs ("192.168.1.1") and
+                // stamps ("17/Oct 12:00") are syntax errors if unquoted,
+                // and Flot never paints — leaving the 450px empty box.
+                $tickX = is_numeric($key) ? (0 + $key) : json_encode((string)$key, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                $tickL = json_encode((string)$value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                $this->xaxisLabels .= "[" . $tickX . ", " . $tickL . "]";
                 $counter++;
                 if ($counter < $maxlabels) {
                     $this->xaxisLabels .= ", ";
@@ -316,7 +321,7 @@ class BarGraph extends HtmlComponent {
             $out_scripts .= "
                     {
                         shadowSize: 5,
-                        label:'" . $this->data_labels[$i] . "',
+                        label: " . json_encode((string)$this->data_labels[$i], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . ",
                         color:'" . $this->LineColor[$i] . "',
                         data: " . $this->graph[$i] . ",";
 

@@ -1,7 +1,7 @@
 Summary: Server and site statistics for web, ftp, email, and network traffic
 Name: base-sitestats-scripts
 Version: 2.3
-Release: 6%{?dist}
+Release: 7%{?dist}
 Vendor: Project BlueOnyx
 License: Sun modified BSD
 Group: System Environment/BlueOnax
@@ -9,7 +9,7 @@ Source: sitestats-scripts.tar.gz
 BuildRoot: /tmp/sitestats-scripts
 BuildArchitectures: noarch
 Requires: webalizer, tmpwatch, httpd
-Requires: iptables-services
+Requires: nftables
 Requires: goaccess
 Requires: monitorix
 
@@ -20,74 +20,14 @@ generating and viewing reports.
 
 %post
 
-if [ -f /bin/systemctl ]; then
-  ### Fix fucking RH Firewall shit:
-  # Stop and disable firewalld:
-  systemctl stop firewalld.service &>/dev/null || :
-  systemctl disable firewalld.service &>/dev/null || :
-fi
+# Network accounting uses nft table inet bxacct (see log_traffic).
+# Do not stop firewalld and do not flush iptables.
 
-# Turn module unload off for iptables:
-/bin/sed -i -e 's@^IPTABLES_MODULES_UNLOAD="yes"@IPTABLES_MODULES_UNLOAD="no"@' /etc/sysconfig/iptables-config
-
-# Check if APF is present:
-if [ -d /etc/apf ];then
-
-  # APF present. Disable and stop iptables:
-  rm -f /etc/sysconfig/iptables
-  touch /etc/sysconfig/iptables
-  echo "# Empty, because APF is present" > /etc/sysconfig/iptables
-  systemctl disable iptables.service &>/dev/null || :
-  systemctl stop iptables.service &>/dev/null || :
+if [ -d /etc/apf ]; then
+  :
 else
-  # Flush existing iptables rules:
-  iptables --flush
-
-  if [ $1 -eq 1 ]; then
-
-    # New Install
-
-    # Zap existing /etc/sysconfig/iptables
-    rm -f /etc/sysconfig/iptables
-    touch /etc/sysconfig/iptables
-    echo "# Empty, because log_traffic hasn't run yet." > /etc/sysconfig/iptables
-
-    rm -f /etc/sysconfig/ip6tables
-    touch /etc/sysconfig/ip6tables
-    echo "# Empty, because log_traffic hasn't run yet." > /etc/sysconfig/ip6tables
-
-    #    # Enable iptables:
-    #    systemctl enable iptables.service
-
-  else
-
-    # Upgrade of already installed RPM:
-
-    # Zap existing /etc/sysconfig/iptables
-    rm -f /etc/sysconfig/iptables
-    touch /etc/sysconfig/iptables
-    echo "# Empty, because log_traffic hasn't run yet." > /etc/sysconfig/iptables
-
-    rm -f /etc/sysconfig/ip6tables
-    touch /etc/sysconfig/ip6tables
-    echo "# Empty, because log_traffic hasn't run yet." > /etc/sysconfig/ip6tables
-
-    # Generate accounting rules for iptables:
-    /etc/cron.hourly/log_traffic &>/dev/null || :
-    
-    # Save new iptables rules:
-    iptables-save > /etc/sysconfig/iptables
-
-    #    # Enable iptables:
-    #    systemctl enable iptables.service &>/dev/null || :
-    #
-    #    # Start iptables:
-    #    if [ $1 -gt 1 ]; then
-    #      # RPM upgrade
-    #      systemctl restart iptables.service &>/dev/null || :
-    #    fi
-
-  fi
+  /etc/cron.hourly/log_traffic clean &>/dev/null || :
+  /etc/cron.hourly/log_traffic &>/dev/null || :
 fi
 
 if [ -f /etc/logrotate.conf ];then
@@ -96,6 +36,11 @@ if [ -f /etc/logrotate.conf ];then
 fi
 
 %changelog
+
+* Sat Oct 17 2026 Michael Stauber <mstauber@solarspeed.net> 2.3-7
+- Replaced iptables accounting in log_traffic with nftables table
+  inet bxacct. Firewalld is no longer stopped or disabled.
+- Dropped Requires: iptables-services, added Requires: nftables.
 
 * Tue Mar 14 2023 Michael Stauber <mstauber@solarspeed.net> 2.3-6
 - Added /etc/logrotate.d/suphp

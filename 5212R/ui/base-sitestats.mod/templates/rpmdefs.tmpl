@@ -54,6 +54,7 @@ mkdir -p $RPM_BUILD_ROOT/%{RootDir}/ui/web/%{Vendor}/%{Service}/img
 %attr(0755,root,root) /usr/sausalito/sbin/update_vsite_logrotate.pl
 %attr(0755,root,root) /usr/sausalito/sbin/goaccess_init.sh 
 %attr(0755,root,root) /usr/sausalito/sbin/goaccess.sh
+%attr(0755,root,root) /usr/sausalito/sbin/bxacct_dump.sh
 %attr(0644,root,root) /usr/lib/systemd/system/goaccess.service
 %attr(0644,root,root) /usr/sausalito/ui/web/base/sitestats/.htaccess
 [AUTOFILL]
@@ -129,6 +130,27 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+
+* Sat Oct 17 2026 Michael Stauber <mstauber@solarspeed.net> 2.4-16
+- Network live chart uses aggnet_chart_labels() so br0 palette strings
+  are applied; metrics no longer mix eth0 and br0.
+
+* Sat Oct 17 2026 Michael Stauber <mstauber@solarspeed.net> 2.4-15
+- Network GUI: live RX/TX from /gui/metrics aggnet, nft bxacct pie and
+  per-IP table, 24h history from /var/log/ipacct. Added ccewrap bxacct.xml
+  for bxacct_dump.sh. Hide empty History tab. Pie enables setShowSliceLabels.
+
+* Sat Oct 17 2026 Michael Stauber <mstauber@solarspeed.net> 2.4-14
+- Added Usage Information > Network page (SummaryNetwork.php) using
+  UIFC2 BarGraph and ScrollList. Live counters come from nft table
+  inet bxacct; hourly history is parsed from /var/log/ipacct without
+  Analog. Menu id base_server_netusage sits between Monitorix and Email.
+
+* Fri Oct 16 2026 Michael Stauber <mstauber@solarspeed.net> 2.4-13
+- Dropped goaccess.service After=blueonyx.service and
+  Before=cced.construct.service. That ordering cycle with
+  blueonyx.service (After=cced.construct) kept multi-user.target
+  from being reached; systemd dropped goaccess.service/start.
 
 * Sun Apr 26 2026 Michael Stauber <mstauber@solarspeed.net> 2.4-12
 - Modified glue/handlers/log_account.pl to add detailed pre-useradd 

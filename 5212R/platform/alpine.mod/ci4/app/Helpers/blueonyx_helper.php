@@ -2793,6 +2793,41 @@ function get_primary_interface($override=FALSE) {
     return $primary_interface;
 }
 
+/**
+ * Interface whose aggnet RX/TX we chart. Default-route device, not the
+ * CODB slave: get_primary_interface() rewrites br0→eth0, but node_exporter
+ * counters live on br0. Including both double-counts the same traffic.
+ */
+function aggnet_chart_iface() {
+    $iface = get_primary_interface(TRUE);
+    if ($iface === '' || $iface === 'lo') {
+        $iface = get_primary_interface();
+    }
+    return $iface;
+}
+
+/**
+ * Flot legend map for aggnet keys. Prefers palette.receive_bytes_total_<iface>
+ * and falls back to the generic string plus the interface name.
+ */
+function aggnet_chart_labels($i18n) {
+    $iface = aggnet_chart_iface();
+    $out = array();
+    $dirs = array(
+        'receive_bytes_total_' => 'receive_bytes_total',
+        'transmit_bytes_total_' => 'transmit_bytes_total',
+    );
+    foreach ($dirs as $prefix => $generic) {
+        $id = $prefix . $iface;
+        $got = $i18n->get('[[palette.' . $id . ']]');
+        if ($got === '' || $got === $id || strpos((string)$got, '[[') !== false) {
+            $got = $i18n->get('[[palette.' . $generic . ']]') . ' ' . $iface;
+        }
+        $out[$id] = $got;
+    }
+    return $out;
+}
+
 function get_primary_ipv4_ip($actual_device = null) {
     // If no device is provided, use the primary network interface
     if ($actual_device === null) {

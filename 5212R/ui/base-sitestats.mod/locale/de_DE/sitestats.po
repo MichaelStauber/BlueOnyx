@@ -33,6 +33,34 @@ msgstr "Netzwerk"
 msgid "netusageDescription"
 msgstr "Nutzungsstatistiken des Netzwerks"
 
+msgid "netLiveTitle"
+msgstr "Live (seit dem letzten stündlichen Reset)"
+
+msgid "netHistoryTitle"
+msgstr "Letzte 24 Stunden"
+
+msgid "netLiveList"
+msgstr "Pro IP"
+
+msgid "netIp"
+msgstr "IP-Adresse"
+
+msgid "netIn"
+msgstr "Eingehend"
+
+msgid "netOut"
+msgstr "Ausgehend"
+
+msgid "netTotal"
+msgstr "Gesamt"
+
+msgid "netNoData"
+msgstr "Noch keine Netzwerk-Accounting-Daten. Zähler erscheinen, nachdem log_traffic einmal gelaufen ist."
+
+msgid "netLoopbackNote"
+msgstr "Loopback (127.0.0.0/8) wird ausgelassen."
+
+
 msgid "webusage"
 msgstr "Web"
 

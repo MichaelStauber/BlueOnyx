@@ -53,9 +53,10 @@ class Metrics extends BaseController {
 
             $aggnet = [];
 
-            $primary_interface = get_primary_interface();
+            $chart_iface = aggnet_chart_iface();
+            $chart_iface_re = preg_quote($chart_iface, '/');
             foreach ($aggnet_raw as $key => $val) {
-                if (preg_match("/^(receive|transmit)_bytes_total_(br0|eth0|{$primary_interface})$/", $key)) {
+                if (preg_match("/^(receive|transmit)_bytes_total_{$chart_iface_re}$/", $key)) {
                     $aggnet[$key] = $val;
                 }
             }

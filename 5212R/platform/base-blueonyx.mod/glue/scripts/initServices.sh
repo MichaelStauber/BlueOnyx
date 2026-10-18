@@ -142,8 +142,9 @@ LIB=/usr/sausalito/lib
 ## Enable all needed services:
 /bin/echo "Enabling all needed services ..."
 onservices="cced.init httpd admserv admserv-init.service admserv-php-fpm.service xinetd mariadb named-chroot network saslauthd"
-for service in $services; do
-  systemctl enable $service.service > /dev/null 2>&1
+for service in $onservices; do
+  service=${service%.service}
+  systemctl enable "$service.service" >/dev/null 2>&1 || :
 done
 
 # Change MySQL database store to /home if it is a separate partition:

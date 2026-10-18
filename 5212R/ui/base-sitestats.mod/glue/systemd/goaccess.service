@@ -1,7 +1,6 @@
 [Unit]
 Description = GoAccess - GoAccess is an open source real-time web log analyzer and interactive viewer
-After=nss-lookup.target network.target plymouth-quit-wait.service blueonyx.service admserv.service
-Before=cced.construct.service swatch.service
+After=nss-lookup.target network.target plymouth-quit-wait.service admserv.service
 
 [Service]
 Type = simple

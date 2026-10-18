@@ -1,0 +1,10 @@
+<item
+    id="base_server_netusage"
+    label="[[base-sitestats.netusage]]"
+    description="[[base-sitestats.netusageDescription]]"
+    url="/sitestats/summaryNetwork"
+>
+    <parent id="base_serverusage" order="45">
+        <access require="serverStatsServerNetwork"/>
+    </parent>
+</item>

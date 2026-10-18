@@ -37,34 +37,6 @@ if ($custom_php_conf ne "1") {
   Sauce::Service::service_run_init('httpd', 'reload');
 }
 
-#
-## Install the required PEAR module for all versions of PHP that are currently present:
-#
-
-# Known PHP versions:
-%known_php_versions = (
-                        'PHPOS' => '/usr',
-                        'PHP'   => '/home/solarspeed/php',
-                        'PHP56' => '/home/solarspeed/php-5.6',
-                        'PHP70' => '/home/solarspeed/php-7.0',
-                        'PHP71' => '/home/solarspeed/php-7.1',
-                        'PHP72' => '/home/solarspeed/php-7.2',
-                        'PHP73' => '/home/solarspeed/php-7.3',
-                        'PHP74' => '/home/solarspeed/php-7.4',
-                        'PHP80' => '/home/solarspeed/php-8.0',
-                        'PHP81' => '/home/solarspeed/php-8.1',
-                        'PHP82' => '/home/solarspeed/php-8.2',
-                        'PHP83' => '/home/solarspeed/php-8.3',
-                        'PHP84' => '/home/solarspeed/php-8.4',
-                        'PHP85' => '/home/solarspeed/php-8.5',
-                        'PHP86' => '/home/solarspeed/php-8.6',
-                        'PHP90' => '/home/solarspeed/php-9.0',
-                        'PHP91' => '/home/solarspeed/php-9.1',
-                        'PHP92' => '/home/solarspeed/php-9.2',
-                        'PHP93' => '/home/solarspeed/php-9.3',
-                        'PHP94' => '/home/solarspeed/php-9.4',
-                        );
-
 # PHP used from the command line must not inherit the web-only open_basedir
 # restriction. The restriction is applied later in the Vsite Apache/FPM
 # configuration (and in the suPHP copy of php.ini).
@@ -86,84 +58,6 @@ for my $opcache_ini (
 ) {
   next if $seen_opcache_ini{$opcache_ini}++;
   &ensure_opcache_settings($opcache_ini);
-}
-
-# List of PEAR modules that we *need* to install:
-%required_modules = (
-                      'Net_Socket', 
-                      'Net_IMAP', 
-                      'Mail', 
-                      'Net_IDNA2', 
-                      'Net_SMTP', 
-                      'Net_Sieve', 
-                      'Mail_Mime', 
-                      'Auth_SASL' 
-                    );
-
-# Only run this if we're online and pear.php.net can be pinged:
-$check_net = `ping -n -q -c 1 -w 1 pear.php.net|grep "1 received"|wc -l`;
-chomp($check_net);
-# Only run this if we can ping pear.php.net:
-if ($check_net eq "1") {
-  # Do this for all known PHP versions:
-  for $phpVer (keys %known_php_versions) {
-    $pear_path = $known_php_versions{$phpVer} . "/bin/pear";
-    $module_registry_path = $known_php_versions{$phpVer} . "/share/pear/.registry/";
-    $top_module_path = $known_php_versions{$phpVer} . "/share/pear";
-
-    if (! -f $pear_path) {
-      # $pear_path doesn't exist, skipping.
-      next;
-    }
-
-    # Special provisions for the PHP of the OS:
-    if ($phpVer eq "PHPOS") {
-      system("cp /etc/php.ini /etc/php.ini.bak");
-      system("cat /etc/php.ini|grep -v ^open_basedir > /etc/php.ini");
-    }
-    else {
-      if (-f $pear_path) {
-        system("cp $known_php_versions{$phpVer}/etc/php.ini $known_php_versions{$phpVer}/etc/php.ini.bak");
-        system("cat $known_php_versions{$phpVer}/etc/php.ini|grep -v ^open_basedir > $known_php_versions{$phpVer}/etc/php.ini");
-      }
-    }
-    # Do this for all %required_modules:
-    for $module (keys %required_modules) {
-      my $module_regi_check = $module_registry_path . lc $module . ".reg";
-      if (-f $module_regi_check) {
-        next;
-      }
-      if ((-f $pear_path) && (! -f $module_regi_check)) {
-        $module_check = `$pear_path list|grep $module|wc -l`;
-        chomp($module_check);
-        if (($module_check == "0") && (-f $pear_path)) {
-          # Do the PEAR installs:
-          if ($module eq "Net_IDNA2") {
-            # Handle special case for Net_IDNA2 which is beta and needs this work around:
-            system("$pear_path install channel://pear.php.net/Net_IDNA2-0.1.1 --alldeps > /dev/null");
-          }
-          else {
-            # All others can be installed normally:
-            system("$pear_path install $module --alldeps > /dev/null");
-          }
-          # Fix permissions recursively, because the PEAR-installer doesn't. WTF! YGBSM!!
-          system("chmod -R 755 $top_module_path");
-        }
-      }
-    }
-    if ($phpVer eq "PHPOS") {
-      # Move the unmodified php.ini of the OS back in place:
-      system("mv /etc/php.ini.bak /etc/php.ini");
-    }
-    else {
-      if (-f $pear_path) {
-        # Move the unmodified php.ini of the OS back in place:
-        if (-f "$known_php_versions{$phpVer}/etc/php.ini") {
-          system("mv $known_php_versions{$phpVer}/etc/php.ini.bak $known_php_versions{$phpVer}/etc/php.ini");
-        }
-      }
-    }
-  }
 }
 
 $cce->bye("SUCCESS");

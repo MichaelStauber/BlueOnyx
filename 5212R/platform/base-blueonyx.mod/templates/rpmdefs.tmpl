@@ -299,6 +299,16 @@ fi
 
 <begin $CHANGELOG>
 
+* Sat Oct 17 2026 Michael Stauber <mstauber@solarspeed.net> 8.20261017-9
+- enableQuota.sh: do not mv /etc/fstab aside unless the rewrite
+  tmpfile is non-empty. Empty/missing fstab (Anaconda %post race)
+  left no fstab at all (fstab.bak 0 bytes).
+
+* Fri Oct 16 2026 Michael Stauber <mstauber@solarspeed.net> 8.20261016-8
+- Fixed glue/scripts/initServices.sh: the enable loop iterated
+  $services (the disable list) instead of $onservices, so kdump and
+  other unwanted units were re-enabled after being disabled.
+
 * Fri Oct 16 2026 Michael Stauber <mstauber@solarspeed.net> 8.20261016-7
 - Fixed /root/network_settings.sh DHCP-keep path: wait until cce_construct
   has started and finished, then share the nmtui finish path (CODB sync,

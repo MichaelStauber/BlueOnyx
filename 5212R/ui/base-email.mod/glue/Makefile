@@ -43,6 +43,8 @@ install:
 	$(INSTALL) etc/cron.d/break-smrsh-loop.cron $(PREFIX)/etc/cron.d
 	$(INSTALL) etc/cron.daily/mboxfix.pl $(PREFIX)/etc/cron.daily
 	$(INSTALL) etc/dovecot/conf.d/10-ssl.conf.bx $(PREFIX)/etc/dovecot/conf.d/10-ssl.conf.bx
+	mkdir -p $(PREFIX)/etc/dovecot
+	$(INSTALL) -m 644 etc/dovecot/dh.pem $(PREFIX)/etc/dovecot/dh.pem
 	$(INSTALL) etc/dovecot/conf.d/blueonyx-auth.conf.ext $(PREFIX)/etc/dovecot/conf.d/blueonyx-auth.conf.ext
 	$(INSTALL) etc/httpd/conf.d/radicale_redirects.conf $(PREFIX)/etc/httpd/conf.d/radicale_redirects.conf
 rpm:

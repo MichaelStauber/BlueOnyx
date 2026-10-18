@@ -139,12 +139,7 @@ class Network_details extends BaseController {
 
             $plotName = 'trafficChart';
             $metrics = 'aggnet';
-            $receive_bytes_total_eth0 = $i18n->get("[[palette.receive_bytes_total_eth0]]");
-            $transmit_bytes_total_eth0 = $i18n->get("[[palette.transmit_bytes_total_eth0]]");
-            $labels = '{
-                "receive_bytes_total_eth0": "' . $receive_bytes_total_eth0 . '",
-                "transmit_bytes_total_eth0": "' . $transmit_bytes_total_eth0 . '",
-            }';
+            $labels = json_encode(aggnet_chart_labels($i18n), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             $height = '250px';
             $theme = 'light';
             $spacing = '2.5';

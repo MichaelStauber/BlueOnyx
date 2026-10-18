@@ -4,6 +4,8 @@ After=syslog.target network.target
 
 [Service]
 Type=notify
+RuntimeDirectory=php-fpm
+RuntimeDirectoryMode=0755
 PIDFile=/run/php-fpm/php-fpm-7.2.pid
 EnvironmentFile=/etc/sysconfig/php-fpm
 ExecStart=/home/solarspeed/php-7.2/sbin/php-fpm --nodaemonize

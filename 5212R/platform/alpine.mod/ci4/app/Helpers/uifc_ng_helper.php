@@ -275,25 +275,7 @@ function StartPageStats($cceClient, $BxPage, $i18n) {
 
         $plotName = 'trafficChart';
         $metrics = 'aggnet';
-        $receive_bytes_total_eth0 = $i18n->get("[[palette.receive_bytes_total_eth0]]");
-        $transmit_bytes_total_eth0 = $i18n->get("[[palette.transmit_bytes_total_eth0]]");
-
-        $primary_interface = get_primary_interface();
-        if ($primary_interface != 'eth0') {
-            $rx_locale = $i18n->get("[[palette.receive_bytes_total]]") . " " . $primary_interface;
-            $tx_locale = $i18n->get("[[palette.transmit_bytes_total]]") . " " . $primary_interface;
-            $labels = '{
-                "receive_bytes_total_' . $primary_interface . '": "' . $rx_locale . '",
-                "transmit_bytes_total_' . $primary_interface . '": "' . $tx_locale . '"
-            }';
-
-        }
-        else {
-            $labels = '{
-                "receive_bytes_total_eth0": "' . $receive_bytes_total_eth0 . '",
-                "transmit_bytes_total_eth0": "' . $transmit_bytes_total_eth0 . '"
-            }';
-        }
+        $labels = json_encode(aggnet_chart_labels($i18n), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         $height = '250px';
         $theme = 'light';

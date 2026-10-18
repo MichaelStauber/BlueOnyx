@@ -126,6 +126,10 @@ class Wizard extends BaseController {
             $BX_SESSION['loginUser']['gui_theme'] = 'adminica';
         }
 
+        // dns/gateway are admin-ACL. Unauthenticated getObject cannot see
+        // them, so a pre-auth isset() wait loop never ends. Auth first.
+        // If factory admin is not there yet, wait instead of /login.
+
         if ($BX_SESSION['sessionId'] == "") {
 
             //
@@ -155,11 +159,12 @@ class Wizard extends BaseController {
 
             }
             else {
-                //
-                //-- Default login doesn't work. We need to ask for username and password:
-                //
-                header("Location: /login?action=wizard");
-                exit;
+                $peek = $CI->cceClient->getObject('System', array('cce_nocache' => 'cce_nocache'));
+                if (is_array($peek) && isset($peek['isLicenseAccepted']) && ($peek['isLicenseAccepted'] == '1')) {
+                    header("Location: /login?action=wizard");
+                    exit;
+                }
+                return Wizard::wizard_reload();
             }
         }
 

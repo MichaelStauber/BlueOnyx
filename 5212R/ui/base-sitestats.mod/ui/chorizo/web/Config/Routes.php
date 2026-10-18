@@ -14,4 +14,5 @@ $routes->add('sitestats/summaryEmail', 'Sitestats\Controllers\SummaryEmail::inde
 $routes->add('sitestats/summaryWeb', 'Sitestats\Controllers\SummaryWeb::index');
 $routes->add('sitestats/goaccessview', 'Sitestats\Controllers\GoAccessView::index');
 $routes->add('sitestats/summaryMonitorix', 'Sitestats\Controllers\SummaryMonitorix::index');
+$routes->add('sitestats/summaryNetwork', 'Sitestats\Controllers\SummaryNetwork::index');
 $routes->add('sitestats/sitestats_amdetails', 'Sitestats\Controllers\Sitestats_amdetails::index');

@@ -8,6 +8,14 @@
 # Default: assume setup not done
 SETUPDONE=0
 
+# The CCEd constructors that just finished may have created CapabilityGroups
+# while a browser was already talking to the GUI. A capability snapshot written
+# in that window is incomplete - it can miss "adminUser", which makes the GUI
+# menu logic deny administrative access and bounce /wizard to
+# /user/personalAccount and back. Drop it once, now that the constructors are
+# done; the next request rebuilds it from complete data.
+rm -f /usr/sausalito/capcache/*_capabilityGroups
+
 # Look for .isLicenseAccepted file and read its content if present
 LICENSE_FILE=$(find /usr/sausalito/codb/objects/ -name .isLicenseAccepted -print -quit 2>/dev/null)
 if [ -n "$LICENSE_FILE" ] && [ -f "$LICENSE_FILE" ]; then

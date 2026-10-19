@@ -32,6 +32,24 @@ include_once("System.php");
 include_once("I18n.php");
 include_once("ArrayPacker.php");
 
+// CapCache is legacy global-namespace code like this file, so the CI4
+// autoloader will never find it. It lives next to this file; anchor the
+// include to __DIR__ so it resolves regardless of include_path or CWD.
+include_once(__DIR__ . '/CapCache.php');
+
+// The cache helper is an optimisation, not a prerequisite. If it is missing
+// (incomplete package, botched deploy) log it and fall back to no caching
+// instead of taking the whole GUI down with a fatal error.
+if (!class_exists('CapCache', FALSE)) {
+    $capcache_msg = 'ServerScriptHelper.php: CapCache.php not found next to ' . __FILE__ . ' - capability cache disabled';
+    if (function_exists('bx_error_log')) {
+        bx_error_log($capcache_msg);
+    }
+    else {
+        error_log($capcache_msg);
+    }
+}
+
 class ServerScriptHelper {
 
     //
@@ -1301,33 +1319,48 @@ class ServerScriptHelper {
 
         self::debug_log("getAllCapabilityGroups: via ServerScriptHelper");
 
-        $capabilityGroups_file_name = "/usr/sausalito/capcache/$this->loginName" . "_capabilityGroups";
+        $loginName = (isset($BX_SESSION['loginName']) && $BX_SESSION['loginName'] != '') ? $BX_SESSION['loginName'] : $this->loginName;
 
         if (isset($this->_gotAllCapabilityGroups)) {
             self::debug_log("getAllCapabilityGroups: From memory");
             return $this->capabilityGroups;
         }
-        elseif ((is_file($capabilityGroups_file_name)) && ($enable_ACL_Cache === TRUE)) {
-            $capabilityGroups_file_data = file_get_contents($capabilityGroups_file_name);
-            $this->capabilityGroups = json_decode($capabilityGroups_file_data, true);
-            if (!is_array($this->capabilityGroups)) {
-                system("rm -f $capabilityGroups_file_name");
-                self::debug_log("getAllCapabilityGroups: Capability cache $capabilityGroups_file_name not readable or garbled. Deleting cachefile and continuing with full run for now.");
-            }
-            else {
+
+        // Which CapabilityGroups exist *right now*. Doubles as the cache's
+        // validation key: a snapshot taken while the CCEd constructors were still
+        // creating those groups has a different OID set and gets rebuilt instead
+        // of being trusted.
+        $cce =& $this->cceClient;
+        $oids = array();
+        try {
+            $oids = (array)$cce->find("CapabilityGroup");
+        }
+        catch (\Throwable $e) {
+            $oids = array();
+        }
+
+        // Conditions (a) System object missing and (b) license not accepted:
+        // neither trust nor write the on-disk cache in that window. If the
+        // helper is not installed at all, behave as if we were always in that
+        // window: full run on every request, no caching, no fatal.
+        $have_cache = class_exists('CapCache', FALSE);
+        $setup_window = $have_cache ? CapCache::setupWindow($cce) : TRUE;
+
+        if ($have_cache && (!$setup_window) && ($enable_ACL_Cache === TRUE)) {
+            $cached_groups = CapCache::load($loginName, $oids);
+            if (is_array($cached_groups)) {
+                $this->capabilityGroups = $cached_groups;
                 $this->_gotAllCapabilityGroups = 1;
-                return $this->capabilityGroups;                
+                return $this->capabilityGroups;
             }
+            self::debug_log("getAllCapabilityGroups: cache stale, incomplete or missing - Full run");
         }
         else {
-            self::debug_log("getAllCapabilityGroups: Full run");
+            self::debug_log("getAllCapabilityGroups: setup window - cache bypassed, Full run");
         }
 
         $timer = timer();
         timer('ServerScriptHelper CapabilityGroup Fetch');
-
-        $cce =& $this->cceClient;
-        $oids = $cce->find("CapabilityGroup");
 
         $totalNumOIDs = count($oids);
         $oid_list = json_encode($oids);
@@ -1359,11 +1392,21 @@ class ServerScriptHelper {
         timer('ServerScriptHelper CapabilityGroup Fetch');
         $this->_gotAllCapabilityGroups = 1;
 
-        // Store temporary file:
-        if ($enable_ACL_Cache === TRUE) {
-            $capabilityGroups_file_data = json_encode($this->capabilityGroups);
-            if (!write_file($capabilityGroups_file_name, $capabilityGroups_file_data)) {
-                system("rm -f $capabilityGroups_file_name");
+        // Store the snapshot - but never one we cannot trust:
+        if (($enable_ACL_Cache === TRUE) && $have_cache) {
+            if ($setup_window) {
+                // Constructor window: whatever exists right now may still be
+                // incomplete, so nothing is persisted.
+                CapCache::drop($loginName);
+            }
+            elseif (($loginName === 'admin') && (!isset($this->capabilityGroups['adminUser']))) {
+                // (c) Never persist a snapshot that cannot even resolve the
+                // factory admin's adminUser capability.
+                CapCache::drop($loginName);
+                self::debug_log("getAllCapabilityGroups: refusing to cache incomplete capability groups for 'admin' (adminUser missing)");
+            }
+            elseif (!CapCache::save($loginName, $this->capabilityGroups, $oids)) {
+                CapCache::drop($loginName);
             }
         }
         return $this->capabilityGroups;

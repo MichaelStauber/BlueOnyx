@@ -103,6 +103,15 @@ information for [VENDOR]-[SERVICE].
 
 <begin $CHANGELOG>
 
+* Sun Oct 18 2026 Michael Stauber <mstauber@solarspeed.net> 3.0.1-11
+- Gated login success: after the default factory login (admin/blueonyx)
+  WizardElmerProper now sets AUTH_STAGE to SUCCESS.
+  BaseController::getAllowed() only accepts the stages SUCCESS and PWDAUTH,
+  and the wizard authenticates straight through cceClient->auth() without
+  ever going through the login controller. The session therefore had a
+  valid sessionId but no auth stage, and the first capability check bounced
+  the operator to /expired instead of rendering the wizard.
+
 * Sat Oct 17 2026 Michael Stauber <mstauber@solarspeed.net> 3.0.1-10
 - On license accept, drop .bx-factory-console and refresh /etc/issue.
 

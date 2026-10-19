@@ -122,7 +122,7 @@ class WizardElmerProper extends BaseController {
             $BX_SESSION['sessionId'] = $CI->cceClient->auth($BX_SESSION['loginName'], $defaultPW);
 
             if (!empty($BX_SESSION['sessionId'])) {
-
+                $CI->setAUTH_STAGE('SUCCESS');
                 $serverScriptHelper = new ServerScriptHelper($BX_SESSION['sessionId'], $BX_SESSION['loginName']);
                 $CI->setSSH($serverScriptHelper);
                 $System = $CI->getSystem();

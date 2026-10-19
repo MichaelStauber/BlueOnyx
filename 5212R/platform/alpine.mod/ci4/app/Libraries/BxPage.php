@@ -1076,7 +1076,26 @@ class BxPage extends Controller {
             $logout_link = '/logout/true';
             $parent_root = '';
 
-            if ((in_array("adminUser", $access)) || ((in_array("siteAdmin", $access)) && (count($access) >= "2"))) {
+            // Setup window guard. While isLicenseAccepted is 0 the operator can
+            // only reach /wizard (see the redirect above), and the CapabilityGroups
+            // may still be under construction - so $access can be missing
+            // "adminUser" even though this IS the factory admin. The branch below
+            // would then send the wizard to /user/personalAccount, which bounces
+            // straight back to /wizard: an endless redirect loop that leaves the
+            // operator stuck on a fresh install. Render the wizard regardless of
+            // $access in that state, but only for the factory admin.
+            $setup_window = (isset($system['isLicenseAccepted']) && ($system['isLicenseAccepted'] == '0'));
+            $factory_admin = (isset($BX_SESSION['loginName']) && ($BX_SESSION['loginName'] === 'admin'));
+            $no_admin_user = (!in_array("adminUser", (array)$access));
+
+            if (($page_module == 'gui') && $setup_window && $factory_admin && $no_admin_user) {
+                $active_menu_item = 'base_personalProfile';
+                $parent_root = 'root';
+                $ignore_items = array('base_manualButton');
+                // Use function MenuChildren to get a sorted list of children for our menu entries:
+                $root_children_sort_order = array();
+            }
+            elseif ((in_array("adminUser", $access)) || ((in_array("siteAdmin", $access)) && (count($access) >= "2"))) {
 
                 // Wizard exception:
                 if (($system['isLicenseAccepted'] == '0') && ((current_url() === site_url('wizard')) || (current_url() === site_url('login')))) {

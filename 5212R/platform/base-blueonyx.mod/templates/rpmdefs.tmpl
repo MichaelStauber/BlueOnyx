@@ -304,6 +304,14 @@ fi
 
 <begin $CHANGELOG>
 
+* Sun Oct 18 2026 Michael Stauber <mstauber@solarspeed.net> 8.20261018-14
+- bx_runonce.sh: drop capcache/*_capabilityGroups once the CCEd
+  constructors have finished. A browser hitting the GUI during the
+  constructor window used to leave an incomplete capability snapshot
+  behind (no "adminUser"), which kept the wizard redirecting to
+  /user/personalAccount. The cache is rebuilt from complete data on the
+  next request.
+
 * Sun Oct 18 2026 Michael Stauber <mstauber@solarspeed.net> 8.20261018-13
 - initServices.sh EFI branch: derive the ESP device, its partition, the
   vendor directory and the loader file from the running system. The old

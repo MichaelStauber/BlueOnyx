@@ -104,6 +104,16 @@ information for [VENDOR]-[SERVICE].
 <begin ui>
 # ui post-install
 
+# The ci4 tree ships with a fixed mtime: the ISO build pipeline normalises
+# file timestamps, so every file carries the same date no matter when it was
+# changed. PHP's opcache validates by mtime, therefore an updated PHP file
+# looks unchanged to it and the stale compiled script keeps being served -
+# even though the file on disk is new. Restart the pool so the new code is
+# actually used.
+if [ -x /usr/bin/systemctl ]; then
+  /usr/bin/systemctl try-restart admserv-php-fpm &>/dev/null || :
+fi
+
 # Set Hostname:
 BXHN=`/usr/bin/uname -n`
 if [ "$BXHN" != '' ];then
@@ -225,6 +235,48 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+
+* Sun Oct 18 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-45
+- %post (ui): restart admserv-php-fpm after the ci4 tree is installed.
+  The ISO build pipeline normalises file timestamps, so every shipped PHP
+  file carries the same mtime regardless of when it changed. opcache
+  validates by mtime, so an updated file looked unchanged and the stale
+  compiled script kept being served - the file on disk was new, the code
+  that ran was old. Symptom: a fatal pointing at a line number that does
+  not exist in the installed file.
+
+* Sun Oct 18 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-44
+- Capabilities.php / ServerScriptHelper.php: CapCache is no longer a hard
+  dependency. If CapCache.php is missing or unreadable (incomplete package,
+  partial deploy) it is logged and the capability cache is disabled for that
+  request instead of dying with 'Class "CapCache" not found'. The GUI keeps
+  working, just without cache validation.
+
+* Sun Oct 18 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-43
+- Capabilities.php and ServerScriptHelper.php include CapCache.php
+  explicitly now. Both are legacy global-namespace libraries that the GUI
+  pulls in with include_once, so the CI4 autoloader never resolved the new
+  class: every request died with 'Class "CapCache" not found'. The include
+  is anchored to __DIR__, so it works regardless of include_path and CWD.
+
+* Sun Oct 18 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-42
+- Capability cache was trusted blindly: no stamp, no invalidation. A
+  cache/*_capabilityGroups snapshot written while the CCEd constructors
+  were still creating the CapabilityGroups therefore stayed valid, even
+  though it was missing groups that appeared seconds later. If
+  "adminUser" is missing from it, the menu logic denies administrative
+  access and redirects /wizard to /user/personalAccount - which redirects
+  back to /wizard: an endless loop on a fresh install.
+- New app/Libraries/CapCache.php: ts/oids/groups format, 900 s TTL, the
+  cached OID set must still match the CapabilityGroups that exist in CODB,
+  atomic write (tmp file + rename, 0600). Both
+  Capabilities::getAllCapabilityGroups() and
+  ServerScriptHelper::getAllCapabilityGroups() use it.
+- The cache is neither read nor written while (a) the System object is
+  missing or (b) isLicenseAccepted is 0, and a snapshot that cannot resolve
+  "adminUser" for login "admin" is never persisted (c).
+- BxPage: while setup is incomplete, /wizard is rendered for the factory
+  admin even when $access lacks adminUser. Kills the redirect loop.
 
 * Sat Oct 17 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-41
 - ErrorPages wait page: render elmer_minimalist_view directly

@@ -236,6 +236,84 @@ fi
 
 <begin $CHANGELOG>
 
+* Mon Oct 19 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-50
+- fetchUserCapabilities(): the reconnect result is checked, the old session is
+  validated with authkey() before anything gets decrypted, and only a usable
+  session id is taken over ('expired', an empty string and a run of zeroes are
+  rejected - the same check Login.php does). If the session cannot be restored
+  while cced is answering, the operator goes to /login instead of looping on
+  the auto-refreshing wait page; if cced stays unreachable, the wait page
+  remains. A failed authkey()/auth() carries no status at all - the cce.so
+  backend just returns the raw value - so every retry builds a fresh connection
+  and re-tries the authentication before anything is decided. Only when the
+  retry budget is spent is a verdict formed: reachable means the relogin
+  fallback, unreachable means the wait page. That is a heuristic, not proof of a
+  rejection - a connection that dies inside auth() while cced comes back cannot
+  be told apart from a refused login. Where the browser still carries the
+  encrypted password cookie
+  (enc_auth) the retry re-authenticates with it: login name from the session,
+  password from dec_pwd(). A new session id is applied via
+  setBX_SESSION_sessionId(), which updates BX_SESSION and the sessionId cookie;
+  the CodeIgniter session itself is written later by setUserLogged().
+
+* Mon Oct 19 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-49
+- Capability wait page now really sends 503/Retry-After. Status and headers
+  are only emitted by Response::send(); the previous echo + exit skipped that,
+  so the browser received a plain 200. The view is set as the response body and
+  the response is sent before exiting.
+- fetchUserCapabilities() reconnects before each retry. A retry with the same
+  connection was pointless: after a cced restart the old handle is dead and
+  waiting alone does not revive it. CceClient::connect() is called between
+  attempts.
+- CapCache now stamps snapshots with a format version (FORMAT = 2) and rejects
+  anything else. This invalidates the partial snapshots older builds could
+  leave behind: they stored a partial group list next to the full OID list and
+  therefore passed every other check.
+
+* Mon Oct 19 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-48
+- Capability completeness is now counted by group name instead of read
+  attempts. Both read paths (external_cce_get.pl and direct CCE) can return
+  the same OID, so a counter could reach the expected number while a group was
+  still missing.
+  The expected number is taken from CCE at runtime (find CapabilityGroup) -
+  nothing is hardcoded, so groups added by an update or by a shop module raise
+  the bar automatically and also invalidate the cache through the changed OID
+  set.
+  A short external fetch now tops itself up through the direct CCE path
+  instead of being thrown away, and an empty OID list (CCE not reachable at
+  all) counts as incomplete rather than complete.
+
+* Mon Oct 19 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-47
+- Completeness and session handling of the capability cache:
+  - getAllCapabilityGroups() (Capabilities, ServerScriptHelper) now compares
+    the number of groups actually read against the OIDs CCE reported. A
+    partial read (e.g. 5 of 30 while CCEd restarts) is no longer marked as
+    loaded and no longer cached. The old check only caught the 0 case, and a
+    partial set stored together with the full OID list looked valid forever.
+  - listAllowed() only keeps its result when the groups were read completely,
+    so a later call in the same request can recompute it.
+  - BaseController::setUserLogged() retries three times (300 ms apart) and, if
+    the groups are still incomplete, shows the wizard wait page (503,
+    Retry-After 5) instead of storing a partial access list in the session.
+    Until now a brief CCEd outage could leave permanently missing menu entries
+    or wrong redirects until the user logged out.
+
+* Mon Oct 19 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-46
+- Capabilities constructor: set loginName/sessionId *before* the capability
+  groups are loaded. getAllCapabilityGroups() shells out through ccewrap and
+  shell() puts $this->loginName into CCE_USERNAME - with the name still
+  unset the call went out as user "", CCEd logged 'AUTHKEY to user "" failed'
+  and every request fell back to the slow direct-CCE path.
+- getAllCapabilityGroups() (Capabilities and ServerScriptHelper): every read
+  is checked. CCEd gets restarted right after the constructors finish, which
+  is exactly when the wizard hands over to /gui, and $cce->get($oid) returns
+  false in that window. The unchecked $obj['name'] then raised
+  'Trying to access array offset on false' -> HTTP 500 straight after a
+  successful setup. Now: skip unreadable groups, retry on the direct path if
+  the JSON output was empty, and if nothing at all could be read, log it and
+  leave the 'all groups loaded' flag unset so a later call retries - no empty
+  set is cached.
+
 * Sun Oct 18 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-45
 - %post (ui): restart admserv-php-fpm after the ci4 tree is installed.
   The ISO build pipeline normalises file timestamps, so every shipped PHP

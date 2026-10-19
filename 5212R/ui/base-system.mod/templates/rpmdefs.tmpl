@@ -125,6 +125,24 @@ fi
 
 <begin $CHANGELOG>
 
+* Sun Oct 18 2026 Michael Stauber <mstauber@solarspeed.net> 1.7.3-4
+- modsystem.pl: new cleanup_firstboot(), runs once setup is done
+  (isLicenseAccepted = 1). It removes the /root/network_settings.sh hook
+  from /root/.bashrc, deletes /etc/.bx-factory-console and refreshes
+  /etc/issue.
+  The web based wizard could never do this itself: the GUI pool runs as
+  'admserv', so its @unlink('/etc/.bx-factory-console') and
+  @system('bx_update_issue.sh') were silent no-ops and the network TUI
+  kept starting on every root console login after setup had finished.
+  Handlers run as root, and nw_update (which the wizard sets when it
+  finishes) triggers this one.
+- conf/base-system.conf: added System.isLicenseAccepted as a trigger for
+  modsystem.pl. The cleanup used to depend on the wizard bumping nw_update,
+  which only the 5211R/5212R wizards did - a license set by any other path
+  (script, restored config, 5210R wizard) never fired it. Now the property
+  change itself is the trigger. csrf.pl already listens on the same
+  property, so multiple handlers per property is the established pattern.
+
 * Sat Oct 17 2026 Michael Stauber <mstauber@solarspeed.net> 1.7.3-3
 - FirstBoot: write /etc/issue via bx_update_issue.sh (with address),
   not the welcome-only block that getty would keep showing.

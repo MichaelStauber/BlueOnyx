@@ -27,6 +27,12 @@ class CapCache {
     const DIRECTORY = '/usr/sausalito/capcache';
     const TTL       = 900;
 
+    // Bumped whenever the meaning of a cached snapshot changes. Snapshots
+    // written by an older build are rejected instead of trusted - the
+    // previous versions could store a partial group list next to the full
+    // OID list, which passed every other check.
+    const FORMAT    = 2;
+
     /**
      * Memoised result of setupWindow() for this request.
      *
@@ -107,8 +113,10 @@ class CapCache {
 
         $data = json_decode($raw, TRUE);
 
-        // Legacy format (bare map, no stamp) or garbled file: rebuild.
-        if (!is_array($data) || !isset($data['ts']) || !isset($data['oids']) || !isset($data['groups']) || !is_array($data['oids']) || !is_array($data['groups'])) {
+        // Legacy format (bare map, no stamp), an older format version or a
+        // garbled file: rebuild. The version check is what invalidates the
+        // partial snapshots older builds may have written.
+        if (!is_array($data) || !isset($data['v']) || ((int)$data['v'] !== self::FORMAT) || !isset($data['ts']) || !isset($data['oids']) || !isset($data['groups']) || !is_array($data['oids']) || !is_array($data['groups'])) {
             self::drop($loginName);
             return FALSE;
         }
@@ -147,6 +155,7 @@ class CapCache {
         $file = self::path($loginName);
 
         $payload = json_encode(array(
+            'v'      => self::FORMAT,
             'ts'     => time(),
             'oids'   => array_map('intval', array_values((array)$currentOids)),
             'groups' => $groups,

@@ -44,6 +44,20 @@ my $primary_network_interface = get_primary_interface();
 my $obj = $cce->event_object();
 my $new = $cce->event_new();
 my $old = $cce->event_old();
+
+# Web based setup finished? Then clean up the first-boot leftovers. The wizard
+# runs as 'admserv' and can neither write /root/.bashrc nor remove
+# /etc/.bx-factory-console nor rewrite /etc/issue - the @unlink/@system calls it
+# makes are silent no-ops. Handlers run as root, so this is where it works.
+# event_object() is a fresh get() of the object when the handler starts
+# (CCE.pm::read_header), so it carries the value the change just set. Check the
+# change set as well, so this keeps working if that ever changes.
+my $licensed = ((defined($obj->{'isLicenseAccepted'})) && ($obj->{'isLicenseAccepted'} eq '1'))
+            || ((defined($new->{'isLicenseAccepted'})) && ($new->{'isLicenseAccepted'} eq '1'));
+
+if ($licensed) {
+    &cleanup_firstboot();
+}
 use Data::Dumper;
 
 ##########################################################################
@@ -167,6 +181,54 @@ if (-e '/proc/user_beancounters') {
 # comfortable shoes.
 $cce->bye('SUCCESS');
 exit(0);
+
+sub cleanup_firstboot {
+    # Once setup is finished, /root/network_settings.sh must not be launched on
+    # every root console login any more. Remove the hook that initServices.sh
+    # (and sshd_handler.pl) put into /root/.bashrc.
+    my $bashrc = '/root/.bashrc';
+    if (-f $bashrc) {
+        my @keep = ();
+        my $changed = 0;
+        if (open(my $in, '<', $bashrc)) {
+            while (my $line = <$in>) {
+                if (($line =~ /network_settings\.sh/) || ($line =~ /^#\s*Added by initServices\.sh\s*$/)) {
+                    $changed = 1;
+                    next;
+                }
+                push @keep, $line;
+            }
+            close($in);
+        }
+        if ($changed) {
+            my $tmp = $bashrc . '.bxnew';
+            if (open(my $out, '>', $tmp)) {
+                print $out @keep;
+                close($out);
+                chmod 0644, $tmp;
+                if (rename($tmp, $bashrc)) {
+                    &debug_msg("cleanup_firstboot: removed the network_settings.sh hook from /root/.bashrc \n");
+                }
+                else {
+                    unlink($tmp);
+                }
+            }
+        }
+    }
+
+    # The factory credentials must not survive setup.
+    if (-f '/etc/.bx-factory-console') {
+        unlink('/etc/.bx-factory-console');
+        &debug_msg("cleanup_firstboot: removed /etc/.bx-factory-console \n");
+    }
+
+    # Redraw the console banner: credentials and Server Name are gone now.
+    if (-x '/usr/sausalito/sbin/bx_update_issue.sh') {
+        system('/usr/sausalito/sbin/bx_update_issue.sh');
+    }
+
+    return 1;
+}
 
 sub debug_msg {
     if ($DEBUG) {

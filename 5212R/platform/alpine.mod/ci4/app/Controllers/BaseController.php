@@ -934,6 +934,183 @@ abstract class BaseController extends Controller
         }
     }
 
+    // description: a cced session id that is actually worth trying. cced answers
+    // a failed login or an unknown session with an empty string or 'expired', and
+    // a run of zeroes means "no session" as well.
+    protected function cceSessionIdUsable($sessionId) {
+        if (($sessionId === NULL) || ($sessionId === FALSE) || (is_array($sessionId))) {
+            return FALSE;
+        }
+        $sessionId = (string)$sessionId;
+        if (($sessionId === '') || ($sessionId === 'expired')) {
+            return FALSE;
+        }
+        if (preg_match('/^0+$/', $sessionId)) {
+            return FALSE;
+        }
+        return TRUE;
+    }
+
+    // description: is cced reachable right now? A failed authkey()/auth() does
+    // not tell us why it failed: the cce.so backend just returns the raw value and
+    // isConnected is only touched by connect() and bye(). So probe with a fresh
+    // client. A successful probe only means cced answers at this moment - it says
+    // nothing about why the earlier call failed.
+    protected function cceReachable() {
+        try {
+            $probe = new CceClient();
+            return ($probe->connect() === TRUE);
+        }
+        catch (\Throwable $e) {
+            return FALSE;
+        }
+    }
+
+    // description: back to the login form. Used when cced answers but our session
+    // cannot be restored - the auto-refreshing wait page would just loop.
+    protected function forceRelogin($reason = '') {
+        if ($reason != '') {
+            bx_error_log("forceRelogin(): " . $reason);
+        }
+        setcookie("sessionId", 'expired', 0, "/");
+        try {
+            session()->destroy();
+        }
+        catch (\Throwable $e) {
+            // nothing to do - the cookie is already marked expired
+        }
+        header('Location: ' . base_url() . 'login');
+        exit;
+    }
+
+    // Fetches the capability list for the current user. cced is restarted right
+    // after the constructors finish - exactly when the wizard hands over to the
+    // GUI - so a fetch can come back empty or partial. Retries briefly, and if it
+    // still fails it shows the 503 wait page instead of writing a partial set
+    // into the session (which would stick until logout and leave the user with
+    // missing menu entries or wrong redirects).
+    protected function fetchUserCapabilities($retries = 3) {
+        $attempt = 0;
+        while (TRUE) {
+            if ($attempt > 0) {
+                // 1) Build a FRESH connection for every retry. The old handle died
+                // with cced, and reconnecting it proves nothing about whether the
+                // auth calls below will work.
+                $fresh = new CceClient();
+                if ($fresh->connect() !== TRUE) {
+                    if ($attempt >= $retries) {
+                        bx_error_log("fetchUserCapabilities(): cced still unreachable after " . $attempt . " retries - showing the wait page");
+                        $this->renderCapabilityWaitPage();
+                    }
+                    $attempt++;
+                    usleep(300000);
+                    continue;
+                }
+                $this->cceClient = $fresh;
+
+                // 2) Maybe our session survived the restart. Ask cced instead of
+                // guessing - and before we decrypt anything.
+                $ok = FALSE;
+                if ((method_exists($this->cceClient, 'authkey')) && ($this->cceSessionIdUsable($this->BX_SESSION['sessionId']))) {
+                    $newSessionId = $this->cceClient->authkey($this->BX_SESSION['loginName'], $this->BX_SESSION['sessionId']);
+                    if ($this->cceSessionIdUsable($newSessionId)) {
+                        $this->setBX_SESSION_sessionId($newSessionId);
+                        $ok = TRUE;
+                        bx_error_log("fetchUserCapabilities(): session of '" . $this->BX_SESSION['loginName'] . "' survived the cced restart");
+                    }
+                }
+
+                // 3) Session gone: log back in with the password from the
+                // encrypted cookie (enc_auth). Same check Login.php does - cced
+                // reports a failed login as 'expired'.
+                if (!$ok) {
+                    $pwd = $this->dec_pwd();
+                    if ((method_exists($this->cceClient, 'auth')) && ($pwd !== NULL) && ($pwd !== '')) {
+                        $newSessionId = $this->cceClient->auth($this->BX_SESSION['loginName'], $pwd);
+                        if ($this->cceSessionIdUsable($newSessionId)) {
+                            $this->setBX_SESSION_sessionId($newSessionId);
+                            $ok = TRUE;
+                            bx_error_log("fetchUserCapabilities(): re-authenticated '" . $this->BX_SESSION['loginName'] . "' after a cced restart");
+                        }
+                        else {
+                            bx_error_log("fetchUserCapabilities(): cced did not accept the stored credentials for '" . $this->BX_SESSION['loginName'] . "' (attempt " . $attempt . ")");
+                        }
+                    }
+                    else {
+                        bx_error_log("fetchUserCapabilities(): no usable password in enc_auth for '" . $this->BX_SESSION['loginName'] . "' - cannot re-authenticate");
+                    }
+                }
+
+                // 4) Still nothing. A failed authkey()/auth() carries no status, so
+                // we cannot tell a dropped connection from a rejection - another
+                // attempt on a fresh connection is the only honest answer. Once the
+                // budget is spent this is a heuristic, not a verdict: cced reachable
+                // means the login form is the only thing left to offer, cced gone
+                // means the wait page.
+                if (!$ok) {
+                    if ($attempt >= $retries) {
+                        if ($this->cceReachable()) {
+                            $this->forceRelogin("cced accepted the connection but the session of '" . $this->BX_SESSION['loginName'] . "' cannot be restored after " . $attempt . " attempts");
+                        }
+                        bx_error_log("fetchUserCapabilities(): cced unreachable while restoring the session of '" . $this->BX_SESSION['loginName'] . "' - showing the wait page");
+                        $this->renderCapabilityWaitPage();
+                    }
+                    $attempt++;
+                    usleep(300000);
+                    continue;
+                }
+            }
+
+            $Capabilities = new Capabilities($this->cceClient, $this->BX_SESSION['loginName'], $this->BX_SESSION['sessionId']);
+            $access = $Capabilities->listAllowed();
+            if ($Capabilities->capabilityGroupsComplete()) {
+                return $access;
+            }
+            if ($attempt >= $retries) {
+                bx_error_log("fetchUserCapabilities(): capability groups still incomplete after " . $attempt . " retries - not storing them in the session, showing the wait page");
+                $this->renderCapabilityWaitPage();
+            }
+            $attempt++;
+            usleep(300000);
+        }
+    }
+
+    // The wizard's own "one moment please" page, as 503 + Retry-After. Same view
+    // and the same BabelFish keys the wizard uses, so it never drifts.
+    protected function renderCapabilityWaitPage() {
+        $ini_langs    = initialize_languages(FALSE);
+        $locale       = $ini_langs['locale'];
+        $localization = $ini_langs['localization'];
+        $charset      = $ini_langs['charset'];
+
+        $this->response->setStatusCode(503);
+        $this->response->setHeader('Retry-After', '5');
+        $this->response->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+        $this->response->setHeader('Pragma', 'no-cache');
+        $this->response->setHeader('Content-language', $locale);
+        $this->response->setHeader('Content-type', "text/html; charset=$charset");
+
+        $title = PoorMansBabelFish("wizard_refresh_header", $locale, 'base-wizard');
+        $text  = PoorMansBabelFish("wizard_refresh_text", $locale, 'base-wizard');
+
+        // Status and headers are only emitted by Response::send(). With echo +
+        // exit the framework never sends them, so the browser would get a plain
+        // 200 page instead of 503 + Retry-After. Set the body and send it.
+        $this->response->setBody(view('../../Modules/Base/Gui/Views/elmer_minimalist_view', array(
+            'localization'    => $localization,
+            'charset'         => $charset,
+            'page_title'      => $title,
+            'bx_logo_color'   => '#000000',
+            'elmer_style_css' => '/.elm/dist/css/style.css',
+            'extra_headers'   => '<meta http-equiv="refresh" content="5" />',
+            'heading'         => $title,
+            'text'            => $text,
+            'extra_footers'   => '',
+        )));
+        $this->response->send();
+        exit;
+    }
+
     public function setUserLogged($sessionId='') {
         if ($sessionId === '') {
             // No sessionId? Reset session data:
@@ -960,8 +1137,7 @@ abstract class BaseController extends Controller
             }
             else {
                 // 'Capabilities' for this User have not yet been determined. Fetch them for storage in SessionData:
-                $Capabilities = new Capabilities($this->cceClient, $this->BX_SESSION['loginName'], $this->BX_SESSION['sessionId']);
-                $this->UserCapabilities = $Capabilities->listAllowed();
+                $this->UserCapabilities = $this->fetchUserCapabilities();
             }
 
             // Set Session-Data:

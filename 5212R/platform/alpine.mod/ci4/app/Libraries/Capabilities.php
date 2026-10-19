@@ -52,6 +52,9 @@ class Capabilities {
     public $loginUser;
     var $_listAllowed;
     var $_gotAllCapabilityGroups;
+    // TRUE only when every CapabilityGroup that CCE reported was really read.
+    // A partial read (CCEd restarting mid-fetch) must never count as complete.
+    public $groups_complete = FALSE;
     var $loginName;
     var $sessionId;
     var $debugActive;
@@ -81,15 +84,19 @@ class Capabilities {
         $this->_listAllowed = array();
         $this->_debug = false;
 
+        // Credentials first. getAllCapabilityGroups() below shells out through
+        // ccewrap and shell() puts $this->loginName into CCE_USERNAME. With the
+        // name still unset the call goes out as user "" - CCEd answers
+        // 'AUTHKEY to user "" failed', the external fetch fails, and we fall back
+        // to the slow direct-CCE path (which is what dies when CCEd restarts).
+        $this->loginName = (isset($BX_SESSION['loginName']) && $BX_SESSION['loginName'] != '') ? $BX_SESSION['loginName'] : $loginName;
+        $this->sessionId = (isset($BX_SESSION['sessionId']) && $BX_SESSION['sessionId'] != '') ? $BX_SESSION['sessionId'] : $sessionId;
+
         // this makes us get all the capgroup stuff right away, making CCE not 
         // to worry about pulling capgroups out by indexed names
         $this->getAllCapabilityGroups();
         $this->getAllCapabilities();
         $this->listAllowed();
-
-        // save parameters
-        $this->loginName = $BX_SESSION['loginName'];
-        $this->sessionId = $BX_SESSION['sessionId'];
 
         // Check if debugging is active
         if (is_file("/etc/DEBUGSSH")) {
@@ -98,6 +105,12 @@ class Capabilities {
         else {
             $this->debugActive = FALSE;
         }
+    }
+
+    // description: TRUE when every CapabilityGroup that CCE reported was really
+    // read. A FALSE here means "permissions unknown", never "no permissions".
+    public function capabilityGroupsComplete() {
+        return $this->groups_complete;
     }
 
     // description: checks to see if a user is granted the given capability.
@@ -385,6 +398,9 @@ class Capabilities {
             if (is_array($cached_groups)) {
                 $this->capabilityGroups = $cached_groups;
                 $this->_gotAllCapabilityGroups = 1;
+                // A cache that was validated against the current OID set counts
+                // as complete - incomplete snapshots are never written any more.
+                $this->groups_complete = TRUE;
                 return $this->capabilityGroups;
             }
             $this->debug_log("getAllCapabilityGroups: cache stale, incomplete or missing - Full run");
@@ -411,21 +427,63 @@ class Capabilities {
             $fallback_to_direct_cce = '1';
         }
 
+        // Read the groups. CCEd can vanish mid-request - it gets restarted right
+        // after the constructors finish, which is exactly when the wizard hands
+        // over to the GUI - so every single read has to be checked: an
+        // unchecked $obj['name'] on false is a hard 500 in PHP 8.
+        // Track which groups were really read - by name, not by counting read
+        // attempts. When both paths run for the same OID a counter would count
+        // that group twice and could hide a gap.
+        $read_groups = array();
+
         if ($fallback_to_direct_cce == '0') {
             // Use JSON results:
             $JSON_OBJECTS = json_decode($output, true);
-            foreach ($JSON_OBJECTS as $oid) {
-                // Get CapabilityGroup settings:
-                $this->getCapabilityGroup($oid['OBJECT']['name'], $oid['OBJECT']);
+            if (is_array($JSON_OBJECTS)) {
+                foreach ($JSON_OBJECTS as $oid) {
+                    if ((!is_array($oid)) || (!isset($oid['OBJECT'])) || (!is_array($oid['OBJECT'])) || (!isset($oid['OBJECT']['name']))) {
+                        continue;
+                    }
+                    // Get CapabilityGroup settings:
+                    $this->getCapabilityGroup($oid['OBJECT']['name'], $oid['OBJECT']);
+                    $read_groups[$oid['OBJECT']['name']] = TRUE;
+                }
+            }
+            if (count($read_groups) < count($oids)) {
+                // The external fetch came back short. Top it up the direct way
+                // instead of throwing the partial result away.
+                $fallback_to_direct_cce = '1';
             }
         }
-        else {
+
+        if ($fallback_to_direct_cce != '0') {
             // Use PHP-CCE instead:
             foreach($oids as $oid) {
                 $obj = $cce->get($oid);
+                if ((!is_array($obj)) || (!isset($obj['name']))) {
+                    continue;
+                }
                 $this->getCapabilityGroup($obj['name'], $obj);
+                $read_groups[$obj['name']] = TRUE;
             }
         }
+
+        // The expected count comes from CCE itself (find CapabilityGroup), so
+        // groups added by an update or a shop module are included automatically:
+        // they raise the bar here and they change the OID set the cache is
+        // validated against. Nothing is hardcoded. An empty OID list means CCE
+        // could not be asked at all - that is never "complete".
+        if ((count($oids) == 0) || (count($read_groups) < count($oids))) {
+            // CCEd is gone or still coming up - or it answered only part of the
+            // set. Do not mark this as loaded and do not cache it: a partial read
+            // stored together with the full OID list would look valid forever.
+            bx_error_log("getAllCapabilityGroups: read " . count($read_groups) . " of " . count($oids) . " CapabilityGroups (CCEd restarting?) - not complete, nothing cached, retry left open");
+            return $this->capabilityGroups;
+        }
+
+        // Every group that CCE reported was read. Only now is this complete.
+        $this->groups_complete = TRUE;
+
         timer('Capabilities.php CapabilityGroup Fetch');
         $this->_gotAllCapabilityGroups = 1;
 
@@ -533,7 +591,10 @@ class Capabilities {
 
         // Remove blank entries, make unique and store:
         $returnCap = array_filter(array_unique($returnCap));
-        if ($this->_listAllowed[$oid] == TRUE) {
+        // Only remember the result when the capability groups were read
+        // completely. Otherwise a later call in the same request must be able to
+        // recompute it - CCEd may be back a second later.
+        if (($this->_listAllowed[$oid] == TRUE) && ($this->groups_complete)) {
             $this->_listAllowed[$oid] = $returnCap;
         }
         return $returnCap;

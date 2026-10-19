@@ -126,6 +126,14 @@ fi
 
 <begin $CHANGELOG>
 
+* Sat Oct 17 2026 Michael Stauber <mstauber@solarspeed.net> 3.0.21-10
+- 30_addNetwork.pl: if isLicenseAccepted is 1, unlink
+  .bx-factory-console before rewriting /etc/issue (backstop if
+  setup finished without network_settings.sh / wizard).
+
+* Sat Oct 17 2026 Michael Stauber <mstauber@solarspeed.net> 3.0.21-9
+- /etc/issue updates go through bx_update_issue.sh (idempotent).
+
 * Sat Oct 17 2026 Michael Stauber <mstauber@solarspeed.net> 3.0.21-8
 - AM Network details traffic chart uses aggnet_chart_labels() so the
   legend matches the default-route interface (br0 vs eth0).

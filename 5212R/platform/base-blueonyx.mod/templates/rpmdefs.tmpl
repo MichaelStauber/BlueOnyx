@@ -73,6 +73,10 @@ information for [VENDOR]-[SERVICE].
 %dir /usr/share/doc/blueonyx-release-5212R
 /usr/share/doc/blueonyx-release-5212R/*
 %attr(0644,root,root) /usr/lib/systemd/system/blueonyx.service
+%attr(0644,root,root) /usr/lib/systemd/system/bx-issue.service
+%attr(0644,root,root) /usr/lib/systemd/system/getty@.service.d/bx-issue.conf
+%attr(0644,root,root) /usr/lib/systemd/system/serial-getty@.service.d/bx-issue.conf
+%attr(0755,root,root) /etc/NetworkManager/dispatcher.d/99-bx-issue
 %config(noreplace) /usr/share/ssl/certs/sendmail-2048.dh
 %config(noreplace) /var/lib/dovecot/ssl-parameters.dat
 <end glue>
@@ -107,6 +111,7 @@ fi
 
 # Enable CCEd:
 systemctl enable blueonyx.service &>/dev/null || :
+systemctl enable bx-issue.service &>/dev/null || :
 systemctl enable cced.init.service &>/dev/null || :
 systemctl enable cced.construct.service &>/dev/null || :
 
@@ -298,6 +303,39 @@ fi
 <end $TRIGGERUN>
 
 <begin $CHANGELOG>
+
+* Sun Oct 18 2026 Michael Stauber <mstauber@solarspeed.net> 8.20261018-13
+- initServices.sh EFI branch: derive the ESP device, its partition, the
+  vendor directory and the loader file from the running system. The old
+  code hardcoded /dev/sda and \EFI\centos\shim.efi, so both calls failed
+  silently on every install: the ESP directory is EFI/almalinux, the
+  loader is shimx64.efi, and the disk is usually NVMe. The product's only
+  attempt to restore a lost boot entry therefore never worked.
+  The NVRAM entry is now only created when it is actually missing, so -c
+  cannot add a duplicate on every boot.
+  grub2-mkconfig now always writes /boot/grub2/grub.cfg, also on EFI:
+  the ESP grub.cfg is a chainload stub, and mkconfig output written there
+  would be ignored by kernel updates.
+
+* Sun Oct 18 2026 Michael Stauber <mstauber@solarspeed.net> 8.20261018-12
+- /etc/issue: Server Name from the kernel hostname (uname -n, i.e.
+  /etc/hostname) instead of hostname -d, which fell back to the
+  /etc/hosts "localdomain" until 30_addNetwork applied CODB's
+  hostname/domain. The two writes differed (localhost.localdomain vs
+  localhost.localhost), so the banner was rewritten and getty HUPed on
+  every boot. localhost* names are suppressed now, so both writes are
+  byte-identical and the console no longer redraws.
+
+* Sat Oct 17 2026 Michael Stauber <mstauber@solarspeed.net> 8.20261017-11
+- /etc/issue: factory root/blueonyx line while .bx-factory-console
+  exists (cleared by network_settings.sh or wizard). Getty instance
+  drop-ins After=bx-issue.service. HUP only if MainPID is agetty.
+
+* Sat Oct 17 2026 Michael Stauber <mstauber@solarspeed.net> 8.20261017-10
+- /etc/issue: one writer (bx_update_issue.sh). Skip rewrite if
+  unchanged; HUP getty when it changes. bx-issue.service runs after
+  network-online, before getty — not after constructors.
+  initServices.sh no longer clobbers the address-bearing banner.
 
 * Sat Oct 17 2026 Michael Stauber <mstauber@solarspeed.net> 8.20261017-9
 - enableQuota.sh: do not mv /etc/fstab aside unless the rewrite

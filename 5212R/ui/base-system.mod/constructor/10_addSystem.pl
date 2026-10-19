@@ -229,16 +229,10 @@ sub FirstBoot {
 
     if (! -f '/etc/sysconfig/bxmta') {
 
-        # Show login information in the "issue"
-        $HAVEPISSUE=`cat /etc/issue|grep "$build"|wc -l`;
-        chomp($HAVEPISSUE);
-        if ($HAVEPISSUE < "1") {
-            system('/bin/echo "BlueOnyx ' . $build . ' on \S" > /etc/issue');
-            system('/bin/echo "Kernel \r on an \m" >> /etc/issue');
-            system('/bin/echo "" >> /etc/issue');
-            system('/bin/echo "Welcome to your new server ... " >> /etc/issue');
-            system('/bin/echo "  To finish setup, simply login in as \"root\" with password \"blueonyx\"" >> /etc/issue');
-            system('/bin/echo "" >> /etc/issue');
+        # Factory console stamp + address-bearing /etc/issue.
+        system('touch /etc/.bx-factory-console');
+        if (-x '/usr/sausalito/sbin/bx_update_issue.sh') {
+            system('/usr/sausalito/sbin/bx_update_issue.sh');
         }
 
         $HAVEPICO=`cat /etc/profile|grep "pico"|wc -l`;

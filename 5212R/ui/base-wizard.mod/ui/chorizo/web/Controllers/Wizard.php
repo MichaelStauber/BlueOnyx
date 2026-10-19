@@ -633,6 +633,10 @@ class Wizard extends BaseController {
 
                 if (count($errors) == "0") {
                     $CI->cceClient->setObject('System', array('isLicenseAccepted' => '1', 'isRegistered' => '0'), '');
+                @unlink('/etc/.bx-factory-console');
+                if (is_executable('/usr/sausalito/sbin/bx_update_issue.sh')) {
+                    @system('/usr/sausalito/sbin/bx_update_issue.sh');
+                }
 
                     // Send cookies that expire in one hour:
                     setcookie("loginName", 'admin', time()+60*60*24*365, "/");

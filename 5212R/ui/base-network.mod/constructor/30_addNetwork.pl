@@ -714,33 +714,14 @@ if (!$ok) {
 ### Update /etc/issue:
 #
 
-# Re-fetch the IPs:
-$primary_ipv4 = get_primary_ipv4_ip();
-$primary_ipv6 = get_primary_ipv6_ip();
-
-# Open /etc/issue for writing
-open(my $fhi, '>', '/etc/issue') or die "Could not open file '/etc/issue' $!";
-
-# Print the basic system information
-print $fhi $System->{productName} . " on \\S\n";
-print $fhi "Kernel \\r on an \\m\n";
-print $fhi "\n";
-print $fhi "Server Name:  " . $System->{hostname} . "." . $System->{domainname} .  "\n";
-
-# Print the primary IPv4 address if it is defined
-if ($primary_ipv4) {
-    print $fhi "IPv4 Address: $primary_ipv4\n";
+# Backstop: if setup already finished some other way, drop factory
+# credentials from the console before rewriting /etc/issue.
+if (defined $System->{'isLicenseAccepted'} && $System->{'isLicenseAccepted'} eq '1') {
+    unlink '/etc/.bx-factory-console';
 }
-
-# Print the primary IPv6 address if it is defined
-if ($primary_ipv6) {
-    print $fhi "IPv6 Address: $primary_ipv6\n";
+if (-x '/usr/sausalito/sbin/bx_update_issue.sh') {
+    system('/usr/sausalito/sbin/bx_update_issue.sh');
 }
-
-print $fhi "\n";
-
-# Close the file handle
-close($fhi);
 
 debug_msg("All done. Exiting.\n");
 

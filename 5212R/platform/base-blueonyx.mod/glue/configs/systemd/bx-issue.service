@@ -1,0 +1,17 @@
+[Unit]
+Description=BlueOnyx console banner (/etc/issue)
+Documentation=man:issue(5)
+# After NM/DHCP, before getty draws. Never After=cced.construct.
+After=NetworkManager.service
+Wants=network-online.target
+After=network-online.target
+Before=getty.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sausalito/sbin/bx_update_issue.sh
+RemainAfterExit=yes
+TimeoutStartSec=30
+
+[Install]
+WantedBy=multi-user.target

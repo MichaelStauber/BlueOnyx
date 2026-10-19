@@ -4,12 +4,11 @@ if [ -f /etc/resolvconf/resolv.conf.d/base ];then
      cp /etc/resolvconf/resolv.conf.d/base /etc/resolv.conf
 fi
 
-# Post-Install clean up of /etc/issue:
-HAVEISSUE=$(cat /etc/issue|grep "Welcome to your new server"|wc -l)
-if [ "$HAVEISSUE" -gt "0" ];then
-	/bin/echo "BlueOnyx 5210R on \S" > /etc/issue
-	/bin/echo "Kernel \r on an \m" >> /etc/issue
-	/bin/echo "" >> /etc/issue
+# Post-Install clean up of /etc/issue: one writer only. bx_update_issue.sh
+# carries the address and the factory credentials, and skips the rewrite
+# when the bytes are unchanged.
+if [ -x /usr/sausalito/sbin/bx_update_issue.sh ]; then
+    /usr/sausalito/sbin/bx_update_issue.sh || :
 fi
 
 # Post-Install clean up of /root/.bashrc:

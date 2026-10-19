@@ -226,6 +226,15 @@ fi
 
 <begin $CHANGELOG>
 
+* Sat Oct 17 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-41
+- ErrorPages wait page: render elmer_minimalist_view directly
+  (do not new WizardElmerProper — no injected Response).
+
+* Sat Oct 17 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-40
+- ErrorPages::Redirect: if CCEd/System is not ready, show the wizard
+  wait page (503 Retry-After 10) instead of /expired. License not
+  accepted still redirects to /wizard.
+
 * Sat Oct 17 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-39
 - aggnet charts use the default-route interface (br0 on a bridge), not
   eth0+br0 together. Legend looks up palette.receive_bytes_total_<iface>.

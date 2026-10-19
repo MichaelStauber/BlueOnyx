@@ -30,6 +30,11 @@ install:
 	tar cBf - --exclude '.svn' scripts | (cd $(PREFIX)/usr/sausalito ; tar xBf -)
 	tar cBf - --exclude '.svn' configs | (cd $(PREFIX)/usr/sausalito ; tar xBf -)
 	install -m 0755 configs/systemd/blueonyx.service $(PREFIX)/usr/lib/systemd/system/blueonyx.service
+	install -m 0644 configs/systemd/bx-issue.service $(PREFIX)/usr/lib/systemd/system/bx-issue.service
+	mkdir -p $(PREFIX)/usr/lib/systemd/system/getty@.service.d
+	mkdir -p $(PREFIX)/usr/lib/systemd/system/serial-getty@.service.d
+	install -m 0644 configs/systemd/getty@.service.d/bx-issue.conf $(PREFIX)/usr/lib/systemd/system/getty@.service.d/bx-issue.conf
+	install -m 0644 configs/systemd/serial-getty@.service.d/bx-issue.conf $(PREFIX)/usr/lib/systemd/system/serial-getty@.service.d/bx-issue.conf
 	install -m 0644 doc/* $(PREFIX)/usr/share/doc/blueonyx-release-5212R
 	install -m 0600 dh/sendmail-2048.dh $(PREFIX)/usr/share/ssl/certs/sendmail-2048.dh
 	install -m 0644 dh/ssl-parameters.dat $(PREFIX)/var/lib/dovecot/ssl-parameters.dat

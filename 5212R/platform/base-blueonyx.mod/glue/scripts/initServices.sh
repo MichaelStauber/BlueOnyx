@@ -227,13 +227,11 @@ fi
 
 # Not in OpenVZ CTs!
 if [ ! -e /proc/user_beancounters ] && [ ! -e /dev/incus/sock ];then
-  # Show login information in the "issue"
-  /bin/echo "BlueOnyx 5212R on \S" > /etc/issue
-  /bin/echo "Kernel \r on an \m" >> /etc/issue
-  /bin/echo "" >> /etc/issue
-  /bin/echo "Welcome to your new server ... " >> /etc/issue
-  /bin/echo "  To finish setup, simply login in as \"root\" with password \"blueonyx\"" >> /etc/issue
-  /bin/echo "" >> /etc/issue
+  # Factory console stamp: credentials on /etc/issue until nmtui or wizard.
+  touch /etc/.bx-factory-console
+  if [ -x /usr/sausalito/sbin/bx_update_issue.sh ]; then
+    /usr/sausalito/sbin/bx_update_issue.sh || :
+  fi
 fi
 
 # Only mess with Grub if we're NOT in an OpenVZ or Incus Container:
@@ -309,16 +307,77 @@ if [ ! -e /proc/user_beancounters ] && [ ! -e /dev/incus/sock ]; then
 
   # Deploy Grub:
   if [ -d /sys/firmware/efi ];then
-          # For EFI:
-          efibootmgr -c -d /dev/sda -p 1 -L "BlueOnyx 5212R" -l '\EFI\centos\shim.efi'
+          # For EFI: derive the ESP device, its partition and the vendor
+          # directory from the running system. The old code assumed CentOS on
+          # /dev/sda, so both calls failed on every install (the ESP directory
+          # is EFI/almalinux and the disk is usually NVMe).
+          ESP_MNT="/boot/efi"
+          ESP_SRC=$(findmnt -no SOURCE "$ESP_MNT" 2>/dev/null)
+          [ -z "$ESP_SRC" ] && ESP_SRC=$(awk '$2 == "/boot/efi" { print $1; exit }' /proc/mounts 2>/dev/null)
+          ESP_DISK=""
+          ESP_PART=""
+          case "$ESP_SRC" in
+            /dev/nvme*|/dev/mmcblk*|/dev/md*)
+                  ESP_DISK=$(echo "$ESP_SRC" | sed -e 's/p[0-9]*$//')
+                  ESP_PART=$(echo "$ESP_SRC" | sed -e 's/^.*p//')
+                  ;;
+            /dev/*)
+                  ESP_DISK=$(echo "$ESP_SRC" | sed -e 's/[0-9]*$//')
+                  ESP_PART=$(echo "$ESP_SRC" | sed -e 's/^[^0-9]*//')
+                  ;;
+          esac
+          case "$ESP_PART" in
+            ''|*[!0-9]*) ESP_PART="" ;;
+          esac
+
+          # Vendor directory that is really present on the ESP (almalinux,
+          # not centos).
+          EFI_VENDOR=""
+          if [ -d "$ESP_MNT/EFI" ]; then
+                  for d in almalinux redhat centos; do
+                          if [ -d "$ESP_MNT/EFI/$d" ]; then
+                                  EFI_VENDOR="$d"
+                                  break
+                          fi
+                  done
+                  if [ -z "$EFI_VENDOR" ]; then
+                          EFI_VENDOR=$(ls -1 "$ESP_MNT/EFI" 2>/dev/null | grep -viE '^(BOOT|Microsoft)$' | head -1)
+                  fi
+          fi
+
+          # Loader filename differs: shimx64.efi on AlmaLinux, shim.efi on the
+          # old CentOS layout.
+          EFI_LOADER=""
+          if [ -n "$EFI_VENDOR" ]; then
+                  for f in shimx64.efi shim.efi grubx64.efi grub.efi; do
+                          if [ -f "$ESP_MNT/EFI/$EFI_VENDOR/$f" ]; then
+                                  EFI_LOADER="$f"
+                                  break
+                          fi
+                  done
+          fi
+
+          # Recreate the NVRAM entry only when it is really gone. With -c on
+          # every run this would add a duplicate entry on each boot.
+          if [ -n "$ESP_DISK" ] && [ -n "$ESP_PART" ] && [ -n "$EFI_VENDOR" ] && [ -n "$EFI_LOADER" ]; then
+                  if ! efibootmgr 2>/dev/null | grep -q "BlueOnyx 5212R"; then
+                          efibootmgr -c -d "$ESP_DISK" -p "$ESP_PART" -L "BlueOnyx 5212R" \
+                                  -l "\\EFI\\$EFI_VENDOR\\$EFI_LOADER" >/dev/null 2>&1 || :
+                  fi
+          fi
+
+          # On EFI the ESP grub.cfg is only a chainload stub; the config it
+          # loads is /boot/grub2/grub.cfg. Do not run mkconfig against the
+          # stub, or kernel updates (which write /boot/grub2/grub.cfg) would
+          # be ignored.
           if [ -f /usr/sbin/grub2-mkconfig ];then
-            grub2-mkconfig -o /boot/efi/EFI/centos/grub.cfg
+            grub2-mkconfig -o /boot/grub2/grub.cfg >/dev/null 2>&1 || :
           fi
   else
           # Non-EFI:
           # Run grub2-mkconfig -o /boot/grub2/grub.cfg
           if [ -f /usr/sbin/grub2-mkconfig ];then
-            grub2-mkconfig -o /boot/grub2/grub.cfg
+            grub2-mkconfig -o /boot/grub2/grub.cfg >/dev/null 2>&1 || :
           fi
   fi
 fi

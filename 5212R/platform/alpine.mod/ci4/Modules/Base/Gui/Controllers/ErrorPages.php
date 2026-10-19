@@ -31,14 +31,45 @@ class ErrorPages extends BaseController {
         $IP = getIp();
         $agent = $AGENT->getBrowser() . ' ' . $AGENT->getVersion();
 
-        // Find out if the web based initial setup has been completed:
+        // Find out if the web based initial setup has been completed.
+        // Unguarded $System['isLicenseAccepted'] 500s when CCEd/System is
+        // not ready yet, then the else-branch sent GET / to /expired/...
         $System = $CI->cceClient->getObject('System', array('cce_nocache' => 'cce_nocache'));
+        $licenseAccepted = (is_array($System) && isset($System['isLicenseAccepted']) && ($System['isLicenseAccepted'] == '1'));
 
-        // Redirect-Exception for /wizard if 'isLicenseAccepted' is not yet set and we're not already on /wizard:
-        if ($System['isLicenseAccepted'] == "0" && current_url() != site_url('wizard')) {
-            // Web based setup has *NOT* been completed. Redirect to /wizard
-            header("Location: /wizard");
-            exit;
+        if (!$licenseAccepted && current_url() != site_url('wizard')) {
+            // Setup not done, or CCEd has no System object yet. Never fall
+            // through to /expired. If System exists, send the operator to
+            // /wizard. If it does not, show the wizard wait page here.
+            if (is_array($System) && isset($System['isLicenseAccepted']) && ($System['isLicenseAccepted'] == '0')) {
+                header("Location: /wizard");
+                exit;
+            }
+            // Do not construct WizardElmerProper by hand — no injected
+            // Request/Response. Render the same wait view here.
+            $ini_langs = initialize_languages(FALSE);
+            $locale = $ini_langs['locale'];
+            $localization = $ini_langs['localization'];
+            $charset = $ini_langs['charset'];
+            $this->response->setStatusCode(503);
+            $this->response->setHeader('Retry-After', '10');
+            $this->response->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+            $this->response->setHeader('Pragma', 'no-cache');
+            $this->response->setHeader('Content-language', $locale);
+            $this->response->setHeader('Content-type', "text/html; charset=$charset");
+            $title = PoorMansBabelFish("wizard_refresh_header", $locale, 'base-wizard');
+            $text = PoorMansBabelFish("wizard_refresh_text", $locale, 'base-wizard');
+            return view('../../Modules/Base/Gui/Views/elmer_minimalist_view', array(
+                'localization' => $localization,
+                'charset' => $charset,
+                'page_title' => $title,
+                'bx_logo_color' => '#000000',
+                'elmer_style_css' => '/.elm/dist/css/style.css',
+                'extra_headers' => '<meta http-equiv="refresh" content="10" />',
+                'heading' => $title,
+                'text' => $text,
+                'extra_footers' => '',
+            ));
         }
 
         if ((isset($_COOKIE['sessionId'])) && (isset($_COOKIE['loginName'])) && (session()->get('isLoggedIn')) && (isset($serverScriptHelper)) && (isset($BX_SESSION['loginUser']['OID']))) {

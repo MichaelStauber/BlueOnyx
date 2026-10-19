@@ -1,6 +1,9 @@
 #!/bin/bash
 # network_settings.sh - BlueOnyx Network Settings configurator - nmtui version (simplified, less dialog hell)
 
+# scp / ssh root@box 'cmd' must not run the TUI (breaks scp; would complete setup).
+[ -t 0 ] || exit 0
+
 export LANGUAGE=en_US.UTF-8 LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 
 # Get BlueOnyx version
@@ -127,6 +130,8 @@ finishFirstBoot() {
   cecho "Enjoy BlueOnyx ${BX_VERSION}!"
 
   grep -v "network_settings.sh" /root/.bashrc > /tmp/.bashrc && mv /tmp/.bashrc /root/.bashrc || true
+  rm -f /etc/.bx-factory-console
+  [ -x /usr/sausalito/sbin/bx_update_issue.sh ] && /usr/sausalito/sbin/bx_update_issue.sh || true
 }
 
 waitForCceConstruct

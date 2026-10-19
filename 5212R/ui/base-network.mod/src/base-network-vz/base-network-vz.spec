@@ -1,7 +1,7 @@
 Summary: Small Helper CentOS 8 on for OpenVZ 7 to fix missing /etc/resolv.conf
 Name: base-network-vz
 Version: 1.0.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 Vendor: %{vendor}
 License: Sun modified BSD
 Group: System Environment/BlueOnyx
@@ -38,6 +38,13 @@ systemctl stop bxvzresolve.servicee >/dev/null 2>&1 || :
 systemctl disable bxvzresolve.servicee >/dev/null 2>&1 || :
 
 %changelog
+
+* Sun Oct 18 2026 Michael Stauber <mstauber@solarspeed.net> 1.0.0-2
+- bxvzresolve.sh: stop writing /etc/issue directly. It matched the
+  factory "Welcome to your new server" text and replaced the banner
+  with the addressless block, dropping the DHCP address and the
+  factory credentials. All /etc/issue writes now go through
+  /usr/sausalito/sbin/bx_update_issue.sh.
 
 * Tue Oct 15 2019 Michael Stauber <mstauber@solarspeed.net> 1.0.0-1
 - initial build

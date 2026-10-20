@@ -24,8 +24,22 @@ fi
 /bin/touch /tmp/yum.updating
 /bin/rm -f /tmp/yum.check-update
 
-# Fake Sauce::Service restart event to get /gui/service to report the running update process:
-echo "restart" > /usr/sausalito/services/yum ; date +%s >> /usr/sausalito/services/yum
+# Fake Sauce::Service restart event to get /gui/service to report the running update process.
+# Written to a dot-prefixed temporary file and renamed into place, never truncated in situ:
+# Daemon.pm reads this file on a 15 second cycle and skips dot-prefixed entries, so it cannot
+# observe a half-written file and then delete the request as "older than allowed".
+QUEUE_DIR=/usr/sausalito/services
+if [ -d "$QUEUE_DIR" ]; then
+    TMPFILE=$(mktemp "$QUEUE_DIR/.yum.XXXXXXXX")
+    if [ -n "$TMPFILE" ]; then
+        if printf 'restart\n%s\n' "$(/bin/date +%s)" > "$TMPFILE"; then
+            /bin/chmod 600 "$TMPFILE"
+            /bin/mv -f "$TMPFILE" "$QUEUE_DIR/yum"
+        else
+            /bin/rm -f "$TMPFILE"
+        fi
+    fi
+fi
 
 /usr/bin/dnf clean all &>/dev/null || :
 LC_ALL=C /usr/bin/dnf -y update > /tmp/yum.update

@@ -34,6 +34,24 @@ else {
 $jailkit_daemon_status = `ps axf|grep /usr/sbin/jk_socketd|grep -v grep|wc -l`;
 chomp($jailkit_daemon_status);
 
+# An empty /etc/jailkit/jk_socketd.ini means "nothing to broker" - the same state systemd
+# skips this unit on, via ConditionFileNotEmpty in the drop-in shipped by this package.
+# Report it the same way here: no restart attempt, and no failure. "-s" is deliberately the
+# identical test systemd applies, so the unit and the monitor cannot disagree about what
+# "empty" means. A config with content is a genuine expectation that the daemon is running,
+# and every check below keeps its full teeth: restart attempt, then RED if it stays down.
+#
+# The state is AM_STATE_NOINFO, not GREEN: a service that is deliberately not in play is
+# "not applicable", which is what the other monitors report in the same situation
+# (am_OpenDKIM and am_phpfpm* exit NOINFO when their service is not enabled). greenMsg is
+# printed as well so the row is not left with an empty message, as am_OpenDKIM does.
+my $jk_cfg = "/etc/jailkit/jk_socketd.ini";
+if (!-s $jk_cfg) {
+    print $ENV{greenMsg};
+    $cce->bye('SUCCESS');
+    exit $am_states{AM_STATE_NOINFO};
+}
+
 if ($jailkit_daemon_status eq "0") {
     # Service not running:
 
@@ -48,8 +66,13 @@ if ($jailkit_daemon_status eq "0") {
         # Thank God, no Systemd: 
         `/sbin/service jailkit restart`;
     }
-    # Now check again:
-    $jailkit_daemon_status = Sauce::Service::service_get_init("jailkit");
+    # Now check again, on the same evidence we used to decide it was down. The previous
+    # version used service_get_init(), which is `systemctl is-enabled` - that reports
+    # whether the unit starts at boot, not whether the daemon is running, so the verdict
+    # was inverted: RED for a running daemon on a disabled unit, GREEN for a dead daemon
+    # on an enabled one. Ask the process, the same way the top of this script asks.
+    $jailkit_daemon_status = `ps axf|grep /usr/sbin/jk_socketd|grep -v grep|wc -l`;
+    chomp($jailkit_daemon_status);
     if ($jailkit_daemon_status == "0") {        
         print $ENV{redMsg};
         $cce->bye('SUCCESS'); 

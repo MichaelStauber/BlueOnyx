@@ -17,6 +17,14 @@ use lib qw(/usr/sausalito/perl);
 
 my $QUEUE_DIR = '/usr/sausalito/services/';
 
+# The events a queue entry may carry: the five Daemon.pm executes, plus 'start', which callers
+# already queue. Anything else would be written and then never executed, so it would sit in the
+# queue until it aged out and made /gui/service report a restart in progress for five minutes.
+# Skip the write for those, and keep returning success: that is what this call did before (it
+# wrote nothing for an unknown event), and the calls that pass '0'/'1' - base-ftp's proftpd
+# toggle - have already had the real work done by service_toggle_init().
+my %QUEUE_EVENTS = map { $_ => 1 } qw(stop reload start restart condrestart condreload);
+
 sub new {
     my $self = shift;
     my $class = ref($self) || $self;
@@ -39,6 +47,11 @@ sub register_event
         return(0);
     }
 
+    if (!$QUEUE_EVENTS{$event}) {
+        debug_msg("Not queueing '$event' for '$service' - the daemon cannot execute it.");
+        return(1);
+    }
+
     if (! -d $QUEUE_DIR) {
         debug_msg("Creating directory: $QUEUE_DIR");
         system("/bin/mkdir $QUEUE_DIR");
@@ -51,38 +64,31 @@ sub register_event
 
     debug_msg("Using queue file: $queue_file");
 
-    # If the file doesn't exist, create it
-    unless (-e $queue_file) {
-        open(my $fh, '>', $queue_file) or do {
-            debug_msg("Failed to create $queue_file: $!");
-            return(0);
-        };
-        close($fh);
-        debug_msg("Created $queue_file with $event request");
-    }
+    # Write the event to a dot-prefixed temporary file in the same directory and rename it
+    # over the queue file. rename(2) inside one filesystem is atomic, so a reader sees either
+    # the previous contents or the new ones - never a truncated file. Daemon.pm already skips
+    # dot-prefixed entries and does not count them, so the temporary file is invisible to it.
+    # chmod runs before the rename, so the file is 0600 from the moment it becomes visible.
+    my $tmp_file = $QUEUE_DIR . '.' . $service . '.' . $$ . '.new';
 
-    if ($event eq 'stop') {
-        # Write the "stop" event and timestamp
-        open(my $fh, '>', $queue_file) or do {
-            debug_msg("Failed to open $queue_file for writing: $!");
-            return(0);
-        };
-        print $fh "$event\n$timestamp\n";
-        close($fh);
-        debug_msg("Updated $queue_file with $event request");
-        return(1);
-    }
-    
-    # For other events, replace the existing file
-    open(my $fh, '>', $queue_file) or do {
-        debug_msg("Failed to open $queue_file for appending: $!");
+    open(my $fh, '>', $tmp_file) or do {
+        debug_msg("Failed to open $tmp_file for writing: $!");
         return(0);
     };
+    print $fh "$event\n$timestamp\n";
+    close($fh) or do {
+        debug_msg("Failed to close $tmp_file: $!");
+        unlink($tmp_file);
+        return(0);
+    };
+    chmod(0600, $tmp_file);
 
-    if ($event eq 'reload' || $event eq 'start' || $event eq 'restart' || $event eq 'condrestart' || $event eq 'condreload') {
-        print $fh "$event\n$timestamp\n";
+    if (!rename($tmp_file, $queue_file)) {
+        debug_msg("Failed to rename $tmp_file to $queue_file: $!");
+        unlink($tmp_file);
+        return(0);
     }
-    close($fh);
+
     debug_msg("Updated $queue_file with $event request");
     return(1);
 }

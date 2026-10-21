@@ -62,8 +62,6 @@ sub _daemonize {
 
 sub process_queue {
 
-    my $file_count = `ls -k1 $QUEUE_DIR`;
-
     opendir(my $dh, $QUEUE_DIR) || do {
         &_logmsg("Can't open $QUEUE_DIR: $!");
         die "Can't open $QUEUE_DIR: $!";
@@ -114,8 +112,32 @@ sub process_queue {
 
         close($fh);
 
-        chomp($event);
-        chomp($timestamp);
+        chomp($event) if defined $event;
+        chomp($timestamp) if defined $timestamp;
+
+        # A file caught mid-write, or written by anything that is not atomic, leaves us with a
+        # missing or unparsable field. Subtracting that from time() gives ~1.7e9, which is greater
+        # than any purge age, so the entry below would be deleted as "older than allowed" - throwing
+        # away a request that was never even read. Leave it alone and look again next cycle instead.
+        # The safety valve stays: a file that is still unreadable after QUEUE_PURGE_TIME is not
+        # mid-write, it is rubbish, so judge its age by mtime (which a writer refreshes) and purge it
+        # then. Without that, a permanently broken file would sit in the queue forever.
+        if (!defined($event) || !defined($timestamp) ||
+            $event !~ /^[a-z]+$/ || $timestamp !~ /^\d+$/) {
+            my $seen_event = defined($event) ? $event : '<undef>';
+            my $seen_stamp = defined($timestamp) ? $timestamp : '<undef>';
+            my $mtime = (stat($path))[9];
+            my $age = defined($mtime) ? (time() - $mtime) : $QUEUE_PURGE_TIME;
+
+            if ($age >= $QUEUE_PURGE_TIME) {
+                unlink($path);
+                &_logmsg("Queue file $file has been unreadable for ${age}s (event=$seen_event, timestamp=$seen_stamp). Removing it as it cannot be executed.");
+            }
+            else {
+                &_logmsg("Queue file $file is incomplete (event=$seen_event, timestamp=$seen_stamp). Leaving it for the next cycle.");
+            }
+            next;
+        }
 
         my $current_time = time();
         my $time_difference = $current_time - $timestamp;

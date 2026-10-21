@@ -236,6 +236,61 @@ fi
 
 <begin $CHANGELOG>
 
+* Tue Oct 20 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-51
+- The systemAdministrator shortcut now really is a shortcut. admin has neither
+  capLevels nor uiRights of his own: his whole right set comes from the "I am
+  god" branch of listAllowed(), which enumerates the CapabilityGroups, and it
+  silently became EMPTY whenever that read failed - cced restarting right after
+  the constructors, a capability cache rejected by the TTL/OID check, a stale
+  session. With an empty $access the menu builder pruned every entry that
+  requires a capability (base_software needs managePackage) and pages that use
+  such an entry as their menu root died in MenuChildren() with "Undefined array
+  key" - a hard 500 on /base/expirydate, /base/newlinqstatus, /base/link,
+  /base/unlink and /base/transfer.
+- Added bx_is_system_administrator() and bx_has_capability() to
+  ci4/app/Helpers/blueonyx_helper.php. The three access checks in
+  generateSiteMap() and MenuChildren() now go through bx_has_capability(), which
+  grants a systemAdministrator everything without looking at $access (and
+  without enumerating a single CapabilityGroup). Malformed menu entries whose
+  <parent> block carries several <access> children are still dropped, so the
+  resulting menu is identical to the one a fully privileged admin gets today -
+  verified against the real menu XML and the real capability cache.
+- generateSiteMapCached() caches the unfiltered admin menu under its own key
+  (admserv:menu:v<ver>:raw:god) instead of one entry per access signature.
+- Modified ci4/app/Libraries/BxPage.php: the menu branch and every other check
+  on $access ask $is_god first, so a broken capability read can no longer route
+  an admin into the "no rights" branch. If the page's own menu entry is missing
+  from the sitemap, the menu now falls back to 'root' with a log line instead of
+  rendering a bare page.
+- Added CapCache::loadStale(): last resort for non-admin users. When the fresh
+  read comes back incomplete, the last snapshot on disk is used even though its
+  TTL and OID set no longer match - slightly outdated rights beat no rights at
+  all. The format version is still checked, so snapshots from older builds stay
+  refused.
+- Modified ci4/app/Libraries/ServerScriptHelper.php and Capabilities.php to use
+  that fallback, and to log an empty $access set. Both now initialise loginUser
+  from the User object by name when the session holds no usable copy, instead of
+  leaving it unset - which made every capability check deny, silently.
+- Modified ci4/app/Libraries/ServerScriptHelper.php to really redirect on a
+  failed authkey(): a 'return' inside a constructor does not end the request,
+  the RedirectResponse is discarded and the caller continued with sessionId=''
+  and no loginUser. That is the path that produced the empty $access in the
+  first place.
+- MenuChildren() no longer dies on a menu id that is not in the sitemap: unknown
+  or not-permitted roots return an empty child list with a log line.
+- The Config\Logger threshold is 4 in production, so PHP warnings never reach
+  the log. These failures were therefore invisible until they surfaced as a 500;
+  the log lines added above are written with bx_error_log() and appear in
+  /var/log/gui-debug.log.
+
+- bx_menu_version() now includes the file ctime in the version hash it derives
+  from the menu XML files. Our ISO builds normalise mtimes, so every file of a
+  package carries the same timestamp; a package that replaced a menu XML with one
+  of identical size therefore did not change the version and the cached sitemap
+  kept being served for up to its TTL of one hour. ctime is set by the kernel when
+  the file is written and is not normalised, so a reinstall is always noticed. The
+  cost is unchanged - it is the same stat() call.
+
 * Mon Oct 19 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-50
 - fetchUserCapabilities(): the reconnect result is checked, the old session is
   validated with authkey() before anything gets decrypted, and only a usable

@@ -345,6 +345,17 @@ setProgress($sysOID, "[[base-swupdate.packageInstallSuccess,package=$pkgname]]",
     
 system("rm -rf $path");
 
+# A freshly installed package may bring its own CapabilityGroups - or it may add
+# capabilities to a group that already exists. A new group changes the OID set of
+# the CapabilityGroups and therefore invalidates the per-user capability snapshots
+# in /usr/sausalito/capcache on its own. A capability added to an existing group
+# does NOT: the OID set stays the same, the snapshot keeps passing every check and
+# the GUI would go on working with the old right set until its TTL expires (15
+# minutes). So drop the snapshots here and let them be rebuilt on the next request
+# - what the package brought is then effective right away, for admin and reseller
+# alike.
+system("rm -f /usr/sausalito/capcache/*_capabilityGroups");
+
 # reboot called. this overrides everything else.
 my $refreshcce;
 if ($ARGV[1] =~ /r/i) {

@@ -747,6 +747,17 @@ class BxPage extends Controller {
         $user = $BX_SESSION['loginUser'];
         $access = $serverScriptHelper->getAccessRights($this->cceClient);
 
+        // A systemAdministrator may do everything - and, more importantly, he may
+        // do it even when the CapabilityGroups could not be read. $access is built
+        // by enumerating them, so a failed read (cced restarting, rejected
+        // capability cache) leaves it EMPTY for admin, who has neither capLevels
+        // nor uiRights of his own. Every right check below therefore asks this
+        // flag first instead of trusting $access alone.
+        $is_god = bx_is_system_administrator();
+        if (($is_god) && (count($access) == 0)) {
+            bx_error_log("BxPage: EMPTY access list for systemAdministrator '" . $BX_SESSION['loginName'] . "' - using the systemAdministrator shortcut");
+        }
+
         // Special case: shellAccessEnabled
         if ($BX_SESSION['userShell'] > "0") {
             $access[] = 'shellAccessEnabled';
@@ -805,7 +816,7 @@ class BxPage extends Controller {
         $AMnames = array();
 
         // Only poll "ActiveMonitor" if the GUI user actually has ACL rights for 'ActiveMonitor':
-        if (in_array("serverShowActiveMonitor", $access)) {
+        if (($is_god) || (in_array("serverShowActiveMonitor", $access))) {
             // Get Active Monitor Alerts (fast way):
             $all_AM_data = $this->cceClient->getAll("ActiveMonitor", array());
             $all_AM_data = reset($all_AM_data);
@@ -1036,8 +1047,8 @@ class BxPage extends Controller {
             //---- Start: Menu Display
 
             // If User has 'ManageVPS' but NOT 'ManageIncus' access rights? Then we need to manually remove
-            // all siteManagement related access rights:
-            if ((in_array('ManageVPS', $access)) && (!in_array('ManageIncus', $access))) {
+            // all siteManagement related access rights. Never for a systemAdministrator - he keeps everything.
+            if ((!$is_god) && (in_array('ManageVPS', $access)) && (!in_array('ManageIncus', $access))) {
                 $stray_reseller_caps = array('siteAnonFTP', 'manageSite', 'siteShell', 'siteSSL', 'siteAdmin');
                 foreach ($stray_reseller_caps as $key => $value) {
                     // Remove all reseller caps from currently used caps:
@@ -1095,7 +1106,7 @@ class BxPage extends Controller {
                 // Use function MenuChildren to get a sorted list of children for our menu entries:
                 $root_children_sort_order = array();
             }
-            elseif ((in_array("adminUser", $access)) || ((in_array("siteAdmin", $access)) && (count($access) >= "2"))) {
+            elseif (($is_god) || (in_array("adminUser", $access)) || ((in_array("siteAdmin", $access)) && (count($access) >= "2"))) {
 
                 // Wizard exception:
                 if (($system['isLicenseAccepted'] == '0') && ((current_url() === site_url('wizard')) || (current_url() === site_url('login')))) {
@@ -1123,7 +1134,7 @@ class BxPage extends Controller {
                     }
                 }
             }
-            elseif (in_array("siteAdmin", $access)) { 
+            elseif (($is_god) || (in_array("siteAdmin", $access))) { 
                 if ($page_module == "gui") {
                     $parent_root = 'root';
                     $ignore_items = array('base_manualButton', 'base_updateLight');
@@ -1154,8 +1165,17 @@ class BxPage extends Controller {
                 $parent_root = $active_menu_item;
                 $ignore_items = array();
 
+                // The page's own menu entry can be missing from the sitemap: pruned
+                // by the access filter, or a menu id that no longer exists. Using it
+                // as the menu root would render the page without any navigation - or,
+                // before MenuChildren() learned to guard, kill it with a 500.
+                if (!isset($_SiteMap_items[$parent_root])) {
+                    bx_error_log("BxPage: page_module '" . $page_module . "' has no entry in the SiteMap - falling back to 'root'");
+                    $parent_root = 'root';
+                }
+
                 // Use function MenuChildren to get a sorted list of children for our menu entries:
-                $root_children_sort_order = MenuChildren($active_menu_item, $ignore_items, $_SiteMap_items, $access);
+                $root_children_sort_order = MenuChildren($parent_root, $ignore_items, $_SiteMap_items, $access);
             }
 
             //
@@ -1682,7 +1702,7 @@ class BxPage extends Controller {
 
             // Vsite/User Quicksearch:
             $vsite_and_user_quicksearch_menu = '';
-            if ((in_array('systemAdministrator', $access)) && (in_array('adminUser', $access)) && (in_array('siteAdmin', $access))) {
+            if (($is_god) || ((in_array('systemAdministrator', $access)) && (in_array('adminUser', $access)) && (in_array('siteAdmin', $access)))) {
                 $vsite_and_user_quicksearch_dataTableInit = <<<HTML
                     <script>
                     $(document).ready(function() {
@@ -1726,7 +1746,7 @@ class BxPage extends Controller {
 
             // Handle Active Monitor:
             $ActiveMonitorDisplay = '';
-            if (in_array("serverShowActiveMonitor", $access)) {
+            if (($is_god) || (in_array("serverShowActiveMonitor", $access))) {
 
                 $AM_warncolor = 'bg-green';
                 $AM_total_warnings = '0';

@@ -142,6 +142,45 @@ class CapCache {
     }
 
     /**
+     * Returns the last written snapshot regardless of its age and of the current
+     * OID set - or FALSE when there is none.
+     *
+     * Last resort for a *non* systemAdministrator when the fresh fetch failed: a
+     * slightly outdated capability set is still far better than no rights at all,
+     * which would strip his menu and bounce him between pages. The format version
+     * is still checked, so snapshots written by older builds - which could carry a
+     * partial group list next to a full OID list - are never used.
+     *
+     * @param string $loginName
+     *
+     * @return array|false
+     */
+    public static function loadStale($loginName) {
+        $file = self::path($loginName);
+
+        if (!is_file($file)) {
+            return FALSE;
+        }
+
+        $raw = @file_get_contents($file);
+        if (($raw === FALSE) || ($raw === '')) {
+            return FALSE;
+        }
+
+        $data = json_decode($raw, TRUE);
+
+        if (!is_array($data) || !isset($data['v']) || ((int)$data['v'] !== self::FORMAT) || !isset($data['groups']) || !is_array($data['groups'])) {
+            return FALSE;
+        }
+
+        if (count($data['groups']) == 0) {
+            return FALSE;
+        }
+
+        return $data['groups'];
+    }
+
+    /**
      * Writes the snapshot atomically (temp file + rename), so a concurrent
      * reader never sees a half written file.
      *

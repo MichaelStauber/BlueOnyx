@@ -477,6 +477,22 @@ class Capabilities {
             // CCEd is gone or still coming up - or it answered only part of the
             // set. Do not mark this as loaded and do not cache it: a partial read
             // stored together with the full OID list would look valid forever.
+            //
+            // Before giving up entirely, fall back to the last snapshot on disk.
+            // It may be older than the TTL and its OID set may differ, but a
+            // slightly outdated right set is far better than none at all: an empty
+            // $access list strips the whole menu and sends the operator into wrong
+            // branches. Only the format version is checked, so a snapshot written
+            // by an older build is still refused.
+            if ($have_cache) {
+                $stale = CapCache::loadStale($loginName);
+                if (is_array($stale) && (count($stale) > 0)) {
+                    bx_error_log("getAllCapabilityGroups: read " . count($read_groups) . " of " . count($oids) . " CapabilityGroups (CCEd restarting?) - falling back to the stale snapshot on disk (" . count($stale) . " groups)");
+                    $this->capabilityGroups = $stale;
+                    $this->groups_complete = TRUE;
+                    return $this->capabilityGroups;
+                }
+            }
             bx_error_log("getAllCapabilityGroups: read " . count($read_groups) . " of " . count($oids) . " CapabilityGroups (CCEd restarting?) - not complete, nothing cached, retry left open");
             return $this->capabilityGroups;
         }

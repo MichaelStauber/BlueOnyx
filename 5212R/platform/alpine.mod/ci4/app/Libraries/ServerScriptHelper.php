@@ -173,7 +173,13 @@ class ServerScriptHelper {
                     @session()->destroy();
                     $data['expired_url'] = $uri['expired'];
                     session()->set($data);
-                    return redirect()->to(base_url() . '/login');
+                    // A 'return' inside a constructor does NOT end the request: the
+                    // RedirectResponse is discarded and the caller keeps running -
+                    // now with a destroyed session and an unset loginUser, which
+                    // turns into an empty $access list and, from there, into wrong
+                    // menu decisions. So really redirect and stop here.
+                    header('Location: ' . base_url() . 'login');
+                    exit;
                 }
 
                 if (($this->loginName != '') && ($this->sessionId != '')) {
@@ -191,19 +197,36 @@ class ServerScriptHelper {
                             $CI->setBX_SESSION_sessionId('');
                         }
                         self::debug_log("ServerScriptHelper.ServerScriptHelper(): Cannot authenticate to CCE (login name: $loginName, session ID: $sessionId)");
-                        return redirect()->to(base_url() . $uri['expired']);
+                        // Same as above: 'return' in a constructor does not end the
+                        // request. Leaving here would continue with sessionId='' and
+                        // an unset loginUser - i.e. with an empty $access list.
+                        header('Location: ' . base_url() . $uri['expired']);
+                        exit;
                     }
 
                     // Auth succeeded. Get logged in Users details:
-                    if (isset($_SESSION['loginUser']['name'])) {
-                        if ($_SESSION['loginUser']['name'] == $this->loginName) {
-                            self::debug_log("ServerScriptHelper: Setting 'loginUser' from Sesion-Data");
-                            $this->loginUser = $_SESSION['loginUser'];
-                        }
+                    if (isset($_SESSION['loginUser']['name']) && ($_SESSION['loginUser']['name'] == $this->loginName)) {
+                        self::debug_log("ServerScriptHelper: Setting 'loginUser' from Sesion-Data");
+                        $this->loginUser = $_SESSION['loginUser'];
                     }
                     else {
-                        self::debug_log("ServerScriptHelper: No Session-Data for 'loginUser' yet. Doing WHOAMI");
-                        $this->loginUser = $this->cceClient->get($this->cceClient->whoami());
+                        // No session data, or data for a *different* user (browser
+                        // reused after a login switch). Falling through with an
+                        // unset loginUser is not an option: everything downstream
+                        // would then see a user without any rights - silently.
+                        self::debug_log("ServerScriptHelper: No usable Session-Data for 'loginUser'. Doing WHOAMI");
+                        $who = $this->cceClient->whoami();
+                        $this->loginUser = ($who != '') ? $this->cceClient->get($who) : FALSE;
+                        if ((!is_array($this->loginUser)) || (count($this->loginUser) == 0)) {
+                            // whoami() can come back empty on a fresh handle - ask by
+                            // name instead of giving up.
+                            self::debug_log("ServerScriptHelper: WHOAMI unusable. Fetching User object by name");
+                            $this->loginUser = $this->cceClient->getObject("User", array("name" => $this->loginName));
+                        }
+                        if ((!is_array($this->loginUser)) || (count($this->loginUser) == 0)) {
+                            bx_error_log("ServerScriptHelper: no loginUser for '" . $this->loginName . "' - every capability check will deny");
+                            $this->loginUser = array();
+                        }
                     }
 
                     // Initialize
@@ -549,6 +572,16 @@ class ServerScriptHelper {
                 $accessRights[] = "siteAdministrator";
             }
         } 
+
+        // An empty right set is never a fact, it is a failure. Say so, otherwise
+        // the GUI silently renders without menus and, on pages whose menu entry
+        // requires a capability, used to die in MenuChildren().
+        if (count($accessRights) == 0) {
+            bx_error_log("ServerScriptHelper::getAccessRights(): EMPTY access set for '" . $loginName
+                . "' (loginUser=" . (is_array($this->loginUser) ? count($this->loginUser) : 'none')
+                . ", systemAdministrator=" . var_export(isset($this->loginUser['systemAdministrator']) ? $this->loginUser['systemAdministrator'] : NULL, TRUE)
+                . ", sessionId=" . var_export($BX_SESSION['sessionId'], TRUE) . ")");
+        }
 
         return array_unique(array_values($accessRights));
     }
@@ -1433,6 +1466,22 @@ class ServerScriptHelper {
             // CCEd is gone or still coming up - or it answered only part of the
             // set. Do not mark this as loaded and do not cache it: a partial read
             // stored together with the full OID list would look valid forever.
+            //
+            // Before giving up entirely, fall back to the last snapshot on disk.
+            // It may be older than the TTL and its OID set may differ, but a
+            // slightly outdated right set is far better than none at all: an empty
+            // $access list strips the whole menu and sends the operator into wrong
+            // branches. Only the format version is checked, so a snapshot written
+            // by an older build is still refused.
+            if ($have_cache) {
+                $stale = CapCache::loadStale($loginName);
+                if (is_array($stale) && (count($stale) > 0)) {
+                    bx_error_log("getAllCapabilityGroups: read " . count($read_groups) . " of " . count($oids) . " CapabilityGroups (CCEd restarting?) - falling back to the stale snapshot on disk (" . count($stale) . " groups)");
+                    $this->capabilityGroups = $stale;
+                    $this->groups_complete = TRUE;
+                    return $this->capabilityGroups;
+                }
+            }
             self::debug_log("getAllCapabilityGroups: read " . count($read_groups) . " of " . count($oids) . " CapabilityGroups (CCEd restarting?) - not complete, nothing cached, retry left open");
             return $this->capabilityGroups;
         }

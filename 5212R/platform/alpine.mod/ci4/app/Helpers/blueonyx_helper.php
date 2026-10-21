@@ -1575,6 +1575,15 @@ function PageURLReferer () {
 
 function MenuChildren($root, $bx_ignore_items, $SiteMap_items, $access=array()) {
 
+    // A menu root that is not in the sitemap used to be a hard 500: the entry may
+    // have been pruned by the access filter (e.g. it requires a capability this
+    // user does not have) or a page may name a menu id that no longer exists.
+    // Neither is a reason to kill the whole page.
+    if ((!is_array($SiteMap_items)) || (!isset($SiteMap_items[$root])) || (!is_array($SiteMap_items[$root])) || (!isset($SiteMap_items[$root]['children'])) || (!is_array($SiteMap_items[$root]['children']))) {
+        bx_error_log("MenuChildren(): menu item '" . $root . "' is not in the SiteMap (unknown or not permitted for this user) - returning an empty child list");
+        return array();
+    }
+
     // Build an array that contains all children of a given menu entry from our $SiteMap_items:
     $root_children = elements($SiteMap_items[$root]['children'], $SiteMap_items);
 
@@ -1597,7 +1606,8 @@ function MenuChildren($root, $bx_ignore_items, $SiteMap_items, $access=array()) 
             // Catches items which only have a single parent:
             if ($temp_arr['id'] == $parent_we_search_for) {
                 // Is this an item that anyone can access? Or one that we specifically have access rights for?
-                if (($temp_arr['access'] == NULL) || (in_array($temp_arr['access'], $access))) {
+                // A systemAdministrator is granted everything inside bx_has_capability().
+                if (bx_has_capability($temp_arr['access'], $access)) {
                     // We have access. However, we don't know if this is a 2nd level menu child
                     // or a third level menu entry. So we use getURLofFirstChild() again and see
                     // if it returns an URL or NULL. If it has no URL as return, then this is either
@@ -1628,7 +1638,8 @@ function MenuChildren($root, $bx_ignore_items, $SiteMap_items, $access=array()) 
                     $temp_arr = elements(array('id', 'order', 'access', 'requiresChildren', 'children'), $par_val, NULL);
                     if ($temp_arr['id'] == $parent_we_search_for) {
                         // Is this an item that anyone can access? Or one that we specifically have access rights for?
-                        if (($temp_arr['access'] == NULL) || (in_array($temp_arr['access'], $access))) {
+                        // A systemAdministrator is granted everything inside bx_has_capability().
+                        if (bx_has_capability($temp_arr['access'], $access)) {
                             // We have access. However, we don't know if this is a 2nd level menu child
                             // or a third level menu entry. So we use getURLofFirstChild() again and see
                             // if it returns an URL or NULL. If it has no URL as return, then this is either
@@ -1768,8 +1779,10 @@ function generateSiteMap($debug = FALSE, $access = '', $CceClient = '', $substit
 
                 // Stuff 'access require' into $item during this post processing:
                 if (isset($l['require'])) {
-                    // But only do so, if the current user has access to it!
-                    if (($l['require'] == NULL) || (in_array($l['require'], $access))) {
+                    // But only do so, if the current user has access to it! A
+                    // systemAdministrator is granted everything inside
+                    // bx_has_capability().
+                    if (bx_has_capability($l['require'], $access)) {
                         $item["parents"]['access'] = $l['require'];
                     }
                     else {
@@ -1881,13 +1894,106 @@ function bx_menu_xml_files(): array {
     return $files;
 }
 
+/**
+ * TRUE if the current user is a CCE systemAdministrator.
+ *
+ * This is the shortcut the whole capability system is built around: a
+ * systemAdministrator may do everything, so neither listAllowed() nor the
+ * menu builder has to enumerate the CapabilityGroups for him. Historically
+ * listAllowed() did enumerate them anyway in order to build the $access
+ * array, which made every admin request depend on the groups being readable.
+ * When that read came back empty - cced restarting right after the
+ * constructors, a rejected capability cache, a stale session - admin ended up
+ * with an EMPTY right set. The GUI then pruned menu items that require a
+ * capability (base_software needs managePackage, for instance) and pages
+ * using such an item as their menu root crashed in MenuChildren() with
+ * "Undefined array key".
+ *
+ * Callers therefore ask this predicate instead of looking for individual
+ * capability names when the question is "may this user see everything?".
+ *
+ * @return bool
+ */
+function bx_is_system_administrator() {
+    static $is_god = NULL;
+
+    if ($is_god !== NULL) {
+        return $is_god;
+    }
+
+    $is_god = FALSE;
+
+    // Preferred source: BX_SESSION, which ServerScriptHelper fills before any
+    // page is rendered. Everything here is defensive: this predicate is also
+    // called from CLI scripts and cron jobs, where there is no CI instance and
+    // get_instance() throws a TypeError because of its return type.
+    try {
+        $CI = get_instance();
+        if (is_object($CI) && method_exists($CI, 'getBX_SESSION')) {
+            $S = $CI->getBX_SESSION();
+            if (isset($S['loginUser']['systemAdministrator'])) {
+                $is_god = ($S['loginUser']['systemAdministrator'] == '1');
+                return $is_god;
+            }
+        }
+    }
+    catch (\Throwable $e) {
+        // No CI4 context - fall through to the session.
+    }
+
+    // Fallback for CLI contexts and for code that runs before BX_SESSION exists.
+    if (isset($_SESSION['loginUser']['systemAdministrator'])) {
+        $is_god = ($_SESSION['loginUser']['systemAdministrator'] == '1');
+    }
+
+    return $is_god;
+}
+
+/**
+ * May the current user see a menu entry that requires $require?
+ *
+ *   $require === NULL   -> no restriction, everybody
+ *   $require is array   -> malformed menu entry (its <parent> block has several
+ *                          <access> children); such an item has always been
+ *                          dropped and stays dropped
+ *   otherwise           -> a capability name: granted without any lookup to a
+ *                          systemAdministrator, checked against $access for
+ *                          everybody else
+ *
+ * Wrapping the three checks in generateSiteMap() / MenuChildren() in one
+ * function keeps the systemAdministrator shortcut from changing anything else:
+ * the resulting sitemap is byte-identical to the one a fully privileged admin
+ * gets today.
+ *
+ * @param mixed $require
+ * @param array $access
+ * @return bool
+ */
+function bx_has_capability($require, $access) {
+    if ($require === NULL) {
+        return TRUE;
+    }
+    if (is_array($require)) {
+        return FALSE;
+    }
+    if (bx_is_system_administrator()) {
+        return TRUE;
+    }
+    return in_array($require, (array)$access);
+}
+
 function bx_menu_version(): string {
     $files = bx_menu_xml_files();
     $h = hash_init('sha1');
     foreach ($files as $f) {
         $st = @stat($f);
         if (!$st) continue;
-        hash_update($h, $f . '|' . $st['mtime'] . '|' . $st['size'] . ';');
+        // ctime as well as mtime: our ISO builds normalise mtimes, so every file
+        // of a package carries the same timestamp. A package that replaces a menu
+        // XML with one of identical size would then not change this version at all
+        // and the cached sitemap would keep being served until it expires. ctime is
+        // set by the kernel when the file is written and is not normalised.
+        hash_update($h, $f . '|' . $st['mtime'] . '|' . $st['ctime'] . '|' . $st['size'] . ';');
     }
     return hash_final($h);
 }
@@ -1912,8 +2018,15 @@ function generateSiteMapCached($access = [], $substitutes = [], $debug = FALSE) 
     sort($access);
     $accessSig = sha1(implode('|', $access));
 
-    // cache WITHOUT substitutes first
-    $cacheKey = "admserv:menu:v{$ver}:raw:acc:{$accessSig}";
+    // cache WITHOUT substitutes first. A systemAdministrator gets the unfiltered
+    // menu, which is a different map than the access-filtered one - so it needs
+    // its own key: one entry for all admins instead of one per access signature.
+    if (bx_is_system_administrator()) {
+        $cacheKey = "admserv:menu:v{$ver}:raw:god";
+    }
+    else {
+        $cacheKey = "admserv:menu:v{$ver}:raw:acc:{$accessSig}";
+    }
 
     // per-request cache
     if (isset($inproc[$cacheKey])) {

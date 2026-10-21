@@ -148,6 +148,16 @@ fi
 
 <begin $CHANGELOG>
 
+* Tue Oct 20 2026 Michael Stauber <mstauber@solarspeed.net> 1.8.9-2
+- pkg_install.pl now drops the per-user capability snapshots
+  (/usr/sausalito/capcache/*_capabilityGroups) after a successful package
+  installation. A package from the shop may ship its own CapabilityGroups - a new
+  group changes the OID set and invalidates the snapshots by itself - but it may
+  also add a capability to a group that already exists, and that keeps the OID set
+  unchanged. The GUI would then have gone on working with the old right set until
+  the snapshot's TTL expired (15 minutes). Dropping them here makes whatever the
+  package brought effective on the next request, for admin and reseller alike.
+
 * Mon Jun 22 2026 Michael Stauber <mstauber@solarspeed.net> 1.8.9-1
 - PKG install with rehashcce/refreshcce/refreshui flags would sometimes
   enter a race condition where CCEd is still down when the status iFrame

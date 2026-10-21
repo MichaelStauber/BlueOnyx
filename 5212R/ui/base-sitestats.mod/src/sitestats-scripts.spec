@@ -1,7 +1,7 @@
 Summary: Server and site statistics for web, ftp, email, and network traffic
 Name: base-sitestats-scripts
 Version: 2.3
-Release: 8%{?dist}
+Release: 9%{?dist}
 Vendor: Project BlueOnyx
 License: Sun modified BSD
 Group: System Environment/BlueOnax
@@ -37,6 +37,16 @@ fi
 
 %changelog
 
+* Tue Nov 03 2026 Greg Kuhnert <gkuhnert@compassnetworks.com.au> 2.3-9
+- am_goaccess.pl: report NOINFO instead of failing when
+  /var/log/httpd/access_log does not exist yet. httpd creates that log
+  lazily, on its first request, so on a fresh boot there is genuinely nothing
+  to parse. It uses the same -e test as the unit's ConditionPathExists=, so
+  the unit and the check cannot disagree about whether the log is there.
+- am_goaccess.pl: when the previous state was N and the log now exists, start
+  the unit directly and report GREEN in the same pass, instead of queueing a
+  restart that the queue holds for QUEUE_WAIT_TIME (10s) while this check
+  rechecks after 3s - which reported one RED pass first.
 * Mon Nov 03 2026 Michael Stauber <mstauber@solarspeed.net> 2.3-8
 - am_monitorix: NOINFO if service disabled/masked (no force-enable); wait 12s
   after restart before RED. Credit: Greg Kuhnert (ISO still shipped 2.3-7).

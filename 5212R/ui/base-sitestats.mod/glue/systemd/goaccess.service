@@ -1,6 +1,12 @@
 [Unit]
 Description = GoAccess - GoAccess is an open source real-time web log analyzer and interactive viewer
 After=nss-lookup.target network.target plymouth-quit-wait.service admserv.service
+# httpd creates /var/log/httpd/access_log lazily, on its first request, not at start. Until that file
+# exists there is nothing for goaccess to parse, so skip the unit rather than let it fail - a failure
+# here is retried at the default 100ms and trips the start limit within a second. The skip is not
+# permanent: the GoAccess ActiveMonitor check tests the same path, reports "not applicable" while the
+# log is absent, and restarts this unit on a later swatch pass once the file is there.
+ConditionPathExists=/var/log/httpd/access_log
 
 [Service]
 Type = simple

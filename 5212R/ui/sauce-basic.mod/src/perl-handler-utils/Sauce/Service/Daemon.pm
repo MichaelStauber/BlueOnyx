@@ -142,8 +142,19 @@ sub process_queue {
         my $current_time = time();
         my $time_difference = $current_time - $timestamp;
 
-        # Stop gets executed (more or less) right away. Anything else must wait for $QUEUE_WAIT_TIME seconds: 
-        if ($event eq 'stop' || (($event eq 'reload' || $event eq 'restart' || $event eq 'condrestart' || $event eq 'condreload') && $time_difference >= $QUEUE_WAIT_TIME)) {
+        # Stop and start get executed (more or less) right away. Anything else must wait for
+        # $QUEUE_WAIT_TIME seconds, so that a burst of restarts fired by one transaction collapses
+        # into a single action:
+        #
+        # 'start' belongs in the immediate group. It has nothing to coalesce with - starting an
+        # already running service is a no-op - and until now it was not executable at all:
+        # Client.pm accepted 'start' and wrote a queue file, this list did not include it, so the
+        # request matched no branch. It was never run and never cleared, and its only exit was the
+        # $QUEUE_PURGE_TIME purge five minutes later, while the GUI reported a pending transaction
+        # for that whole time (DaemonServices.php reads the file count published below, so the
+        # existence of this queue file IS the badge). Callers that pass 'start':
+        # base-mysql's glue/handlers/mysql-runner.pl and base-apache's glue/handlers/reload_httpd.pl.
+        if ($event eq 'stop' || $event eq 'start' || (($event eq 'reload' || $event eq 'restart' || $event eq 'condrestart' || $event eq 'condreload') && $time_difference >= $QUEUE_WAIT_TIME)) {
             my $service = basename($file);
 
             # Special MTA provisions:

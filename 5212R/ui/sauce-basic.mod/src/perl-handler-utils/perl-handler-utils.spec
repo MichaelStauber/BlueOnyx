@@ -1,7 +1,7 @@
 Summary: Perl modules that contain useful utility functions for handlers.
 Name: perl-handler-utils
 Version: 1.8.7
-Release: 2%{?dist}
+Release: 3%{?dist}
 Vendor: %{vendor}
 License: Sun modified BSD
 Group: System Environment/BlueOnyx
@@ -57,6 +57,21 @@ fi
 test "$1" -ge 1 || /bin/systemctl daemon-reload >/dev/null 2>&1 || :
 
 %changelog
+
+* Tue Oct 20 2026 Greg Kuhnert <gkuhnert@compassnetworks.com.au> 1.8.7-3
+- Made Sauce::Service::Daemon execute a queued 'start' event. Client.pm
+  accepted 'start' and wrote the queue file, but the daemon's executable
+  set held only stop, reload, restart, condrestart and condreload, so a
+  'start' request matched no branch: it was never run, never cleared, and
+  its only exit was the QUEUE_PURGE_TIME purge after 300 seconds. The
+  file's existence is what the GUI reports as a pending transaction
+  (DaemonServices.php reads the count published by this daemon), so the
+  interface claimed a service was being restarted for five minutes while
+  nothing was happening. Callers: base-mysql's glue/handlers/mysql-runner.pl
+  and base-apache's glue/handlers/reload_httpd.pl.
+  'start' is executed immediately, in the same group as 'stop', rather than
+  after QUEUE_WAIT_TIME: a second start of a running service is a no-op, so
+  there is nothing for the debounce to collapse.
 
 * Tue Oct 20 2026 Greg Kuhnert <gkuhnert@compassnetworks.com.au> 1.8.7-2
 - Made Sauce/Service/Client.pm write the service queue atomically. It

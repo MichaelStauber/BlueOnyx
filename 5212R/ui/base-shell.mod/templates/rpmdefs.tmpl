@@ -53,6 +53,7 @@ information for [VENDOR]-[SERVICE].
 %attr(0755,-,-) /usr/sausalito/sbin/gauth_check.sh
 %attr(0755,-,-) /usr/sausalito/sbin/jailkit_integrity.pl
 %attr(0755,-,-) /etc/cron.daily/jailkit_integrity
+%attr(0644,-,-) /etc/systemd/system/jailkit.service.d/zz-blueonyx-empty-config.conf
 
 <end glue>
 
@@ -79,6 +80,8 @@ information for [VENDOR]-[SERVICE].
 if [ -d /usr/sausalito/yumcce ];then
         touch /usr/sausalito/yumcce/restart
 fi
+# Make systemd read the jailkit.service drop-in shipped by this package:
+systemctl daemon-reload >/dev/null 2>&1 || :
 
 
 <end glue>
@@ -127,6 +130,23 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+
+* Tue Oct 20 2026 Greg Kuhnert <gkuhnert@compassnetworks.com.au> 1.4-17
+- Added systemd drop-in /etc/systemd/system/jailkit.service.d/
+  zz-blueonyx-empty-config.conf with ConditionFileNotEmpty on
+  /etc/jailkit/jk_socketd.ini. On a virgin install there is no jailed
+  Vsite yet, so update_jk_socketd_ini() legitimately writes an empty
+  jk_socketd.ini and jk_socketd exits 1 with "nothing to do" - which
+  left jailkit.service failed and the system degraded. The unit is now
+  skipped instead of failed while it has no work; enablement policy
+  (jailkit_enabler.pl) and the config writer are unchanged.
+- Added glue/Makefile install rule for systemd drop-ins.
+- Added systemctl daemon-reload to the glue post-install scriptlet so systemd
+  reads the new drop-in immediately on install or upgrade instead of only at
+  the next boot. The call is suppressed with "|| :" so it cannot fail an
+  install where systemd is not running (build chroot, rescue context).
+- The matching am_jailkit.pl changes ship in base-shell-am 1.0.0-4, which is
+  where the Active Monitor script is packaged.
 
 * Thu Sep 17 2026 Michael Stauber <mstauber@solarspeed.net> 1.4-16
 - Fixed Jailkit repair to copy missing executables and libraries with jk_cp.

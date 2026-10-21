@@ -131,6 +131,19 @@ fi
 
 <begin $CHANGELOG>
 
+* Tue Oct 20 2026 Greg Kuhnert <gkuhnert@compassnetworks.com.au> 2.4-17
+- Added ConditionPathExists=/var/log/httpd/access_log to
+  glue/systemd/goaccess.service. httpd creates that log lazily, on its
+  first request, not at start, so a fresh boot could try to start this
+  unit before there was anything to parse. goaccess then exited non-zero
+  and systemd retried it at the default 100ms until "Start request
+  repeated too quickly" left the unit failed - which ActiveMonitor
+  reported as R for GoAccess and for the Sitestats row that aggregates
+  it. The unit is now skipped while the log is absent instead of failing.
+- No ordering was added: the unit's After= line is unchanged. Entry 2.4-13
+  records what an ordering cycle on this unit previously did to
+  multi-user.target.
+
 * Sat Oct 17 2026 Michael Stauber <mstauber@solarspeed.net> 2.4-16
 - Network live chart uses aggnet_chart_labels() so br0 palette strings
   are applied; metrics no longer mix eth0 and br0.

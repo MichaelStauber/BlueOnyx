@@ -609,6 +609,60 @@ EOL
     /usr/bin/systemctl restart spamassassin spamass-milter
 fi
 
+# =============================================
+# CVE-2026-109618 / CVE-2026-109619 (php2shell) - session.upload_progress hedge
+# Drops zz-php2shell-hedge.ini into the php.d of every installed PHP version
+# (OS PHP, Admin GUI PHP and every extra PHP build under /home/solarspeed/).
+# The zz- prefix is deliberate: those scan dirs also hold plain-named files
+# (apcu.ini, imagick.ini, redis.ini, ...) which sort after "99-" but before "zz-".
+# The file content is byte-exact, so bx-php2shell-hedge.sh reports the same state.
+# The matching FPM master is hard-restarted, and only when the file was missing.
+# Fully idempotent - safe for every 15-min Active Monitor run.
+# =============================================
+
+PHP2SHELL_INI="zz-php2shell-hedge.ini"
+PHP2SHELL_SETTING="session.upload_progress.enabled=Off"
+PHP2SHELL_LOGTAG="php2shell-hotfix"
+
+php2shell_hedge()
+{
+    _phpd="$1"
+    _unit="$2"
+
+    [ -d "$_phpd" ] || return 0
+    [ "$(cat "$_phpd/$PHP2SHELL_INI" 2>/dev/null)" = "$PHP2SHELL_SETTING" ] && return 0
+
+    printf '%s\n' "$PHP2SHELL_SETTING" > "$_phpd/$PHP2SHELL_INI" || return 0
+    chmod 0644 "$_phpd/$PHP2SHELL_INI"
+    echo "Created $_phpd/$PHP2SHELL_INI"
+    logger -t "$PHP2SHELL_LOGTAG" "created $_phpd/$PHP2SHELL_INI"
+
+    if [ -n "$_unit" ]; then
+        # Hard restart on purpose - reload is not trusted. try-restart only acts
+        # on a running unit, so dormant extra-PHP pools are not started.
+        if /usr/bin/systemctl try-restart "$_unit" &>/dev/null; then
+            logger -t "$PHP2SHELL_LOGTAG" "try-restart $_unit after ini change"
+        else
+            echo "WARNING: restart of $_unit failed - hedge is on disk, running pool may still be unprotected" >&2
+            logger -t "$PHP2SHELL_LOGTAG" "WARNING: try-restart of $_unit FAILED after writing $_phpd/$PHP2SHELL_INI"
+        fi
+    fi
+}
+
+# OS provided PHP:
+php2shell_hedge "/etc/php.d" "php-fpm"
+
+# Admin GUI PHP:
+php2shell_hedge "/home/solarspeed/admserv-php/etc/php.d" "admserv-php-fpm"
+
+# Every extra PHP version that ships a php.d directory:
+for _php2shell_dir in /home/solarspeed/php-*/etc/php.d; do
+    [ -d "$_php2shell_dir" ] || continue
+    _php2shell_ver="${_php2shell_dir#/home/solarspeed/php-}"
+    _php2shell_ver="${_php2shell_ver%/etc/php.d}"
+    php2shell_hedge "$_php2shell_dir" "php-fpm-$_php2shell_ver"
+done
+
 #
 ### Last rites before exit:
 #

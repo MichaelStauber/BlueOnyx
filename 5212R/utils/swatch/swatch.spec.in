@@ -1,7 +1,7 @@
 Summary: System Watcher
 Name: swatch
 Version: XX_VER_XX
-Release: 12%{?dist}
+Release: 13%{?dist}
 Vendor: Project BlueOnyx
 License: BSD
 Group: System Environment/BlueOnyx
@@ -106,6 +106,17 @@ if [ -f /usr/bin/systemctl ]; then
 fi
 
 %changelog
+
+* Tue Oct 20 2026 Michael Stauber <mstauber@solarspeed.net> 4.1.0-13
+- Added a CVE-2026-109618 / CVE-2026-109619 hedge to hotfixes.sh. It writes
+  zz-php2shell-hedge.ini (session.upload_progress.enabled=Off) into the php.d of
+  the OS PHP, the Admin GUI PHP and every extra PHP build found under
+  /home/solarspeed/, and hard-restarts that FPM master - but only when the file
+  had to be created. The zz- prefix wins over the plain-named files in those
+  scan dirs (apcu.ini, redis.ini, ...) where a 99- prefix would lose, and the
+  content is byte-exact so that the standalone bx-php2shell-hedge.sh tool
+  reports the same state. Idempotent, so the 15-minute Active Monitor run is
+  safe. Remove this block again once a patched PHP is in the repositories.
 
 * Sun Oct 11 2026 Michael Stauber <mstauber@solarspeed.net> 4.1.0-12
 - swatch-cobalt.pl exports CCE AM thresholds as ENV (rThreshhold, ioYellow, ...)

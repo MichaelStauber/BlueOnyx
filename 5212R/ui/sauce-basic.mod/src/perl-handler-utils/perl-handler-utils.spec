@@ -1,7 +1,7 @@
 Summary: Perl modules that contain useful utility functions for handlers.
 Name: perl-handler-utils
 Version: 1.8.7
-Release: 1%{?dist}
+Release: 3%{?dist}
 Vendor: %{vendor}
 License: Sun modified BSD
 Group: System Environment/BlueOnyx
@@ -57,6 +57,40 @@ fi
 test "$1" -ge 1 || /bin/systemctl daemon-reload >/dev/null 2>&1 || :
 
 %changelog
+
+* Tue Oct 20 2026 Greg Kuhnert <gkuhnert@compassnetworks.com.au> 1.8.7-3
+- Made Sauce::Service::Daemon execute a queued 'start' event. Client.pm
+  accepted 'start' and wrote the queue file, but the daemon's executable
+  set held only stop, reload, restart, condrestart and condreload, so a
+  'start' request matched no branch: it was never run, never cleared, and
+  its only exit was the QUEUE_PURGE_TIME purge after 300 seconds. The
+  file's existence is what the GUI reports as a pending transaction
+  (DaemonServices.php reads the count published by this daemon), so the
+  interface claimed a service was being restarted for five minutes while
+  nothing was happening. Callers: base-mysql's glue/handlers/mysql-runner.pl
+  and base-apache's glue/handlers/reload_httpd.pl.
+  'start' is executed immediately, in the same group as 'stop', rather than
+  after QUEUE_WAIT_TIME: a second start of a running service is a no-op, so
+  there is nothing for the debounce to collapse.
+
+* Tue Oct 20 2026 Greg Kuhnert <gkuhnert@compassnetworks.com.au> 1.8.7-2
+- Made Sauce/Service/Client.pm write the service queue atomically. It
+  truncated the queue file with open(..., '>') and wrote the event a
+  moment later, while Sauce/Service/Daemon.pm reads that file on a 15
+  second cycle. A read landing in that gap got an undefined timestamp,
+  computed time() - 0 = ~1.7e9 seconds of age and deleted the entry as
+  "older than allowed" - silently discarding a queued restart. The event
+  is now written to a dot-prefixed temporary file and renamed into place,
+  so a reader sees either the previous contents or the new ones.
+- Client.pm only queues the events the daemon can execute. An unrecognised
+  event was previously truncated into the file with nothing written after
+  it, leaving a zero-byte entry; it is now skipped with a log line, and the
+  call still returns success as it did before.
+- Sauce/Service/Daemon.pm now validates what it reads: an event or
+  timestamp that is missing or unparsable is left in place for the next
+  cycle instead of being treated as infinitely old. A file that is still
+  unreadable after QUEUE_PURGE_TIME is still removed, judged by mtime.
+- Removed a dead `ls -k1` at the top of Daemon.pm::process_queue.
 
 * Tue Dec 09 2025 Michael Stauber <mstauber@solarspeed.net> 1.8.7-1
 - Bugfix in Sauce/Service/Client.pm related to 'start' event.

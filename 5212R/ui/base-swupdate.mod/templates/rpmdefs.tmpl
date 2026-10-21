@@ -148,6 +148,18 @@ fi
 
 <begin $CHANGELOG>
 
+* Tue Oct 20 2026 Greg Kuhnert <gkuhnert@compassnetworks.com.au> 1.8.9-3
+- Modified glue/handlers/yum-update.sh to write its fake Sauce::Service
+  'restart' event for the 'yum' queue entry in one step. It used
+  'echo "restart" > .../services/yum ; date +%s >> ...', which leaves the
+  file empty - and then holding only the event line - for as long as it
+  takes to run date. Sauce/Service/Daemon.pm reads that file on a 15 second
+  cycle, and an event without a timestamp is read as infinitely old, so the
+  entry was deleted as "older than allowed" and the /gui/service page lost
+  the running-update indicator. The event is now written to a dot-prefixed
+  temporary file and renamed into place, which is atomic and invisible to
+  the daemon until complete.
+
 * Tue Oct 20 2026 Michael Stauber <mstauber@solarspeed.net> 1.8.9-2
 - pkg_install.pl now drops the per-user capability snapshots
   (/usr/sausalito/capcache/*_capabilityGroups) after a successful package

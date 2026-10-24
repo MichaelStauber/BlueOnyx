@@ -35,9 +35,14 @@ while (<$fh>)
 
 foreach my $dev (sort {$a cmp $b} keys %{$conf})
 {
-        my $if_num = 0;
+        # Only pin the names of real ethernet interfaces that are already
+        # named ethX. Everything else (bridges, vlans, veth, ovs, ...) must
+        # keep its kernel name - do NOT generate rules for them:
+        next unless ($dev =~ /^eth(\d+)$/);
+        my $if_num = $1;
         my $say_dev = lc($dev);
         my $say_mac = lc($conf->{$dev});
+        next if ($say_mac eq '');
         print "\n# Added by 'write_udev' for detected device '$dev'.\n";
         print "SUBSYSTEM==\"net\", ACTION==\"add\", DRIVERS==\"?*\", ATTR{address}==\"$say_mac\", NAME=\"eth$if_num\"\n";
 }

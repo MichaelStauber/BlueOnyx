@@ -304,6 +304,16 @@ fi
 
 <begin $CHANGELOG>
 
+* Sat Oct 24 2026 Michael Stauber <mstauber@solarspeed.net> 8.20261024-15
+- glue/sbin/write_udev.pl: fixed udev rule generation. The loop counter
+  was initialized inside the loop and never incremented, so every NIC
+  got a rule with NAME="eth0". On multi-NIC machines this produced
+  several rules claiming eth0 and udev rename races at every boot
+  ("Failed to rename ... File exists"). The script now only pins
+  interfaces that are already named ethX to exactly that name and
+  ignores bridges, VLANs, veth and OVS devices entirely, so a %post
+  run can no longer generate rules that rename br0/vlan-br0.X to ethX.
+
 * Sun Oct 18 2026 Michael Stauber <mstauber@solarspeed.net> 8.20261018-14
 - bx_runonce.sh: drop capcache/*_capabilityGroups once the CCEd
   constructors have finished. A browser hitting the GUI during the

@@ -170,16 +170,26 @@ class ServerScriptHelper {
 
                 if (($this->loginName == '') || ($this->sessionId == '')) {
                     self::debug_log("ServerScriptHelper.ServerScriptHelper(): Not running authkey() due to missing loginName/sessionId!");
-                    @session()->destroy();
-                    $data['expired_url'] = $uri['expired'];
-                    session()->set($data);
-                    // A 'return' inside a constructor does NOT end the request: the
-                    // RedirectResponse is discarded and the caller keeps running -
-                    // now with a destroyed session and an unset loginUser, which
-                    // turns into an empty $access list and, from there, into wrong
-                    // menu decisions. So really redirect and stop here.
-                    header('Location: ' . base_url() . 'login');
-                    exit;
+                    // Login and expired routes must be reachable without an
+                    // authenticated CCE session. Redirecting those routes to
+                    // /login creates a self-redirect loop before the login form
+                    // can render. Protected routes still return to the login form.
+                    $requestPath = trim((string) \Config\Services::request()->getPath(), '/');
+                    $isPublicLoginRoute = in_array($requestPath, array('login', 'login_denied'), TRUE)
+                        || (strpos($requestPath, 'expired/true/target/') === 0);
+
+                    if (!$isPublicLoginRoute) {
+                        @session()->destroy();
+                        $data['expired_url'] = $uri['expired'];
+                        session()->set($data);
+                        // A 'return' inside a constructor does NOT end the request: the
+                        // RedirectResponse is discarded and the caller keeps running -
+                        // now with a destroyed session and an unset loginUser, which
+                        // turns into an empty $access list and, from there, into wrong
+                        // menu decisions. So really redirect and stop here.
+                        header('Location: ' . base_url() . 'login');
+                        exit;
+                    }
                 }
 
                 if (($this->loginName != '') && ($this->sessionId != '')) {

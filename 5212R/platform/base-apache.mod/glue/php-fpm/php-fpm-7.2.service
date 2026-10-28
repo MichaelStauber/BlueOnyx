@@ -35,8 +35,7 @@ ProtectKernelLogs=true
 ProtectControlGroups=true
 ProtectClock=true
 ProtectHostname=true
-# No privilege escalation via setuid/setgid binaries from within the service:
-NoNewPrivileges=true
+# Prevent creating setuid/setgid files from within the service:
 RestrictSUIDSGID=true
 # Only native syscalls, only common socket families (netutils still work):
 SystemCallArchitectures=native

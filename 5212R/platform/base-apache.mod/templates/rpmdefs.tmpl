@@ -280,6 +280,14 @@ fi
 <begin $CHANGELOG>
 
 
+* Wed Oct 28 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.9-9
+- php-fpm*.service: drop NoNewPrivileges=true. It blocked setgid
+  /usr/sbin/sendmail (smmsp) when PHP mail() submitted via the local
+  MTA, so chdir(/var/spool/clientmqueue) failed with Permission denied
+  and outbound PHP mail (e.g. 2FA) stopped working. ProtectSystem and
+  the rest of the hardening block stay. RestrictSUIDSGID remains
+  (blocks creating setuid/setgid files; does not strip setgid on exec).
+
 * Tue Oct 27 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.9-8
 - virtual_host.pl: the per-Vsite php/ parent directory is now owned by
   prefered_siteAdmin:siteX with mode 0750 (not root:root 0755). Leaf

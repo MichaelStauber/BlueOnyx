@@ -667,11 +667,15 @@ class BxPage extends Controller {
         $sessionId = $BX_SESSION['sessionId'];
         $loginName = $BX_SESSION['loginName'];
 
-        // Make sure we have a sessionId. If not? Back to /login it is!
+        // Protected GUI only: no session means the expired-login form with the
+        // original path as return target. header+exit (not return redirect) so
+        // callers that discard RedirectResponse still stop. Pages that run
+        // without auth must not construct BxPage.
         if ($sessionId == '') {
             $uri = $CI->bx_get_gui_url();
-            bx_error_log("BxPage: Redirect to /login as we have no sessionId for request-URI: " . $uri['actual']);
-            return redirect()->to(base_url() . $uri['expired']);
+            bx_error_log("BxPage: no sessionId - redirect to expired for URI: " . $uri['actual']);
+            header('Location: ' . base_url() . ltrim($uri['expired'], '/'));
+            exit;
         }
 
         // Find out if serverScriptHelper has already been initialized:

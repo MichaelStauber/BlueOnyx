@@ -103,6 +103,14 @@ information for [VENDOR]-[SERVICE].
 
 <begin $CHANGELOG>
 
+* Tue Oct 27 2026 Michael Stauber <mstauber@solarspeed.net> - 3.4.1-10
+- ServerDiskUsage: do not assume $seen_disks['/'] exists when deriving the
+  quota "unlimited" ceiling. Boxes without a /home Disk (and any request where
+  find/get did not populate '/') 500'd on PHP 8 with Undefined array key "/".
+  Prefer /home, then /, then the largest mounted Disk; skip non-array get()
+  results (-1 from API failures); use mounted=>'1' for FIND; harden AM thresholds.
+
+
 * Mon Jun 29 2026 Michael Stauber <mstauber@blueonyx.it> - 3.4.1-9
 - Fixed XFS quota detection to use /usr/sbin/xfs_quota with an absolute path.
 - Prevents fallback to du-based accounting when PATH is restricted.

@@ -304,6 +304,17 @@ fi
 
 <begin $CHANGELOG>
 
+* Tue Oct 27 2026 Michael Stauber <mstauber@solarspeed.net> 8.20261027-16
+- glue/scripts/init.sh: stop regenerating /etc/machine-id on every
+  base-blueonyx-glue %post. The old unconditional rm +
+  systemd-machine-id-setup rotated the NewLinQ serialNumber identity
+  on routine updates and left surplus rescue kernels in /boot.
+  machine-id is now only created when missing/empty (firstboot).
+- glue/scripts/init.sh: if more than one vmlinuz-0-rescue-* exists,
+  keep the one matching the current machine-id (else newest by mtime),
+  remove the rest (vmlinuz/initramfs/hmac/System.map) and refresh
+  /boot/grub2/grub.cfg. No-op when 0 or 1 rescue image is present.
+
 * Sat Oct 24 2026 Michael Stauber <mstauber@solarspeed.net> 8.20261024-15
 - glue/sbin/write_udev.pl: fixed udev rule generation. The loop counter
   was initialized inside the loop and never incremented, so every NIC

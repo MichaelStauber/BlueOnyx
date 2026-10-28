@@ -56,6 +56,7 @@ information for [VENDOR]-[SERVICE].
 /etc/httpd/conf.d/email-autoconfigure.conf
 /etc/httpd/conf.d/zz-modperl-no-request-phase.conf
 /etc/httpd/conf.perl/00-default-vsite.pl
+%attr(0755,root,root) /usr/sausalito/sbin/force_php_pool_update.pl
 /usr/sausalito/sbin/fix_302_httpd_redirects.pl 
 /usr/sausalito/sbin/fix_web-and-email-server-aliasses.pl 
 /usr/sausalito/sbin/set_default_php_settings.pl
@@ -209,6 +210,30 @@ if [ -f /usr/bin/systemctl ]; then
 	# Copy our modified php-fpm.service over:
 	cp /usr/sausalito/configs/systemd/php-fpm.service /usr/lib/systemd/system/php-fpm.service
 
+	# The php-fpm-X.Y.service unit files ship as RPM files. After an update
+	# systemd needs a daemon-reload and running FPM instances must pick up
+	# the new (hardened) units. try-restart = hard restart of everything
+	# that is running; deliberately dormant FPM versions stay dormant.
+	systemctl daemon-reload --no-block >/dev/null 2>&1 || :
+	if [ $1 -gt 1 ] ; then
+		for svc in php-fpm.service php-fpm-[0-9]*.service; do
+			[ -f /usr/lib/systemd/system/$svc ] || continue
+			systemctl try-restart $svc --no-block >/dev/null 2>&1 || logger -t base-apache "try-restart of $svc after unit update failed"
+		done
+
+		# Ensure all Vsite PHP-FPM pools (and suPHP php.ini copies) have
+		# been written by the current pool generator (per-Vsite temp and
+		# session directories). The script checks the ACTUAL config
+		# state and only fires a rewrite if outdated configs exist -
+		# idempotent, self-healing, no flag files.
+		# Quiet on the RPM CLI: all script output goes to syslog only.
+		# PIPESTATUS[0] is the script exit; logger always succeeds.
+		/usr/sausalito/sbin/force_php_pool_update.pl 2>&1 | logger -t base-apache
+		if [ ${PIPESTATUS[0]} -ne 0 ]; then
+			logger -t base-apache "force_php_pool_update.pl failed - some Vsite pools may be outdated"
+		fi
+	fi
+
 	# Reload
 	systemctl daemon-reload --no-block >/dev/null 2>&1 || :
 
@@ -254,6 +279,84 @@ fi
 
 <begin $CHANGELOG>
 
+
+* Tue Oct 27 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.9-8
+- virtual_host.pl: the per-Vsite php/ parent directory is now owned by
+  prefered_siteAdmin:siteX with mode 0750 (not root:root 0755). Leaf
+  dirs stay as before (php/tmp 1777, php/sessions 0700). Applied on
+  early create, handle_fpm_pools heal, and Web Ownership chown so the
+  whole PHP runtime tree belongs to the site end-to-end.
+
+* Mon Oct 26 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.9-7
+- virtual_host.pl (handle_fpm_pools): each Vsite now gets its own PHP
+  temp directory (/home/.sites/<site>/php/tmp, 1777, siteAdmin:site)
+  and its own session directory (/home/.sites/<site>/php/sessions,
+  0700, siteAdmin:site). The temp directory is set as
+  php_admin_value[sys_temp_dir] and php_admin_value[upload_tmp_dir],
+  the session directory as php_admin_value[session.save_path] (admin
+  level, so customers cannot point sessions back to shared locations).
+  Keeps PHP temporary files and session files inside the Vsite's own
+  tree instead of the shared /tmp and /var/lib/php/session namespaces
+  and makes cross-Vsite session file guessing impossible. Both
+  directories are auto-appended to open_basedir so existing Vsites with
+  open_basedir enabled keep working. Does not change application
+  behaviour.
+- virtual_host.pl (vsite/php.d parser): the operator php_admin_flag is
+  now accepted for options that the GUI does not manage. Previously
+  only php_admin_value, php_value and php_flag were allowed there, so
+  lines like "php_admin_flag display_errors Off" in a
+  wwwroot/php.d/*.ini file were silently dropped. Customer report
+  (Janwillem, site7_include.ini): both php_admin_flag lines vanished.
+  Fixed in the parse filter and the emit loop, so the directive now
+  flows into the vhost (mod_php), the FPM pool and the suPHP php.ini
+  like the other operators. Note: the first-file-wins deduplication
+  is per option name across all php.d/*.ini files of the Vsite - an
+  option already set by another ini file (alphabetically earlier)
+  keeps its value.
+- Added /usr/sausalito/sbin/force_php_pool_update.pl: fires a one-time
+  PHPVsite.force_update on all Vsites to regenerate every FPM pool
+  (and suPHP php.ini) after the update, applying the per-Vsite
+  temp/session directories fleet-wide in one go. Called from %post on every
+  update. Criterion is the actual config state (does each pool config
+  / suPHP php.ini already carry the new directives?), NOT a flag file:
+  idempotent, self-healing (re-repairs mangled pool configs on the
+  next update), and it skips the CCE walk entirely when everything is
+  already current.
+- virtual_host.pl: the per-Vsite php/tmp and php/sessions directories
+  are now created EARLY in the handler run, before any config that
+  references them is written (suPHP php.ini copy and FPM pool file).
+  Previously the directories were only created inside handle_fpm_pools,
+  which runs after the suPHP php.ini edit - leaving a short window
+  where a config could point at a directory that did not exist yet.
+  handle_fpm_pools still re-checks and heals both dirs idempotently.
+- Added UMask=0022 (explicit default: files 644/dirs 755) to all php-fpm
+  systemd units - no behaviour change, documents the intent. Note:
+  systemd-analyze only scores UMask=0077 as hardened, but 0077 would
+  break Apache-served files (Apache runs as apache:apache, not in the
+  siteX groups, so worker-created files must keep world-read or at
+  least group/world readability). 0022 it is - the 0.1 exposure point
+  is deliberately accepted.
+- virtual_host.pl (suPHP path): the per-Vsite php.ini copied for suPHP
+  Vsites now also sets sys_temp_dir/upload_tmp_dir
+  (/home/.sites/<site>/php/tmp) and session.save_path
+  (/home/.sites/<site>/php/sessions) via edit_php_ini, so suPHP Vsites
+  get the same private temp/session isolation as FPM Vsites. The legacy
+  (pre-5.3) ini hash gets upload_tmp_dir and session.save_path only
+  (sys_temp_dir does not exist there).
+- Hardened all systemd unit files for php-fpm (OS) and php-fpm-X.Y
+  (extra PHP versions): ProtectSystem=full, PrivateDevices, ProtectKernel
+  (Tunables/Modules/Logs), ProtectControlGroups, ProtectClock,
+  ProtectHostname, NoNewPrivileges, RestrictSUIDSGID,
+  SystemCallArchitectures=native, RestrictAddressFamilies (UNIX/INET/
+  INET6) and LockPersonality. CapabilityBoundingSet limited to
+  CAP_SETUID, CAP_SETGID, CAP_CHOWN, CAP_FOWNER, CAP_DAC_OVERRIDE and
+  CAP_KILL, which is all the FPM master needs to drop worker privileges
+  and manage its sockets. PrivateTmp was already present and is kept.
+  ProtectHome is deliberately NOT set: Vsite docroots live under
+  /home/.sites. admserv-php-fpm is untouched (GUI needs real /tmp).
+  %post now daemon-reloads and try-restarts all installed php-fpm units
+  on package updates, so running FPM masters pick up the hardened units
+  while dormant PHP versions stay dormant.
 
 * Sat Oct 17 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.9-6
 - php-fpm.service: add RuntimeDirectory=php-fpm so /run/php-fpm exists

@@ -11,6 +11,42 @@ EnvironmentFile=/etc/sysconfig/php-fpm
 ExecStart=/home/solarspeed/php-8.5/sbin/php-fpm --nodaemonize
 ExecReload=/bin/kill -USR2 $MAINPID
 PrivateTmp=true
+# Explicit default umask (files 644, dirs 755) so service-created
+# files stay readable by Apache (which runs as apache:apache and is NOT
+# in the siteX groups). Documents the intent; does NOT change the
+# systemd-analyze exposure score (only 0077 would, which would break
+# Apache-served files - see base-apache changelog).
+UMask=0022
+
+# --- Hardening (Phase 1, see base-apache changelog) ---
+# ProtectSystem=full: /usr, /boot, /efi, /etc are read-only for this service.
+# PHP-FPM pools never legitimately write there (docroots are /home/.sites,
+# temp files go to the PrivateTmp namespace or /var). ProtectHome must NOT
+# be enabled here: all Vsite docroots live under /home/.sites.
+ProtectSystem=full
+# PrivateDevices: only pseudo-devices (/dev/null, /dev/urandom, ...) remain
+# visible - PHP needs no real device nodes.
+PrivateDevices=true
+# Protect the kernel interfaces and the host identity from a compromised
+# PHP-FPM master or worker:
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+# No privilege escalation via setuid/setgid binaries from within the service:
+NoNewPrivileges=true
+RestrictSUIDSGID=true
+# Only native syscalls, only common socket families (netutils still work):
+SystemCallArchitectures=native
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+# Lock the execution domain:
+LockPersonality=true
+# The FPM master only needs to drop worker privileges, chown/chmod the
+# sockets, and signal its children. Everything else is stripped:
+CapabilityBoundingSet=CAP_SETUID CAP_SETGID CAP_CHOWN CAP_FOWNER CAP_DAC_OVERRIDE CAP_KILL
+
 Restart=on-failure
 
 [Install]

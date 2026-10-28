@@ -170,26 +170,16 @@ class ServerScriptHelper {
 
                 if (($this->loginName == '') || ($this->sessionId == '')) {
                     self::debug_log("ServerScriptHelper.ServerScriptHelper(): Not running authkey() due to missing loginName/sessionId!");
-                    // Login and expired routes must be reachable without an
-                    // authenticated CCE session. Redirecting those routes to
-                    // /login creates a self-redirect loop before the login form
-                    // can render. Protected routes still return to the login form.
-                    $requestPath = trim((string) \Config\Services::request()->getPath(), '/');
-                    $isPublicLoginRoute = in_array($requestPath, array('login', 'login_denied'), TRUE)
-                        || (strpos($requestPath, 'expired/true/target/') === 0);
-
-                    if (!$isPublicLoginRoute) {
-                        @session()->destroy();
-                        $data['expired_url'] = $uri['expired'];
-                        session()->set($data);
-                        // A 'return' inside a constructor does NOT end the request: the
-                        // RedirectResponse is discarded and the caller keeps running -
-                        // now with a destroyed session and an unset loginUser, which
-                        // turns into an empty $access list and, from there, into wrong
-                        // menu decisions. So really redirect and stop here.
-                        header('Location: ' . base_url() . 'login');
-                        exit;
-                    }
+                    // Missing credentials must NOT hard-redirect from this
+                    // constructor. Historically this branch used
+                    // return redirect()->to(.../login), which is a no-op inside
+                    // a constructor - so unauthenticated pages (e.g. /base/cron
+                    // for NewLinQ license refresh) kept running, and protected
+                    // UI enforced auth in BxPage via /expired/true/target/... .
+                    // Turning that into header()+exit broke every no-auth page
+                    // and short-circuited BxPage. Skip authkey and continue.
+                    $data['expired_url'] = $uri['expired'];
+                    session()->set($data);
                 }
 
                 if (($this->loginName != '') && ($this->sessionId != '')) {
@@ -207,10 +197,11 @@ class ServerScriptHelper {
                             $CI->setBX_SESSION_sessionId('');
                         }
                         self::debug_log("ServerScriptHelper.ServerScriptHelper(): Cannot authenticate to CCE (login name: $loginName, session ID: $sessionId)");
-                        // Same as above: 'return' in a constructor does not end the
-                        // request. Leaving here would continue with sessionId='' and
-                        // an unset loginUser - i.e. with an empty $access list.
-                        header('Location: ' . base_url() . $uri['expired']);
+                        // Failed authkey() must stop here: continuing would leave
+                        // sessionId='' and no loginUser (empty $access). Send the
+                        // operator to /expired/true/target/<path> so login can
+                        // return them to the page they asked for.
+                        header('Location: ' . base_url() . ltrim($uri['expired'], '/'));
                         exit;
                     }
 

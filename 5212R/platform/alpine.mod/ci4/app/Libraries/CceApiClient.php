@@ -404,7 +404,7 @@ class CceApiClient {
         return $this->callApi($payload);
     }
 
-    function getObject($username = "", $sessionid = "", $class, $vars = array(), $namespace = "") {
+    function getObject($username = "", $sessionid = "", $class = "", $vars = array(), $namespace = "") {
         // Use internal defaults if not passed
         if (empty($username)) {
             $username = $this->username ?? '';
@@ -412,15 +412,16 @@ class CceApiClient {
         if (empty($sessionid)) {
             $sessionid = $this->sessionid ?? '';
         }
-        if (!empty($vars)) {
-            $payload['args'] = $vars;
-        }
 
         $payload = array(
             'cmd' => 'GETOBJECT',
             'class' => $class,
             'namespace' => $namespace
         );
+        // args must be set after $payload is created (was previously assigned first and lost)
+        if (!empty($vars)) {
+            $payload['args'] = $vars;
+        }
 
         // Include user/sessionid ONLY if both are present
         if (!empty($username) && !empty($sessionid)) {

@@ -119,28 +119,22 @@
         <!-- Right Sidebar Menu -->
         <!-- /Right Sidebar Menu -->
 
-        <!-- Main Content -->
-        <div class="page-wrapper" style="margin-left: 0px;">
-            <div class="container-fluid">
-
-                <!-- Title -->
-                <div class="row heading-bg">
-                    <div class="col-lg-3 col-md-4 col-sm-4 col-xs-12">
-                    </div>
-                    <!-- Breadcrumb -->
-                    <!-- /Breadcrumb -->
-                </div>
-                <!-- /Title -->
+        <!-- Main Content
+             Short pages (403/404/…): sit in the upper-middle of the viewport
+             (old absolute top:30% look), not dead geometric center.
+             Long pages (/base/cron): stay in document flow, never clip the
+             blue header, scroll normally. "safe center" falls back to start
+             when the card is taller than the viewport. -->
+        <div class="page-wrapper" style="margin-left: 0px; min-height: 100vh;">
+            <div class="container-fluid bx-minimalist-stage" style="min-height: 100vh; display: flex; flex-direction: column; justify-content: safe center; align-items: center; padding: max(1.25rem, 6vh) 1rem max(1.25rem, 28vh); box-sizing: border-box;">
 
                 <!-- End: header_view.php --> 
 
                 <!-- GUI Content -->
-                <div class="row">
-					<br>
-					<div id="main_container" class="container_16">                    
+					<div id="main_container" class="container_16" style="width: 100%; max-width: 720px; margin: 0 auto; flex: 0 0 auto;">
 						<!-- PagedBlock ErrorPages -->
 	                    <input id="SelectedTab" type="hidden" name="SelectedTab" value="basicSettingsTab" />
-	                    <div class="col-md-6" style="position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%);">
+	                    <div class="bx-minimalist-card" style="width: 100%;">
 	                        <div class="panel panel-default  card-view">
 	                            <div class="panel-heading" style="background: #1C5EA0">
 	                                <div class="pull-left">
@@ -174,8 +168,8 @@
 	                                </div><!-- /panel-body -->
 	                            </div><!-- /panel-wrapper -->
 	                        </div>
-		        			<div class="row">
-		        				<div class="col-md-6 ml-10">
+	        				<div class="row" style="position: relative; min-height: 48px; margin-top: 8px;">
+	        					<div class="col-md-12 ml-10" style="position: relative; min-height: 48px;">
 			                        <a href="/gui">
 			                            <span>
 			                                <svg viewBox="0 0 90 90" height="65.83812268091626" width="344.2851548328011" style="width: 344.285px; height: 65.8381px; position: absolute; top: 9px; left: 30px; z-index: 0; cursor: pointer; overflow: visible; transform: translate(-50%, -50%) scale(0.60415);"><defs id="SvgjsDefs2532"><linearGradient id="SvgjsLinearGradient2539"><stop id="SvgjsStop2540" stop-color="#2d388a" offset="0"></stop><stop id="SvgjsStop2541" stop-color="#00aeef" offset="1"></stop></linearGradient></defs><g id="SvgjsG2533" featurekey="v37d4h-0" transform="matrix(0.8427388072013855,0,0,0.8427388072013855,-1.373664294987499,-11.746093633286709)" fill="url(#SvgjsLinearGradient2539)"><polygon xmlns="http://www.w3.org/2000/svg" points="42.021,89.823 98.369,53.589 82.566,61.219 82.574,61.292 82.527,61.238 82.264,61.365 82.281,61.389 "></polygon><polygon xmlns="http://www.w3.org/2000/svg" points="79.395,61.174 38.895,57.391 36.811,91.25 "></polygon><polygon xmlns="http://www.w3.org/2000/svg" points="3.71,38.712 34.918,92.062 37.066,57.146 "></polygon><polygon xmlns="http://www.w3.org/2000/svg" points="95.209,45.172 80.775,27.29 79.232,32.516 95.928,46.175 "></polygon><polygon xmlns="http://www.w3.org/2000/svg" points="98.135,50.979 79.758,35.645 82.281,58.632 "></polygon><polygon xmlns="http://www.w3.org/2000/svg" points="61.512,33.498 79.758,54.504 77.424,33.356 "></polygon><polygon xmlns="http://www.w3.org/2000/svg" points="59.756,34.836 39.467,54.979 80.432,58.808 "></polygon><polygon xmlns="http://www.w3.org/2000/svg" points="58.445,33.191 36.674,27.365 38.974,52.971 "></polygon><polygon xmlns="http://www.w3.org/2000/svg" points="37.133,54.393 34.822,28.537 6.776,37.639 "></polygon><polygon xmlns="http://www.w3.org/2000/svg" points="8.923,35.031 34.527,26.292 25.659,19.867 "></polygon><polygon xmlns="http://www.w3.org/2000/svg" points="1.63,26.184 3.25,37.485 20.957,21.022 "></polygon><polygon xmlns="http://www.w3.org/2000/svg" points="28.355,14.604 7.837,21.987 26.101,17.109 "></polygon><polygon xmlns="http://www.w3.org/2000/svg" points="36.751,24.86 60.131,31.196 77.148,30.907 78.672,25.749 67.951,19.853 48.173,14.486 32.256,13.938 28.073,18.586   "></polygon></g>
@@ -188,11 +182,9 @@
 			                            </span>
 			                        </a>
                         		</div>
-		        			</div>
+	        				</div>
 	                    </div>
 					</div>
-		        </div>
-		        <!-- Closes '<div class="row">' -->
                 <!-- /GUI Content -->
 
                 <!-- End: gui_view.php --> 

@@ -218,13 +218,25 @@ class ServerDiskUsage extends BaseController {
         $usage_list->setColumnWidths(array("20", "50", "120", "120", "449")); // Max: 739px
         
         // only display partitions that are mounted
+        // Use string '1' (CCE scalar), not boolean true - JSON/API backends
+        // can drop or mis-match a PHP boolean in FIND args.
         $sort_index = $usage_list->getSortedIndex();
         if ($sort_index == 1) {
-            $partitions = $CI->cceClient->findSorted('Disk', 'mountPoint', array('mounted' => true));
+            $partitions = $CI->cceClient->findSorted('Disk', 'mountPoint', array('mounted' => '1'));
         }
         else {
             $sort_map = array(2 => 'used', 3 => 'total');
-            $partitions = $CI->cceClient->findNSorted('Disk', $sort_map[2], array('mounted' => true));
+            $partitions = $CI->cceClient->findNSorted('Disk', $sort_map[2], array('mounted' => '1'));
+        }
+        if (!is_array($partitions)) {
+            $partitions = array();
+        }
+        // Fall back to unsorted find if sorted find came back empty but Disks exist.
+        if (count($partitions) == 0) {
+            $partitions = $CI->cceClient->find('Disk', array('mounted' => '1'));
+            if (!is_array($partitions)) {
+                $partitions = array();
+            }
         }
             
         if ($usage_list->getSortOrder() == 'descending') {
@@ -233,16 +245,30 @@ class ServerDiskUsage extends BaseController {
 
         // get AM object for quota percents and stuff
         $am_obj = $CI->cceClient->getObject('ActiveMonitor', array(), 'Disk');
+        if (!is_array($am_obj)) {
+            $am_obj = array();
+        }
+        $am_red = isset($am_obj['red_pcnt']) ? (int)$am_obj['red_pcnt'] : 95;
+        $am_yellow = isset($am_obj['yellow_pcnt']) ? (int)$am_obj['yellow_pcnt'] : 90;
 
         $seen_disks = array();
+        $unlimited = null;
         for ($i = 0; ($i < count($partitions)); $i++) {
             //refresh partition info first
             $CI->cceClient->set($partitions[$i], '', array('refresh' => time()));
             $disk = $CI->cceClient->get($partitions[$i]);
 
+            // CceClient::get() returns -1 on API failure - never index that.
+            if ((!is_array($disk)) || (!isset($disk['mountPoint'])) || ($disk['mountPoint'] === '')) {
+                continue;
+            }
+
             $seen_disks[$disk['mountPoint']] = $disk;
-            
-            if ($disk['used'] && $disk['total']) {
+
+            $percent = 0;
+            $used = '0';
+            $total = '0';
+            if ((isset($disk['used'])) && (isset($disk['total'])) && ($disk['total'])) {
                 $percent = round(100 * ($disk['used'] / $disk['total']));
                 $used = simplify_number($disk['used']*1024, "KB", "1");
                 $total = simplify_number($disk['total']*1024, "KB", "1");
@@ -255,10 +281,10 @@ class ServerDiskUsage extends BaseController {
             $total_field = $factory->getInteger("total$i", $total, '', '', 'r');
             $total_field->setPreserveData(false);
             
-            if ($percent > $am_obj['red_pcnt']) {
+            if ($percent > $am_red) {
                 $status = $factory->getStatusSignal('severeProblem');
             }
-            elseif ($percent > $am_obj['yellow_pcnt']) {
+            elseif ($percent > $am_yellow) {
                 $status = $factory->getStatusSignal('problem');
             }
             else {
@@ -268,6 +294,7 @@ class ServerDiskUsage extends BaseController {
             // On an OpenVZ VPS or on AWS we only have one partition, although for sake of 
             // compatability we also have "/home" as Object "Disk". But this is not a real 
             // partition. Hence we want to hide it here:
+            // /home is the synthetic quota ceiling when present.
             if ($disk['mountPoint'] == '/home') {
                 $unlimited = $disk['total'];
             }
@@ -300,10 +327,26 @@ class ServerDiskUsage extends BaseController {
             }
         }
 
-        // If all fails, assume / and set $unlimited so it's not undefined:
+        // Quota "unlimited" ceiling for user/group tables below:
+        // prefer /home (VPS/AWS), then real root /, then the largest Disk we saw.
+        // Never index $seen_disks['/'] without isset - boxes without a populated
+        // '/' key (empty find, failed get, no /home) used to 500 here on PHP 8.
         $unlimited_text = $i18n->get('[[base-disk.unlimited]]');
-        if (!isset($unlimited)) {
-            $unlimited = $seen_disks['/']['total'];
+        if (($unlimited === null) || ($unlimited === '')) {
+            if (isset($seen_disks['/home']['total'])) {
+                $unlimited = $seen_disks['/home']['total'];
+            }
+            elseif (isset($seen_disks['/']['total'])) {
+                $unlimited = $seen_disks['/']['total'];
+            }
+            else {
+                $unlimited = 0;
+                foreach ($seen_disks as $d) {
+                    if ((is_array($d)) && (isset($d['total'])) && ((int)$d['total'] > (int)$unlimited)) {
+                        $unlimited = $d['total'];
+                    }
+                }
+            }
         }
 
         // Push out the Scrollist with the partition disk usage:

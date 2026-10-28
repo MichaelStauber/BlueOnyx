@@ -491,7 +491,7 @@ sub edit_vhost
                 &debug_msg("Pushing $php_operator|$php_flag|$php_value \n");
                 if (!$vsite_php_settings_writeoff_extra->{"$php_flag"}) {
                     # Preventing duplicates, first one wins.
-                    if (($php_operator eq "php_admin_value") || ($php_operator eq "php_value") || ($php_operator eq "php_flag")) {
+                    if (($php_operator eq "php_admin_value") || ($php_operator eq "php_admin_flag") || ($php_operator eq "php_value") || ($php_operator eq "php_flag")) {
                         if ((length($php_operator) gt "0") && (length($php_flag) gt "0") && (length($php_value) gt "0")) {
                             push(@php_vars_that_need_changing_the_hard_way, ("$php_operator|$php_flag|$php_value"));
                             $vsite_php_settings_writeoff_extra->{"$php_flag"} = "$php_value";
@@ -521,7 +521,7 @@ sub edit_vhost
         $php_fpm_extra_cfg  = "";
         foreach (@php_vars_that_need_changing_the_hard_way) {
             ($php_operator, $php_flag, $php_value) = split(/\|/, $_);
-            if (($php_operator eq "php_admin_value") || ($php_operator eq "php_value") || ($php_operator eq "php_flag")) {
+            if (($php_operator eq "php_admin_value") || ($php_operator eq "php_admin_flag") || ($php_operator eq "php_value") || ($php_operator eq "php_flag")) {
                 if ((length($php_operator) gt "0") && (length($php_flag) gt "0") && (length($php_value) gt "0")) {
                     $php_extra_cfg .=  "$php_operator $php_flag $php_value\n";
                     $php_fpm_extra_cfg .=  "$php_operator" . '[' . "$php_flag" . ']' . " = $php_value\n";
@@ -698,6 +698,34 @@ sub edit_vhost
     # Handle custom php.ini for suPHP enabled sites:
     $basedir_vsite = $vsite->{"basedir"};
     $custom_php_ini_path = $vsite->{'basedir'} . "/wwwroot/php.ini";
+
+    # Ensure the per-Vsite PHP temp and session directories exist BEFORE
+    # any config referencing them is written (the suPHP php.ini below or
+    # the FPM pool file further down). PHP does not create these dirs on
+    # its own; a config pointing at a missing dir breaks uploads and
+    # sessions. handle_fpm_pools re-checks and heals them idempotently.
+    # Parent php/ belongs to the siteAdmin (like wwwroot content trees),
+    # not root - siteAdmin must own the runtime tree end-to-end.
+    $vsite_php_dir = $basedir_vsite . '/php';
+    $vsite_php_tmp_dir = $vsite_php_dir . '/tmp';
+    $vsite_php_sessions_dir = $vsite_php_dir . '/sessions';
+    my $early_dir_uid = $vsite_php->{'prefered_siteAdmin'};
+    if ($early_dir_uid eq "" || !user_exists($early_dir_uid)) {
+        $early_dir_uid = 'apache';
+    }
+    my $early_dir_gid = $vsite->{"name"};
+    for my $vdir ($vsite_php_tmp_dir, $vsite_php_sessions_dir) {
+        if (! -d $vdir) {
+            system('/bin/mkdir', '-p', $vdir);
+            &debug_msg("Created per-Vsite PHP directory $vdir\n");
+        }
+    }
+    system('/bin/chown', $early_dir_uid . ':' . $early_dir_gid, $vsite_php_dir);
+    system('/bin/chmod', '0750', $vsite_php_dir);
+    system('/bin/chown', $early_dir_uid . ':' . $early_dir_gid, $vsite_php_tmp_dir);
+    system('/bin/chmod', '1777', $vsite_php_tmp_dir);
+    system('/bin/chown', $early_dir_uid . ':' . $early_dir_gid, $vsite_php_sessions_dir);
+    system('/bin/chmod', '0700', $vsite_php_sessions_dir);
     
     # If it exists, use the php.ini of the version of PHP specified:
     if ( -f $known_php_inis{$vsite_php->{'version'}}) {
@@ -794,6 +822,25 @@ sub edit_vhost
                 if (-d "$vsite_basedir/vhosts") {
                     &debug_msg("/bin/chown -R $new_owner:$new_GID $vsite_basedir/vhosts\n");
                     system("/bin/chown -R $new_owner:$new_GID $vsite_basedir/vhosts");
+                }
+
+                # Per-Vsite PHP runtime tree (php/tmp, php/sessions and any
+                # files already written there). Must follow prefered_siteAdmin
+                # the same way /web does - otherwise a siteAdmin change leaves
+                # session/temp files owned by the previous pool user and the
+                # new FPM/suPHP worker cannot read or rotate them.
+                if (-d "$vsite_basedir/php") {
+                    &debug_msg("/bin/chown -R $new_owner:$new_GID $vsite_basedir/php\n");
+                    system("/bin/chown -R $new_owner:$new_GID $vsite_basedir/php");
+                    # Restore intentional modes after recursive chown of the tree:
+                    # parent site-private; tmp sticky world-writable; sessions private.
+                    system('/bin/chmod', '0750', "$vsite_basedir/php");
+                    if (-d "$vsite_basedir/php/tmp") {
+                        system('/bin/chmod', '1777', "$vsite_basedir/php/tmp");
+                    }
+                    if (-d "$vsite_basedir/php/sessions") {
+                        system('/bin/chmod', '0700', "$vsite_basedir/php/sessions");
+                    }
                 }
             }
         }
@@ -1446,6 +1493,12 @@ sub edit_php_ini {
                 'mail.add_x_header' => 'On',
                 'sendmail_path' => '/usr/sausalito/sbin/phpsendmail -t',
                 'auto_prepend_file' => '/usr/sausalito/configs/php/set_php_headers.php',
+                # Per-Vsite temp and session directories (see handle_fpm_pools;
+                # handle_fpm_pools creates them regardless of whether FPM or
+                # suPHP serves this Vsite):
+                'sys_temp_dir' => $basedir_vsite . '/php/tmp',
+                'upload_tmp_dir' => $basedir_vsite . '/php/tmp',
+                'session.save_path' => $basedir_vsite . '/php/sessions',
                 'date.timezone' => "'" . $timezone . "'",
                 'mysql.default_socket' => '/var/lib/mysql/mysql.sock',
                 'mysqli.default_socket' => '/var/lib/mysql/mysql.sock',
@@ -1562,6 +1615,35 @@ sub handle_fpm_pools {
     # Get group just to be sure:
     $pool_group = $vsite->{"name"};
 
+    # Per-Vsite PHP directories: temp (sys_temp_dir / upload_tmp_dir)
+    # and sessions (session.save_path). Both live under the Vsite's own
+    # tree instead of the shared /tmp and /var/lib/php/session
+    # namespaces, so temporary files cannot be mixed up across Vsites
+    # and cross-Vsite session file guessing is impossible. Hardening
+    # measure that does not change application behaviour.
+    # Parent php/ is owned by the pool user (siteAdmin), mode 0750 -
+    # same ownership model as the leaf dirs, not root.
+    $vsite_php_dir = $vsite_basedir . '/php';
+    $vsite_php_tmp_dir = $vsite_php_dir . '/tmp';
+    $vsite_php_sessions_dir = $vsite_php_dir . '/sessions';
+    if (! -d $vsite_php_tmp_dir) {
+        system('/bin/mkdir', '-p', $vsite_php_tmp_dir);
+        &debug_msg("Created per-Vsite PHP temp directory $vsite_php_tmp_dir\n");
+    }
+    if (! -d $vsite_php_sessions_dir) {
+        system('/bin/mkdir', '-p', $vsite_php_sessions_dir);
+        &debug_msg("Created per-Vsite PHP session directory $vsite_php_sessions_dir\n");
+    }
+    # Heal permissions/ownership: parent is site-private (0750);
+    # temp is world-writable like /tmp but sticky; sessions only for
+    # the pool user (PHP docs recommendation for session dirs).
+    system('/bin/chown', $pool_UID . ':' . $pool_group, $vsite_php_dir);
+    system('/bin/chmod', '0750', $vsite_php_dir);
+    system('/bin/chown', $pool_UID . ':' . $pool_group, $vsite_php_tmp_dir);
+    system('/bin/chmod', '1777', $vsite_php_tmp_dir);
+    system('/bin/chown', $pool_UID . ':' . $pool_group, $vsite_php_sessions_dir);
+    system('/bin/chmod', '0700', $vsite_php_sessions_dir);
+
     # Pool directory:
     &debug_msg("Using " . $vsite_php->{'version'} . " pool directory: $known_php_fpm_pool_directories{$vsite_php->{'version'}} \n");
     $pool_directory = $known_php_fpm_pool_directories{$vsite_php->{'version'}};
@@ -1651,9 +1733,9 @@ sub handle_fpm_pools {
         }
         $pool_conf .= 'pm.max_requests = ' . $fpm_max_requests . "\n";
         $pool_conf .= '' . "\n";
-        $pool_conf .= '; Set session path to a directory owned by process user' . "\n";
+        $pool_conf .= '; Set session path to the per-Vsite session directory:' . "\n";
         $pool_conf .= 'php_value[session.save_handler] = files' . "\n";
-        $pool_conf .= 'php_value[session.save_path] = /var/lib/php/session' . "\n";
+        $pool_conf .= 'php_admin_value[session.save_path] = ' . $vsite_php_sessions_dir . "\n";
         $pool_conf .= '' . "\n";
         $pool_conf .= '; PHP Vsite settings' . "\n";
 
@@ -1701,8 +1783,25 @@ sub handle_fpm_pools {
         }
 
         if ($PHP_Vsite->{"open_basedir"} ne "") {
+            # Make sure the per-Vsite PHP temp and session directories are
+            # reachable even if open_basedir is on. Do NOT touch the special
+            # value "none" (open_basedir deliberately disabled for this Vsite):
+            # appending paths would turn it into a restrictive list.
+            my $obd = $PHP_Vsite->{"open_basedir"};
+            if ($obd ne 'none') {
+                for my $vdir ($vsite_php_tmp_dir, $vsite_php_sessions_dir) {
+                    if ($obd !~ m#^$vdir/?$# and $obd !~ m#:$vdir/?$# and $obd !~ m#:$vdir/#) {
+                        $obd = $obd . ':' . $vdir . '/';
+                    }
+                }
+                $PHP_Vsite->{"open_basedir"} = $obd;
+            }
             $pool_conf .= 'php_admin_value[open_basedir] = ' . $PHP_Vsite->{"open_basedir"} . "\n";
         }
+
+        # Per-Vsite temp directories - see $vsite_php_tmp_dir above:
+        $pool_conf .= 'php_admin_value[sys_temp_dir] = ' . $vsite_php_tmp_dir . "\n";
+        $pool_conf .= 'php_admin_value[upload_tmp_dir] = ' . $vsite_php_tmp_dir . "\n";
 
         if ($PHP_Vsite->{"post_max_size"} ne "") {
             $pool_conf .= 'php_admin_value[post_max_size] = ' . $PHP_Vsite->{"post_max_size"} . "\n"; 

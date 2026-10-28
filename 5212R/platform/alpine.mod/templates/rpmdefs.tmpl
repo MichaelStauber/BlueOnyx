@@ -236,6 +236,39 @@ fi
 
 <begin $CHANGELOG>
 
+* Tue Oct 27 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-56
+- CceApiClient::getObject(): give $class a default so optional $username/
+  $sessionid are not declared before a required parameter (PHP 8 deprecation
+  spam on pages that call getObject). Also assign payload args after the
+  payload array is created so FIND criteria are not silently dropped.
+- uifc_ng_helper: replace deprecated ${var} string interpolation with {$var}
+  in simplify_number / simplify_number_diskspace sprintf formats.
+
+
+* Tue Oct 27 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-55
+- elmer_minimalist_view: bias short cards toward the upper third (asymmetric
+  padding + justify-content: safe center) so 404-style pages are not parked
+  in the geometric middle; tall pages still start at the top without clipping.
+
+
+* Tue Oct 27 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-54
+- elmer_minimalist_view: replace absolute top:30%/translate centering with a
+  min-height 100vh flex column. Short error pages stay vertically centered;
+  long content (e.g. /base/cron license list) stays in document flow so the
+  blue header is never clipped and the page can scroll.
+
+
+* Tue Oct 27 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-53
+- ServerScriptHelper: do not header+exit on missing credentials. That path
+  used to be a no-op return redirect() inside the constructor, which let
+  intentional no-auth pages (e.g. /base/cron / NewLinQ license refresh) run
+  and left protected UI auth to BxPage via /expired/true/target/... . Making
+  the redirect real broke no-auth pages and sent bare /login without a return
+  target. Failed authkey() still hard-redirects to the expired URL.
+- BxPage: on empty sessionId use header+exit to /expired/true/target/... so
+  discarded RedirectResponse cannot leave protected pages running unauth.
+
+
 * Tue Oct 20 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-52
 - Addressed undesired /login redirects
 

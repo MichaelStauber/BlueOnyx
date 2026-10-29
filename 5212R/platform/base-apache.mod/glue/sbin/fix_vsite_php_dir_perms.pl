@@ -84,8 +84,14 @@ sub ensure_real_dir {
         return 0;
     }
 
-    system('/bin/chown', '--', "$owner:$group", $path);
-    system('/bin/chmod', sprintf('%04o', $mode_oct), $path);
+    if (system('/bin/chown', '--', "$owner:$group", $path) != 0) {
+        print "FAILED chown $owner:$group $path (exit $?)\n";
+        return 0;
+    }
+    if (system('/bin/chmod', sprintf('%04o', $mode_oct), $path) != 0) {
+        print "FAILED chmod " . sprintf('%04o', $mode_oct) . " $path (exit $?)\n";
+        return 0;
+    }
     return 1;
 }
 
@@ -110,10 +116,23 @@ sub heal_vsite_php {
     for my $leaf ($tmp, $sess) {
         my @lst = lstat($leaf);
         next unless (@lst && -d _ && ! -l _);
-        system('/bin/chown', '-R', '--', "$leaf_uid:$leaf_gid", $leaf);
+        if (system('/bin/chown', '-R', '--', "$leaf_uid:$leaf_gid", $leaf) != 0) {
+            print "FAILED chown -R $leaf_uid:$leaf_gid $leaf (exit $?)\n";
+            return 0;
+        }
     }
-    system('/bin/chmod', '1777', $tmp)  if (-d $tmp  && ! -l $tmp);
-    system('/bin/chmod', '0700', $sess) if (-d $sess && ! -l $sess);
+    if (-d $tmp && ! -l $tmp) {
+        if (system('/bin/chmod', '1777', $tmp) != 0) {
+            print "FAILED chmod 1777 $tmp (exit $?)\n";
+            return 0;
+        }
+    }
+    if (-d $sess && ! -l $sess) {
+        if (system('/bin/chmod', '0700', $sess) != 0) {
+            print "FAILED chmod 0700 $sess (exit $?)\n";
+            return 0;
+        }
+    }
 
     return 1;
 }

@@ -715,7 +715,9 @@ sub edit_vhost
         $early_dir_uid = 'apache';
     }
     my $early_dir_gid = $vsite->{"name"};
-    ensure_vsite_php_runtime_dirs($basedir_vsite, $early_dir_uid, $early_dir_gid);
+    unless (ensure_vsite_php_runtime_dirs($basedir_vsite, $early_dir_uid, $early_dir_gid)) {
+        &debug_msg("WARNING: ensure_vsite_php_runtime_dirs failed for $basedir_vsite (early create)\n");
+    }
     
     # If it exists, use the php.ini of the version of PHP specified:
     if ( -f $known_php_inis{$vsite_php->{'version'}}) {
@@ -819,17 +821,33 @@ sub edit_vhost
                 # prefered_siteAdmin. Never chown -R the parent - that
                 # re-opens the siteAdmin-writable parent LPE.
                 if (-d "$vsite_basedir/php") {
-                    ensure_vsite_php_runtime_dirs($vsite_basedir, $new_owner, $new_GID);
-                    # Contents of leaves may still be owned by the previous
-                    # pool user - fix those without touching the parent.
-                    for my $leaf ("$vsite_basedir/php/tmp", "$vsite_basedir/php/sessions") {
-                        my @lst = lstat($leaf);
-                        next unless (@lst && -d _ && ! -l _);
-                        system('/bin/chown', '-R', '--', "$new_owner:$new_GID", $leaf);
+                    # Only heal leaf contents when parent/leaf structure
+                    # was hardened successfully. On helper failure do not
+                    # chown/chmod leaves (parent may still be siteAdmin-owned).
+                    if (ensure_vsite_php_runtime_dirs($vsite_basedir, $new_owner, $new_GID)) {
+                        # Contents of leaves may still be owned by the previous
+                        # pool user - fix those without touching the parent.
+                        for my $leaf ("$vsite_basedir/php/tmp", "$vsite_basedir/php/sessions") {
+                            my @lst = lstat($leaf);
+                            next unless (@lst && -d _ && ! -l _);
+                            if (system('/bin/chown', '-R', '--', "$new_owner:$new_GID", $leaf) != 0) {
+                                &debug_msg("WARNING: chown -R $new_owner:$new_GID $leaf failed (exit $?)\n");
+                            }
+                        }
+                        # Re-assert leaf modes after recursive chown:
+                        if (-d "$vsite_basedir/php/tmp" && ! -l "$vsite_basedir/php/tmp") {
+                            if (system('/bin/chmod', '1777', "$vsite_basedir/php/tmp") != 0) {
+                                &debug_msg("WARNING: chmod 1777 $vsite_basedir/php/tmp failed (exit $?)\n");
+                            }
+                        }
+                        if (-d "$vsite_basedir/php/sessions" && ! -l "$vsite_basedir/php/sessions") {
+                            if (system('/bin/chmod', '0700', "$vsite_basedir/php/sessions") != 0) {
+                                &debug_msg("WARNING: chmod 0700 $vsite_basedir/php/sessions failed (exit $?)\n");
+                            }
+                        }
+                    } else {
+                        &debug_msg("WARNING: ensure_vsite_php_runtime_dirs failed for $vsite_basedir (web-owner change) - skipping leaf content chown\n");
                     }
-                    # Re-assert leaf modes after recursive chown:
-                    system('/bin/chmod', '1777', "$vsite_basedir/php/tmp") if (-d "$vsite_basedir/php/tmp" && ! -l "$vsite_basedir/php/tmp");
-                    system('/bin/chmod', '0700', "$vsite_basedir/php/sessions") if (-d "$vsite_basedir/php/sessions" && ! -l "$vsite_basedir/php/sessions");
                 }
             }
         }
@@ -1612,7 +1630,9 @@ sub handle_fpm_pools {
     $vsite_php_dir = $vsite_basedir . '/php';
     $vsite_php_tmp_dir = $vsite_php_dir . '/tmp';
     $vsite_php_sessions_dir = $vsite_php_dir . '/sessions';
-    ensure_vsite_php_runtime_dirs($vsite_basedir, $pool_UID, $pool_group);
+    unless (ensure_vsite_php_runtime_dirs($vsite_basedir, $pool_UID, $pool_group)) {
+        &debug_msg("WARNING: ensure_vsite_php_runtime_dirs failed for $vsite_basedir (handle_fpm_pools)\n");
+    }
 
     # Pool directory:
     &debug_msg("Using " . $vsite_php->{'version'} . " pool directory: $known_php_fpm_pool_directories{$vsite_php->{'version'}} \n");
@@ -1659,10 +1679,14 @@ sub handle_fpm_pools {
         &debug_msg("Deleting PHP-FPM pool config for $pool_group from all pools (unlinkfile)
 ");
         # Delete pool file from all version dirs, rollback-safe:
-        remove_other_fpm_pool_files('', $pool_group);  # empty keep = remove all
+        unless (remove_other_fpm_pool_files('', $pool_group)) {  # empty keep = remove all
+            &debug_msg("WARNING: remove_other_fpm_pool_files failed while disabling FPM for $pool_group\n");
+        }
         # Also remove the resolved $pool_file if glob missed a path:
         if (defined($pool_file) && $pool_file ne '' && (-e $pool_file || -l $pool_file)) {
-            Sauce::Util::unlinkfile($pool_file);
+            unless (Sauce::Util::unlinkfile($pool_file)) {
+                &debug_msg("WARNING: unlinkfile failed for $pool_file (FPM disable)\n");
+            }
         }
     }
     else {
@@ -1674,7 +1698,9 @@ sub handle_fpm_pools {
         # after a failed CCE txn the site lost its pool (HTTP 503).
         &debug_msg("Removing other-version pool files for $pool_group; keeping $pool_file for editfile
 ");
-        remove_other_fpm_pool_files($pool_file, $pool_group);
+        unless (remove_other_fpm_pool_files($pool_file, $pool_group)) {
+            &debug_msg("WARNING: remove_other_fpm_pool_files failed for $pool_group (keeping $pool_file)\n");
+        }
 
         &debug_msg("Creating PHP-FPM pool config $pool_file through php_vsite_handler.pl \n");
 
@@ -1883,11 +1909,22 @@ sub ensure_vsite_php_runtime_dirs {
     $leaf_gid = 'apache' if (!defined($leaf_gid) || $leaf_gid eq '');
 
     # 1) Parent first (root-owned) - closes the rename/symlink race.
-    _ensure_real_dir($php_dir, 'root', 'root', 0755);
+    #    If this fails, do NOT touch leaves (siteAdmin-owned parent + leaf
+    #    chown/chmod is the LPE surface we are closing).
+    unless (_ensure_real_dir($php_dir, 'root', 'root', 0755)) {
+        &debug_msg("ensure_vsite_php_runtime_dirs: FAILED to harden parent $php_dir - aborting leaf steps\n");
+        return 0;
+    }
 
     # 2) Leaves owned by the pool/siteAdmin user.
-    _ensure_real_dir($tmp_dir, $leaf_uid, $leaf_gid, 01777);
-    _ensure_real_dir($sess_dir, $leaf_uid, $leaf_gid, 0700);
+    unless (_ensure_real_dir($tmp_dir, $leaf_uid, $leaf_gid, 01777)) {
+        &debug_msg("ensure_vsite_php_runtime_dirs: FAILED on $tmp_dir\n");
+        return 0;
+    }
+    unless (_ensure_real_dir($sess_dir, $leaf_uid, $leaf_gid, 0700)) {
+        &debug_msg("ensure_vsite_php_runtime_dirs: FAILED on $sess_dir\n");
+        return 0;
+    }
 
     return 1;
 }
@@ -1919,8 +1956,11 @@ sub _ensure_real_dir {
     }
 
     if (! -e $path) {
-        # mkdir without -p on the leaf after parent exists; use -p for parent.
-        system('/bin/mkdir', '-p', '--', $path);
+        # mkdir -p for parent and leaves; check exit status.
+        if (system('/bin/mkdir', '-p', '--', $path) != 0) {
+            &debug_msg("FAILED mkdir -p $path (exit $?)\n");
+            return 0;
+        }
     }
 
     # Refuse to touch if still a symlink (TOCTOU / failed rename).
@@ -1932,16 +1972,24 @@ sub _ensure_real_dir {
 
     # Path-based chown/chmod are safe only while the parent is root-owned
     # and this path is a real directory (checked above).
-    system('/bin/chown', '--', $owner . ':' . $group, $path);
-    system('/bin/chmod', sprintf('%04o', $mode), $path);
+    if (system('/bin/chown', '--', $owner . ':' . $group, $path) != 0) {
+        &debug_msg("FAILED chown $owner:$group $path (exit $?)\n");
+        return 0;
+    }
+    if (system('/bin/chmod', sprintf('%04o', $mode), $path) != 0) {
+        &debug_msg("FAILED chmod " . sprintf('%04o', $mode) . " $path (exit $?)\n");
+        return 0;
+    }
     return 1;
 }
 
 sub remove_other_fpm_pool_files {
     # Remove $pool_group.conf from every php-fpm pool dir EXCEPT $keep_file,
     # using Sauce::Util::unlinkfile so a CCE rollback can restore them.
+    # Returns 1 if all unlinks succeeded (or nothing to do), 0 on any failure.
     my ($keep_file, $pool_group) = @_;
-    return unless (defined($pool_group) && $pool_group ne '');
+    return 1 unless (defined($pool_group) && $pool_group ne '');
+    my $ok = 1;
     my @candidates = glob('/etc/php-fpm.d/' . $pool_group . '.conf');
     push @candidates, glob('/etc/php-fpm-[0-9]*.d/' . $pool_group . '.conf');
     for my $pf (@candidates) {
@@ -1949,8 +1997,12 @@ sub remove_other_fpm_pool_files {
         next if (defined($keep_file) && $keep_file ne '' && $pf eq $keep_file);
         next unless (-e $pf || -l $pf);
         &debug_msg("Removing other-version FPM pool file $pf (unlinkfile)\n");
-        Sauce::Util::unlinkfile($pf);
+        unless (Sauce::Util::unlinkfile($pf)) {
+            &debug_msg("FAILED unlinkfile $pf\n");
+            $ok = 0;
+        }
     }
+    return $ok;
 }
 
 sub user_exists {

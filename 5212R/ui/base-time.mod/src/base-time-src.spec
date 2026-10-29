@@ -1,6 +1,6 @@
 Summary: Miscellaneous parts of base-time.mod.
 Name: base-time-src
-Version: 1.2.2
+Version: 1.2.3
 Release: 1%{?dist}
 Vendor: %{vendor}
 License: Sun modified BSD
@@ -25,9 +25,16 @@ PREFIX=$RPM_BUILD_ROOT make install
 %defattr(-,root,root)
 %attr(0700,root,root)/usr/sausalito/sbin/setTime
 %attr(0700,root,root)/usr/sausalito/sbin/epochdate
-%attr(0766,root,root)/usr/sausalito/swatch/bin/am_ntpd.pl
+%attr(0755,root,root)/usr/sausalito/swatch/bin/am_ntpd.pl
 
 %changelog
+
+* Thu Oct 29 2026 Michael Stauber <mstauber@solarspeed.net> 1.2.3-1
+- Security: package am_ntpd.pl as 0755 (was 0766 world-writable).
+  Swatch runs the ActiveMonitor typeData as root; a writable
+  am_ntpd.pl allowed local privilege escalation. Align with other
+  swatch bin scripts. RPM upgrade resets the mode on disk.
+
 
 * Tue Jun 17 2025 Michael Stauber <mstauber@solarspeed.net> 1.2.2-1
 - Modified src/Makefile to support PIE by appending -fPIE to CFLAGS 

@@ -57,6 +57,7 @@ information for [VENDOR]-[SERVICE].
 /etc/httpd/conf.d/zz-modperl-no-request-phase.conf
 /etc/httpd/conf.perl/00-default-vsite.pl
 %attr(0755,root,root) /usr/sausalito/sbin/force_php_pool_update.pl
+%attr(0755,root,root) /usr/sausalito/sbin/fix_vsite_php_dir_perms.pl
 /usr/sausalito/sbin/fix_302_httpd_redirects.pl 
 /usr/sausalito/sbin/fix_web-and-email-server-aliasses.pl 
 /usr/sausalito/sbin/set_default_php_settings.pl
@@ -221,6 +222,17 @@ if [ -f /usr/bin/systemctl ]; then
 			systemctl try-restart $svc --no-block >/dev/null 2>&1 || logger -t base-apache "try-restart of $svc after unit update failed"
 		done
 
+		# Harden per-Vsite php/ ownership BEFORE any pool rewrite:
+		# parent must be root:root 0755; leaves siteAdmin-owned.
+		# Independent of force_php_pool_update (which may no-op when
+		# sys_temp_dir is already present on every pool).
+		if [ -x /usr/sausalito/sbin/fix_vsite_php_dir_perms.pl ]; then
+			/usr/sausalito/sbin/fix_vsite_php_dir_perms.pl 2>&1 | logger -t base-apache
+			if [ ${PIPESTATUS[0]} -ne 0 ]; then
+				logger -t base-apache "fix_vsite_php_dir_perms.pl failed - some Vsite php/ trees may still be siteAdmin-owned"
+			fi
+		fi
+
 		# Ensure all Vsite PHP-FPM pools (and suPHP php.ini copies) have
 		# been written by the current pool generator (per-Vsite temp and
 		# session directories). The script checks the ACTUAL config
@@ -278,6 +290,23 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+
+* Thu Oct 29 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.9-10
+- Security: parent <basedir>/php is owned root:root 0755 (not
+  prefered_siteAdmin-writable). Leaves php/tmp (1777) and
+  php/sessions (0700) stay siteAdmin:siteX. virtual_host.pl now
+  refuses to chown/chmod through symlinks (move aside + mkdir).
+  Closes local privilege escalation from siteAdmin to root via
+  php/tmp symlink + root handler chown/chmod.
+- Security/reliability: handle_fpm_pools no longer raw-rm the
+  pool file before Sauce::Util::editfile. Other-version pool
+  copies use unlinkfile; the active pool is replaced via editfile
+  so a CCE rollback restores the previous content instead of
+  deleting the only copy (HTTP 503 after php-fpm reload).
+- Added /usr/sausalito/sbin/fix_vsite_php_dir_perms.pl and call
+  it from %post on upgrade before force_php_pool_update.pl so
+  existing Vsite php/ trees are hardened even when pool configs
+  already look current (sys_temp_dir present).
 
 
 * Wed Oct 28 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.9-9

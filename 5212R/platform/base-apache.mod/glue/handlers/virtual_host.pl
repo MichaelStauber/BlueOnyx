@@ -704,8 +704,9 @@ sub edit_vhost
     # the FPM pool file further down). PHP does not create these dirs on
     # its own; a config pointing at a missing dir breaks uploads and
     # sessions. handle_fpm_pools re-checks and heals them idempotently.
-    # Parent php/ belongs to the siteAdmin (like wwwroot content trees),
-    # not root - siteAdmin must own the runtime tree end-to-end.
+    # Parent php/ is root:root 0755 (not siteAdmin-writable). Leaves
+    # php/tmp and php/sessions belong to the pool user. See
+    # ensure_vsite_php_runtime_dirs().
     $vsite_php_dir = $basedir_vsite . '/php';
     $vsite_php_tmp_dir = $vsite_php_dir . '/tmp';
     $vsite_php_sessions_dir = $vsite_php_dir . '/sessions';
@@ -714,18 +715,7 @@ sub edit_vhost
         $early_dir_uid = 'apache';
     }
     my $early_dir_gid = $vsite->{"name"};
-    for my $vdir ($vsite_php_tmp_dir, $vsite_php_sessions_dir) {
-        if (! -d $vdir) {
-            system('/bin/mkdir', '-p', $vdir);
-            &debug_msg("Created per-Vsite PHP directory $vdir\n");
-        }
-    }
-    system('/bin/chown', $early_dir_uid . ':' . $early_dir_gid, $vsite_php_dir);
-    system('/bin/chmod', '0750', $vsite_php_dir);
-    system('/bin/chown', $early_dir_uid . ':' . $early_dir_gid, $vsite_php_tmp_dir);
-    system('/bin/chmod', '1777', $vsite_php_tmp_dir);
-    system('/bin/chown', $early_dir_uid . ':' . $early_dir_gid, $vsite_php_sessions_dir);
-    system('/bin/chmod', '0700', $vsite_php_sessions_dir);
+    ensure_vsite_php_runtime_dirs($basedir_vsite, $early_dir_uid, $early_dir_gid);
     
     # If it exists, use the php.ini of the version of PHP specified:
     if ( -f $known_php_inis{$vsite_php->{'version'}}) {
@@ -824,23 +814,22 @@ sub edit_vhost
                     system("/bin/chown -R $new_owner:$new_GID $vsite_basedir/vhosts");
                 }
 
-                # Per-Vsite PHP runtime tree (php/tmp, php/sessions and any
-                # files already written there). Must follow prefered_siteAdmin
-                # the same way /web does - otherwise a siteAdmin change leaves
-                # session/temp files owned by the previous pool user and the
-                # new FPM/suPHP worker cannot read or rotate them.
+                # Per-Vsite PHP runtime tree. Parent php/ stays root-owned;
+                # only leaf dirs (and their contents) follow the new
+                # prefered_siteAdmin. Never chown -R the parent - that
+                # re-opens the siteAdmin-writable parent LPE.
                 if (-d "$vsite_basedir/php") {
-                    &debug_msg("/bin/chown -R $new_owner:$new_GID $vsite_basedir/php\n");
-                    system("/bin/chown -R $new_owner:$new_GID $vsite_basedir/php");
-                    # Restore intentional modes after recursive chown of the tree:
-                    # parent site-private; tmp sticky world-writable; sessions private.
-                    system('/bin/chmod', '0750', "$vsite_basedir/php");
-                    if (-d "$vsite_basedir/php/tmp") {
-                        system('/bin/chmod', '1777', "$vsite_basedir/php/tmp");
+                    ensure_vsite_php_runtime_dirs($vsite_basedir, $new_owner, $new_GID);
+                    # Contents of leaves may still be owned by the previous
+                    # pool user - fix those without touching the parent.
+                    for my $leaf ("$vsite_basedir/php/tmp", "$vsite_basedir/php/sessions") {
+                        my @lst = lstat($leaf);
+                        next unless (@lst && -d _ && ! -l _);
+                        system('/bin/chown', '-R', '--', "$new_owner:$new_GID", $leaf);
                     }
-                    if (-d "$vsite_basedir/php/sessions") {
-                        system('/bin/chmod', '0700', "$vsite_basedir/php/sessions");
-                    }
+                    # Re-assert leaf modes after recursive chown:
+                    system('/bin/chmod', '1777', "$vsite_basedir/php/tmp") if (-d "$vsite_basedir/php/tmp" && ! -l "$vsite_basedir/php/tmp");
+                    system('/bin/chmod', '0700', "$vsite_basedir/php/sessions") if (-d "$vsite_basedir/php/sessions" && ! -l "$vsite_basedir/php/sessions");
                 }
             }
         }
@@ -1618,31 +1607,12 @@ sub handle_fpm_pools {
     # Per-Vsite PHP directories: temp (sys_temp_dir / upload_tmp_dir)
     # and sessions (session.save_path). Both live under the Vsite's own
     # tree instead of the shared /tmp and /var/lib/php/session
-    # namespaces, so temporary files cannot be mixed up across Vsites
-    # and cross-Vsite session file guessing is impossible. Hardening
-    # measure that does not change application behaviour.
-    # Parent php/ is owned by the pool user (siteAdmin), mode 0750 -
-    # same ownership model as the leaf dirs, not root.
+    # namespaces. Parent php/ is root:root 0755; leaves belong to the
+    # pool user. See ensure_vsite_php_runtime_dirs().
     $vsite_php_dir = $vsite_basedir . '/php';
     $vsite_php_tmp_dir = $vsite_php_dir . '/tmp';
     $vsite_php_sessions_dir = $vsite_php_dir . '/sessions';
-    if (! -d $vsite_php_tmp_dir) {
-        system('/bin/mkdir', '-p', $vsite_php_tmp_dir);
-        &debug_msg("Created per-Vsite PHP temp directory $vsite_php_tmp_dir\n");
-    }
-    if (! -d $vsite_php_sessions_dir) {
-        system('/bin/mkdir', '-p', $vsite_php_sessions_dir);
-        &debug_msg("Created per-Vsite PHP session directory $vsite_php_sessions_dir\n");
-    }
-    # Heal permissions/ownership: parent is site-private (0750);
-    # temp is world-writable like /tmp but sticky; sessions only for
-    # the pool user (PHP docs recommendation for session dirs).
-    system('/bin/chown', $pool_UID . ':' . $pool_group, $vsite_php_dir);
-    system('/bin/chmod', '0750', $vsite_php_dir);
-    system('/bin/chown', $pool_UID . ':' . $pool_group, $vsite_php_tmp_dir);
-    system('/bin/chmod', '1777', $vsite_php_tmp_dir);
-    system('/bin/chown', $pool_UID . ':' . $pool_group, $vsite_php_sessions_dir);
-    system('/bin/chmod', '0700', $vsite_php_sessions_dir);
+    ensure_vsite_php_runtime_dirs($vsite_basedir, $pool_UID, $pool_group);
 
     # Pool directory:
     &debug_msg("Using " . $vsite_php->{'version'} . " pool directory: $known_php_fpm_pool_directories{$vsite_php->{'version'}} \n");
@@ -1686,14 +1656,25 @@ sub handle_fpm_pools {
     }
 
     if ($vsite_php->{'fpm_enabled'} == "0") {
-        &debug_msg("Deleting PHP-FPM pool config $pool_file_wildcard$pool_group.conf through php_vsite_handler.pl \n");
-        # Delete Pool file from all pools:
-        system("/bin/rm -f $pool_file_wildcard$pool_group.conf");
+        &debug_msg("Deleting PHP-FPM pool config for $pool_group from all pools (unlinkfile)
+");
+        # Delete pool file from all version dirs, rollback-safe:
+        remove_other_fpm_pool_files('', $pool_group);  # empty keep = remove all
+        # Also remove the resolved $pool_file if glob missed a path:
+        if (defined($pool_file) && $pool_file ne '' && (-e $pool_file || -l $pool_file)) {
+            Sauce::Util::unlinkfile($pool_file);
+        }
     }
     else {
 
-        &debug_msg("Removing $pool_file_wildcard$pool_group.conf \n");
-        system("/bin/rm -f $pool_file_wildcard$pool_group.conf");
+        # Remove pool configs for THIS site from OTHER PHP version dirs
+        # only. Do NOT raw-rm $pool_file before editfile: modifyfile only
+        # creates a restore backup when the target still exists. A prior
+        # rm left rollback with only 'R rm pool' and no old content -
+        # after a failed CCE txn the site lost its pool (HTTP 503).
+        &debug_msg("Removing other-version pool files for $pool_group; keeping $pool_file for editfile
+");
+        remove_other_fpm_pool_files($pool_file, $pool_group);
 
         &debug_msg("Creating PHP-FPM pool config $pool_file through php_vsite_handler.pl \n");
 
@@ -1874,6 +1855,102 @@ sub nginx_printer {
     ($in, $out) = @_;
     print $out $nginx_vhost_conf;
     return 1;
+}
+
+
+# ---------------------------------------------------------------------------
+# Per-Vsite PHP runtime tree under <basedir>/php
+# Parent php/ is root:root 0755 so a siteAdmin cannot replace tmp/sessions
+# with a symlink that root would later chown/chmod (LPE). Leaves:
+#   php/tmp      -> siteAdmin:siteX 1777 (sticky, like /tmp)
+#   php/sessions -> siteAdmin:siteX 0700
+# Any symlink or non-directory at those paths is moved aside first; we never
+# follow a user-controlled link with chown/chmod as root.
+# ---------------------------------------------------------------------------
+sub ensure_vsite_php_runtime_dirs {
+    my ($basedir, $leaf_uid_name, $leaf_gid_name) = @_;
+    return 0 unless (defined($basedir) && $basedir ne '' && -d $basedir);
+
+    my $php_dir = $basedir . '/php';
+    my $tmp_dir = $php_dir . '/tmp';
+    my $sess_dir = $php_dir . '/sessions';
+
+    my $leaf_uid = $leaf_uid_name;
+    if (!defined($leaf_uid) || $leaf_uid eq '' || !user_exists($leaf_uid)) {
+        $leaf_uid = 'apache';
+    }
+    my $leaf_gid = $leaf_gid_name;
+    $leaf_gid = 'apache' if (!defined($leaf_gid) || $leaf_gid eq '');
+
+    # 1) Parent first (root-owned) - closes the rename/symlink race.
+    _ensure_real_dir($php_dir, 'root', 'root', 0755);
+
+    # 2) Leaves owned by the pool/siteAdmin user.
+    _ensure_real_dir($tmp_dir, $leaf_uid, $leaf_gid, 01777);
+    _ensure_real_dir($sess_dir, $leaf_uid, $leaf_gid, 0700);
+
+    return 1;
+}
+
+sub _ensure_real_dir {
+    my ($path, $owner, $group, $mode) = @_;
+    return 0 unless (defined($path) && $path ne '');
+
+    my @lst = lstat($path);
+    if (@lst) {
+        if (-l _) {
+            my $aside = $path . '.symlink-removed.' . time() . '.' . $$;
+            if (rename($path, $aside)) {
+                &debug_msg("Moved symlink $path aside to $aside\n");
+            } else {
+                &debug_msg("FAILED to move symlink $path aside: $!\n");
+                return 0;
+            }
+        }
+        elsif (! -d _) {
+            my $aside = $path . '.not-a-dir.' . time() . '.' . $$;
+            if (rename($path, $aside)) {
+                &debug_msg("Moved non-directory $path aside to $aside\n");
+            } else {
+                &debug_msg("FAILED to move non-directory $path aside: $!\n");
+                return 0;
+            }
+        }
+    }
+
+    if (! -e $path) {
+        # mkdir without -p on the leaf after parent exists; use -p for parent.
+        system('/bin/mkdir', '-p', '--', $path);
+    }
+
+    # Refuse to touch if still a symlink (TOCTOU / failed rename).
+    @lst = lstat($path);
+    if (!@lst || -l _ || ! -d _) {
+        &debug_msg("Refusing chown/chmod on $path - not a real directory\n");
+        return 0;
+    }
+
+    # Path-based chown/chmod are safe only while the parent is root-owned
+    # and this path is a real directory (checked above).
+    system('/bin/chown', '--', $owner . ':' . $group, $path);
+    system('/bin/chmod', sprintf('%04o', $mode), $path);
+    return 1;
+}
+
+sub remove_other_fpm_pool_files {
+    # Remove $pool_group.conf from every php-fpm pool dir EXCEPT $keep_file,
+    # using Sauce::Util::unlinkfile so a CCE rollback can restore them.
+    my ($keep_file, $pool_group) = @_;
+    return unless (defined($pool_group) && $pool_group ne '');
+    my @candidates = glob('/etc/php-fpm.d/' . $pool_group . '.conf');
+    push @candidates, glob('/etc/php-fpm-[0-9]*.d/' . $pool_group . '.conf');
+    for my $pf (@candidates) {
+        next unless (defined($pf) && $pf ne '');
+        next if (defined($keep_file) && $keep_file ne '' && $pf eq $keep_file);
+        next unless (-e $pf || -l $pf);
+        &debug_msg("Removing other-version FPM pool file $pf (unlinkfile)\n");
+        Sauce::Util::unlinkfile($pf);
+    }
 }
 
 sub user_exists {

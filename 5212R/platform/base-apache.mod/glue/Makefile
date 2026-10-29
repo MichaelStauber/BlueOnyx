@@ -9,7 +9,7 @@
 #		install_links -- creates links instead of copies of files (for dbging)
 #		rpm -- rolls an rpm for this stuff
 
-SCRIPTS=sbin/force_php_pool_update.pl sbin/fix_302_httpd_redirects.pl sbin/fix_web-and-email-server-aliasses.pl sbin/set_default_php_settings.pl sbin/toggle_ssl.pl sbin/SSL_fixer.pl sbin/phptoggle.pl sbin/switch_php_to_fpm.pl
+SCRIPTS=sbin/force_php_pool_update.pl sbin/fix_vsite_php_dir_perms.pl sbin/fix_302_httpd_redirects.pl sbin/fix_web-and-email-server-aliasses.pl sbin/set_default_php_settings.pl sbin/toggle_ssl.pl sbin/SSL_fixer.pl sbin/phptoggle.pl sbin/switch_php_to_fpm.pl
 
 ifdef CCETOPDIR
 include $(CCETOPDIR)/devel/defines.mk

@@ -162,6 +162,12 @@ fi
 <begin $CHANGELOG>
 
 
+* Fri Oct 30 2026 Michael Stauber <mstauber@solarspeed.net> 4.10-3
+- Hardened glue/sbin/phpsendmail: call logger and sendmail via list-form
+  system() (no shell). Prevents shell metacharacters in _HTTP_HOST,
+  related env, or PHP mail() additional_parameters from being interpreted
+  by /bin/sh. Behavior of -t -i and logging fields unchanged.
+
 * Mon Oct 06 2026 Michael Stauber <mstauber@solarspeed.net> 4.10-2
 - Added GUI and handlers to enable or disable the ionCube Loader per
   installed PHP version on /vsite/phpconfig. Versions without a matching

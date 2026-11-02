@@ -11,6 +11,8 @@ $routes->add('gui/AuthorizationRequired401', 'Gui\Controllers\ErrorPages::Author
 $routes->add('gui/Forbidden403', 'Gui\Controllers\ErrorPages::Forbidden403');
 $routes->add('gui/PageNotFound404', 'Gui\Controllers\ErrorPages::PageNotFound404');
 $routes->add('gui/InternalServerError500', 'Gui\Controllers\ErrorPages::InternalServerError500');
+// Placeholder for skipped ionCube shop modules (encode_81 on PHP 8.2+).
+$routes->add('gui/shopModuleUpgrade', 'Gui\Controllers\ShopModuleUpgrade::index');
 $routes->add('login_denied', 'Gui\Controllers\ErrorPages::LoginDenied');
 $routes->add('gui/validation.js', 'Gui\Controllers\Validation::index');
 $routes->add('gui/pluginsmin.js', 'Gui\Controllers\Pluginsmin::index');

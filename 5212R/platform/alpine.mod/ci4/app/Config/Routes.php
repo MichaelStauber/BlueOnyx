@@ -50,6 +50,9 @@ $routes->get('/', 'Gui\Controllers\ErrorPages::Redirect');
 //
 // Config\Modules must NOT list "routes" in $aliases — CI auto-discovery would
 // include the same files again without this gate.
+//
+// Skipped modules: menu XML URLs are mapped to Gui\Controllers\ShopModuleUpgrade
+// so menu clicks show an upgrade notice instead of a bare 404.
 $modulesPath = ROOTPATH . 'Modules/';
 if (! is_dir($modulesPath)) {
     $modulesPath = '/usr/sausalito/ui/chorizo/ci4/Modules/';
@@ -91,6 +94,10 @@ try {
     if ($prevAppend !== '') {
         @ini_set('auto_append_file', $prevAppend);
     }
+}
+
+if (function_exists('bx_module_routes_register_placeholders')) {
+    bx_module_routes_register_placeholders($routes);
 }
 
 /**

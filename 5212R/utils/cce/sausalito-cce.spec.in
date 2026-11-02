@@ -6,7 +6,8 @@
 
 %define extension_dir %(php-config --extension-dir)
 %define adm_php_prefix /home/solarspeed/admserv-php
-%define adm_extension_dir %(echo %{adm_php_prefix}/lib/php/20240924)
+# Always take Zend API dir from installed AdmServ php-config (8.4 = 20240924, etc.)
+%define adm_extension_dir %( %{adm_php_prefix}/bin/php-config --extension-dir 2>/dev/null || echo %{adm_php_prefix}/lib/php/20240924 )
 %define adm_php_ini_dir %{adm_php_prefix}/etc/php.d
 
 Summary: Cobalt CCE Server and Clients
@@ -246,6 +247,10 @@ if [ "$1" -ge "1" ]; then
 fi
 
 %changelog
+* Mon Nov 02 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-16
+- adm_extension_dir: use admserv-php php-config --extension-dir (not hardcoded
+  Zend API path). Same fix as 5211R 0.99.6-7.
+
 * Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-15
 - CCE.pm: drop unused $self->{io_timeout}; document pack('l!l!') timeval
   (Greg Kuhnert minor)

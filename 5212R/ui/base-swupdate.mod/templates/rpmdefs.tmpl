@@ -147,6 +147,15 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+* Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 1.8.9-4
+- yum-update.sh: atomic Sauce::Service queue publish (Greg Kuhnert PR #4)
+- Keep Ken Marcus fix: no chmod 777 on /var/lib/php/session
+
+* Tue Oct 20 2026 Greg Kuhnert <gkuhnert@compassnetworks.com.au> 1.8.9-3
+- Modified glue/handlers/yum-update.sh to write its fake Sauce::Service
+  'restart' event for the 'yum' queue entry atomically (temp+rename)
+
+
 * Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 1.8.9-3
 - yum-update.sh: remove chmod 777 /var/lib/php/session (Ken Marcus); OS default
   0770 root:apache restored/enforced by hotfixes.sh

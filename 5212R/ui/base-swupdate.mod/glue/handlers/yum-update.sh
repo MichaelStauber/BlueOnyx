@@ -48,7 +48,7 @@ LC_ALL=C /usr/bin/dnf check-update > /tmp/yum.check-update
 
 # Various permission fixes:
 /bin/chmod 644 /var/log/yum.log
-/bin/chmod 777 /var/lib/php/session
+# /var/lib/php/session: OS default 0770 root:apache via hotfixes.sh / tmpfiles (no 777)
 
 exit 0
 

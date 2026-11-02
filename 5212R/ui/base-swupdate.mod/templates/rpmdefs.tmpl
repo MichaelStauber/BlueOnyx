@@ -147,6 +147,11 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+* Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 1.8.9-3
+- yum-update.sh: remove chmod 777 /var/lib/php/session (Ken Marcus); OS default
+  0770 root:apache restored/enforced by hotfixes.sh
+
+
 
 * Tue Oct 20 2026 Michael Stauber <mstauber@solarspeed.net> 1.8.9-2
 - pkg_install.pl now drops the per-user capability snapshots

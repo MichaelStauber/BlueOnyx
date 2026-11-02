@@ -106,6 +106,12 @@ if [ -f /usr/bin/systemctl ]; then
 fi
 
 %changelog
+* Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 4.1.2
+- hotfixes.sh: enforce /var/lib/php/session 0770 root:apache (OS/php.tmpfiles)
+  instead of 0777; AdmServ/vsites no longer need world-writable shared sessions
+  (Ken Marcus finding)
+
+
 * Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 4.1.1
 - swatch.sh: drop stale cce_construct.lock when no construct process remains
   (Greg Kuhnert: lock forever -> AM never updates)

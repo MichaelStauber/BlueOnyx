@@ -125,6 +125,11 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+* Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 3.0.21-12
+- range_ok.pl: after Net::IP->new, guard undef before ->version() so empty/garbage
+  min/max FAIL cleanly instead of die (Greg Kuhnert latent trap)
+
+
 * Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 3.0.21-11
 - Skip empty DHCP IPPoolingRange CREATE (IPv4/IPv6); avoids range_ok FAIL
   and first-boot cced SIGSEGV on long rollback handler lists (Greg)

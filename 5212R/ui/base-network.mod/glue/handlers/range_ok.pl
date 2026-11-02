@@ -20,7 +20,8 @@ my $old = $cce->event_old();
 my $object = $cce->event_object();
 my $new = $cce->event_new();
 
-if (!$object->{min} || !$object->{max}) {
+if (!defined $object->{min} || $object->{min} eq ''
+    || !defined $object->{max} || $object->{max} eq '') {
     $cce->warn('missing_part_of_range');
     $cce->bye('FAIL');
     exit 1;
@@ -28,6 +29,17 @@ if (!$object->{min} || !$object->{max}) {
 
 $ip_one = Net::IP->new($object->{min});
 $ip_two = Net::IP->new($object->{max});
+
+# Net::IP->new returns undef for empty/garbage; ->version would die.
+# Latent trap for any caller (Greg Kuhnert) — fail cleanly instead of die.
+if (!defined $ip_one || !defined $ip_two) {
+    $cce->warn('both_ips_must_be_ipv4_or_ipv6', {
+        'range_min' => $object->{min},
+        'range_max' => $object->{max},
+    });
+    $cce->bye('FAIL');
+    exit 1;
+}
 
 # Check if IP's are either IPv4 or IPv6:
 $Proto_IP_one = $ip_one->version();

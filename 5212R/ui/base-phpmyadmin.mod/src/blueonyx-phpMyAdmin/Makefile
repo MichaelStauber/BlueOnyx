@@ -28,9 +28,11 @@ SPEC_IN := $(TOP)/templates/blueonyx-phpMyAdmin.spec.in
 PMA_WEB := /usr/sausalito/ui/web/base/phpMyAdmin
 RPM_TOPDIR := $(shell rpm --eval '%{_topdir}' 2>/dev/null || echo $(HOME)/rpmbuild)
 
-.PHONY: all help rpm clean distclean-cache download unpack stage package
+.PHONY: all help rpm install clean distclean-cache download unpack stage package
 
+# module.mk: make -C src all|install|rpm — all three build the RPM
 all: rpm
+install: rpm
 
 help:
 	@echo "Targets: make rpm | clean | distclean-cache"

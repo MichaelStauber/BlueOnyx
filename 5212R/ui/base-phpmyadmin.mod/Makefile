@@ -18,9 +18,10 @@ BUILDARCH=noarch
 BUILDUI=new
 BUILDGLUE=yes
 BUILDLOCALE=yes
-BUILDSRC=no
+# yes: module.mk src_rpms runs "make -C src rpm" → blueonyx-phpMyAdmin
+BUILDSRC=yes
 
-# blueonyx-phpMyAdmin is built from src/blueonyx-phpMyAdmin (make rpm there)
+# GUI capstone Requires the app package produced under src/
 REQUIRES = blueonyx-phpMyAdmin
 
 #########
@@ -31,12 +32,3 @@ INSTALL_OTH=$(INSTALL) -m 644
 TMPDIR=/tmp
 
 include /usr/sausalito/devel/module.mk
-
-.PHONY: pma-rpm pma-clean
-
-# Build/install helper for the upstream+SSO package
-pma-rpm:
-	$(MAKE) -C src/blueonyx-phpMyAdmin rpm
-
-pma-clean:
-	$(MAKE) -C src/blueonyx-phpMyAdmin clean

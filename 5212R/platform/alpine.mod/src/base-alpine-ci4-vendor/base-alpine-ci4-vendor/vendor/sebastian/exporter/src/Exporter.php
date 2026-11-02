@@ -174,7 +174,7 @@ class Exporter
         // Format the output similarly to print_r() in this case
         if ($value instanceof \SplObjectStorage) {
             foreach ($value as $key => $val) {
-                $array[\spl_object_hash($val)] = [
+                $array[\spl_object_id($val)] = [
                     'obj' => $val,
                     'inf' => $value->getInfo(),
                 ];
@@ -215,9 +215,9 @@ class Exporter
             \ini_set('precision', '-1');
 
             try {
-                $valueStr = (string) $value;
+                $valueStr = @(string) $value;
 
-                if ((string) (int) $value === $valueStr) {
+                if ((string) @(int) $value === $valueStr) {
                     return $valueStr . '.0';
                 }
 

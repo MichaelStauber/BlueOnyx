@@ -2,6 +2,97 @@
 
 All notable changes of the PHPUnit 8.5 release series are documented in this file using the [Keep a CHANGELOG](https://keepachangelog.com/) principles.
 
+## [8.5.56] - 2026-10-05
+
+### Changed
+
+* The Software Bill of Materials (SBOM) embedded in the PHAR now uses CycloneDX 1.7 and provides the NTIA minimum elements as well as the data fields that BSI TR-03183-2 (version 2.1.0) requires for logical and identified components, including component creators, original, distribution and effective licences, source code URIs, and the PHP runtime and its extensions as external components
+
+## [8.5.55] - 2026-09-23
+
+### Changed
+
+* Do not pass empty output of a test that was run in a separate process to `unserialize()` (which emits a warning for an empty string as of PHP 8.6)
+
+## [8.5.54] - 2026-08-11
+
+### Changed
+
+* Use `spl_object_id()` instead of `spl_object_hash()` (which will be deprecated in PHP 8.6)
+* Use the error suppression operator (`@`) when calling `DeepCopy\DeepCopy::copy()` because it uses `spl_object_hash()` (which will be deprecated in PHP 8.6)
+
+## [8.5.53] - 2026-07-06
+
+### Changed
+
+* [#6797](https://github.com/sebastianbergmann/phpunit/issues/6797): Adapt code generated for test double of interface with constructor for PHP 8.6
+
+## [8.5.52] - 2026-01-27
+
+### Changed
+
+* To prevent Poisoned Pipeline Execution (PPE) attacks using prepared `.coverage` files in pull requests, a PHPT test will no longer be run if the temporary file for writing code coverage information already exists before the test runs
+
+## [8.5.51] - 2026-01-24
+
+### Changed
+
+* `PHPUnit\Framework\MockObject` exceptions are now subtypes of `PHPUnit\Exception`
+
+## [8.5.50] - 2025-12-06
+
+* No changes; `phpunit.phar` rebuilt with PHP 8.4 to work around PHP-Scoper issue [#1139](https://github.com/humbug/php-scoper/issues/1139)
+
+## [8.5.49] - 2025-12-01
+
+* No changes; `phpunit.phar` rebuilt with updated dependencies
+
+## [8.5.48] - 2025-09-24
+
+* No changes; `phpunit.phar` rebuilt with updated dependencies
+
+## [8.5.47] - 2025-09-23
+
+* No changes; `phpunit.phar` rebuilt with updated dependencies
+
+## [8.5.46] - 2025-09-14
+
+### Changed
+
+* [#6366](https://github.com/sebastianbergmann/phpunit/issues/6366): Exclude `__sleep()` and `__wakeup()` from test double code generation on PHP >= 8.5
+
+## [8.5.45] - 2025-09-11
+
+### Changed
+
+* Implement `__serialize()` in addition to `__sleep()` (which will be deprecated in PHP 8.5)
+
+## [8.5.44] - 2025-08-20
+
+### Changed
+
+* Do not configure `report_memleaks` setting (which will be deprecated in PHP 8.5) for PHPT processes
+
+## [8.5.43] - 2025-08-10
+
+### Changed
+
+* Do not use `ReflectionProperty::setAccessible()` with PHP >= 8.1
+* Do not use `SplObjectStorage` methods that will be deprecated in PHP 8.5
+
+## [8.5.42] - 2025-05-02
+
+### Changed
+
+* [#5956](https://github.com/sebastianbergmann/phpunit/issues/5956): Improved handling of deprecated `E_STRICT` constant
+* Improved message when test is considered risky for printing unexpected output
+
+## [8.5.41] - 2024-12-05
+
+### Fixed
+
+* [#6071](https://github.com/sebastianbergmann/phpunit/issues/6071): PHP Archives (PHARs) of PHPUnit 8.5 and PHPUnit 9.6 bundle outdated versions of Prophecy
+
 ## [8.5.40] - 2024-09-19
 
 ### Changed
@@ -314,6 +405,22 @@ All notable changes of the PHPUnit 8.5 release series are documented in this fil
 * [#3967](https://github.com/sebastianbergmann/phpunit/issues/3967): Cannot double interface that extends interface that extends `\Throwable`
 * [#3968](https://github.com/sebastianbergmann/phpunit/pull/3968): Test class run in a separate PHP process are passing when `exit` called inside
 
+[8.5.56]: https://github.com/sebastianbergmann/phpunit/compare/8.5.55...8.5.56
+[8.5.55]: https://github.com/sebastianbergmann/phpunit/compare/8.5.54...8.5.55
+[8.5.54]: https://github.com/sebastianbergmann/phpunit/compare/8.5.53...8.5.54
+[8.5.53]: https://github.com/sebastianbergmann/phpunit/compare/8.5.52...8.5.53
+[8.5.52]: https://github.com/sebastianbergmann/phpunit/compare/8.5.51...8.5.52
+[8.5.51]: https://github.com/sebastianbergmann/phpunit/compare/8.5.50...8.5.51
+[8.5.50]: https://github.com/sebastianbergmann/phpunit/compare/8.5.49...8.5.50
+[8.5.49]: https://github.com/sebastianbergmann/phpunit/compare/8.5.48...8.5.49
+[8.5.48]: https://github.com/sebastianbergmann/phpunit/compare/8.5.47...8.5.48
+[8.5.47]: https://github.com/sebastianbergmann/phpunit/compare/8.5.46...8.5.47
+[8.5.46]: https://github.com/sebastianbergmann/phpunit/compare/8.5.45...8.5.46
+[8.5.45]: https://github.com/sebastianbergmann/phpunit/compare/8.5.44...8.5.45
+[8.5.44]: https://github.com/sebastianbergmann/phpunit/compare/8.5.43...8.5.44
+[8.5.43]: https://github.com/sebastianbergmann/phpunit/compare/8.5.42...8.5.43
+[8.5.42]: https://github.com/sebastianbergmann/phpunit/compare/8.5.41...8.5.42
+[8.5.41]: https://github.com/sebastianbergmann/phpunit/compare/8.5.40...8.5.41
 [8.5.40]: https://github.com/sebastianbergmann/phpunit/compare/8.5.39...8.5.40
 [8.5.39]: https://github.com/sebastianbergmann/phpunit/compare/8.5.38...8.5.39
 [8.5.38]: https://github.com/sebastianbergmann/phpunit/compare/8.5.37...8.5.38

@@ -3040,6 +3040,37 @@ function bx_error_log($msg='') {
     error_log("$msg" . PHP_EOL, 3, '/var/log/gui-debug.log');
 }
 
+/**
+ * Drop illegal top-level numeric keys from $_SESSION before session_write_close().
+ *
+ * PHP refuses to serialize integer (and digit-string) top-level session keys and
+ * emits: session_write_close(): Skipping numeric key N
+ * In CI development that becomes an ErrorException after the page body is already
+ * sent. Nested arrays may still use integer keys (e.g. Capabilities list) - only
+ * the top level of $_SESSION is scrubbed.
+ *
+ * Belt-and-braces only: callers must still use string keys with session()->set().
+ * See validation_helper.php preg_match/$data collision (2026-11).
+ *
+ * @return int Number of keys removed
+ */
+function bx_session_sanitize_numeric_keys(): int
+{
+    if (!isset($_SESSION) || !is_array($_SESSION)) {
+        return 0;
+    }
+
+    $removed = 0;
+    foreach (array_keys($_SESSION) as $key) {
+        if (is_int($key) || (is_string($key) && $key !== '' && ctype_digit($key))) {
+            unset($_SESSION[$key]);
+            $removed++;
+        }
+    }
+
+    return $removed;
+}
+
 /*
 Copyright (c) 2008-2026 Michael Stauber, SOLARSPEED.NET
 Copyright (c) 2008-2026 Team BlueOnyx, BLUEONYX.IT

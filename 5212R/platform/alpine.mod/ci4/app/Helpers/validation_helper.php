@@ -91,28 +91,37 @@ function bx_validation($reset=FALSE) {
         foreach ($matches as $key => $val) {
             if (isset($val)) {
                 foreach ($val as $key_zwo => $val_zwo) {
-                    if (isset($val_zwo)) {
-                        preg_match('#name\s{0,3}=\s{0,3}"(.*)"#isU',$val_zwo,$name);
-                        preg_match('#type\s{0,3}=\s{0,3}"(.*)"#isU',$val_zwo,$type);
-                        if (preg_match('#data\s{0,3}=\s{0,3}"(.*)"#isU',$val_zwo,$data)) {
-                            $my_data = $data[1];
-                        }
-                        else {
-                            $my_data = "";
-                        }
-                        if (preg_match('#errmsg\s{0,3}=\s{0,3}"(.*)"#isU',$val_zwo,$errmsg)) {
-                            $my_errmsg = $errmsg[1];
-                        }
-                        else {
-                            $my_errmsg = "";
-                        }
-                        $_Schema_Items[$name[1]] = array(
-                                            'type' => $type[1],
-                                            'data' => json_encode($my_data), 
-                                            'errmsg' => $my_errmsg,
-                                            'schemafile' => $xml_files[$i]
-                                            );
+                    // Only attribute blobs from PREG_SET_ORDER (index 1), not the full match (0).
+                    if ($key_zwo !== 1 || !isset($val_zwo) || $val_zwo === '') {
+                        continue;
                     }
+                    preg_match('#name\s{0,3}=\s{0,3}"(.*)"#isU', $val_zwo, $name);
+                    preg_match('#type\s{0,3}=\s{0,3}"(.*)"#isU', $val_zwo, $type);
+                    // IMPORTANT: do not use $data as preg_match sink - $data is the
+                    // session payload array later. Numeric $data[0]/$data[1] leftovers
+                    // were written into $_SESSION and triggered:
+                    // session_write_close(): Skipping numeric key 0 (PHP 8+ / CI 4.7).
+                    if (preg_match('#data\s{0,3}=\s{0,3}"(.*)"#isU', $val_zwo, $dataMatch)) {
+                        $my_data = $dataMatch[1];
+                    }
+                    else {
+                        $my_data = "";
+                    }
+                    if (preg_match('#errmsg\s{0,3}=\s{0,3}"(.*)"#isU', $val_zwo, $errmsg)) {
+                        $my_errmsg = $errmsg[1];
+                    }
+                    else {
+                        $my_errmsg = "";
+                    }
+                    if (!isset($name[1]) || $name[1] === '') {
+                        continue;
+                    }
+                    $_Schema_Items[$name[1]] = array(
+                                        'type' => $type[1] ?? '',
+                                        'data' => json_encode($my_data),
+                                        'errmsg' => $my_errmsg,
+                                        'schemafile' => $xml_files[$i]
+                                        );
                 }
             }
         }
@@ -190,7 +199,8 @@ function bx_validation($reset=FALSE) {
     // Include errors:
     $new_data['MESSAGES'] = $messages;
 
-    // Cache $new_data:
+    // Cache $new_data (only string keys - never merge preg_match numeric leftovers)
+    $data = array();
     $data['cachedValidation'] = $new_data;
     session()->set($data);
 

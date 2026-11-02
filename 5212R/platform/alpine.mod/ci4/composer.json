@@ -5,11 +5,11 @@
 	"homepage": "https://github.com/XXPerez/Codeigniter4Modular",
 	"license": "MIT",
 	"require": {
-		"php": ">=7.2",
-		"codeigniter4/framework": "^4",
+		"php": ">=8.2",
+		"codeigniter4/framework": "4.7.5",
 		"ezyang/htmlpurifier": "^4.16",
 		"symfony/yaml": "^6.4 || ^7.1",
-                "cboden/ratchet": "^0.4.4",
+		"cboden/ratchet": "^0.4.4",
 		"react/promise": "^3.2",
 		"ratchet/pawl": "^0.4.1",
 		"sonata-project/google-authenticator": "^2.3"

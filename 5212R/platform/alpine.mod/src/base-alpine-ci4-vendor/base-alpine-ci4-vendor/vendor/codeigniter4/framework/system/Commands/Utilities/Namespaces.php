@@ -91,9 +91,14 @@ class Namespaces extends BaseCommand
         CLI::table($tbody, $thead);
     }
 
+    /**
+     * @param array<array-key, int|string|null> $params
+     *
+     * @return list<array{string, string, string}>
+     */
     private function outputAllNamespaces(array $params): array
     {
-        $maxLength = $params['m'];
+        $maxLength = (int) $params['m'];
 
         $autoloader = service('autoloader');
 
@@ -120,18 +125,23 @@ class Namespaces extends BaseCommand
 
     private function truncate(string $string, int $max): string
     {
-        $length = strlen($string);
+        $length = mb_strlen($string);
 
         if ($length > $max) {
-            return substr($string, 0, $max - 3) . '...';
+            return mb_substr($string, 0, $max - 3) . '...';
         }
 
         return $string;
     }
 
+    /**
+     * @param array<array-key, int|string|null> $params
+     *
+     * @return list<array{string, string, string}>
+     */
     private function outputCINamespaces(array $params): array
     {
-        $maxLength = $params['m'];
+        $maxLength = (int) $params['m'];
 
         $config = new Autoload();
 
@@ -145,7 +155,8 @@ class Namespaces extends BaseCommand
                     $pathOutput = $this->truncate(clean_path($path), $maxLength);
                 }
 
-                $path = realpath($path) ?: $path;
+                $realPath = realpath($path);
+                $path     = $realPath === false ? $path : $realPath;
 
                 $tbody[] = [
                     $ns,

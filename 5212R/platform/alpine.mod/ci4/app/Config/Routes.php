@@ -19,6 +19,9 @@ if (file_exists(SYSTEMPATH . 'Config/Routes.php')) {
  * --------------------------------------------------------------------
  * Router Setup
  * --------------------------------------------------------------------
+ *
+ * Runtime route configuration is intentional for BlueOnyx/Chorizo
+ * (module discovery). Config\Routing.php defaults must not replace this.
  */
 $routes->setDefaultNamespace('');
 $routes->setDefaultController('Gui\Controllers\ErrorPages::Redirect');
@@ -36,16 +39,40 @@ $routes->setAutoRoute(false);
 // Default route
 $routes->get('/', 'Gui\Controllers\ErrorPages::Redirect');
 
-// Dynamically load routes from modules
-$modulesPath = '/usr/sausalito/ui/chorizo/ci4/Modules/';
-$iterator = new \RecursiveIteratorIterator(
-    new \RecursiveDirectoryIterator($modulesPath),
-    \RecursiveIteratorIterator::SELF_FIRST
-);
+// Dynamically load routes from modules.
+// ionCube-encoded module Routes.php cannot run while auto_prepend_file /
+// auto_append_file are set (admserv-php ships set_php_headers.php as prepend).
+// Clear them only for the duration of these requires.
+$modulesPath = ROOTPATH . 'Modules/';
+if (! is_dir($modulesPath)) {
+    $modulesPath = '/usr/sausalito/ui/chorizo/ci4/Modules/';
+}
 
-foreach ($iterator as $file) {
-    if ($file->getFilename() === 'Routes.php') {
-        require $file->getPathname();
+$prevPrepend = ini_get('auto_prepend_file') ?: '';
+$prevAppend  = ini_get('auto_append_file') ?: '';
+// @ - may be blocked under php_admin_*; best-effort for ionCube modules.
+@ini_set('auto_prepend_file', '');
+@ini_set('auto_append_file', '');
+
+try {
+    if (is_dir($modulesPath)) {
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($modulesPath, \FilesystemIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::SELF_FIRST
+        );
+
+        foreach ($iterator as $file) {
+            if ($file->isFile() && $file->getFilename() === 'Routes.php') {
+                require $file->getPathname();
+            }
+        }
+    }
+} finally {
+    if ($prevPrepend !== '') {
+        @ini_set('auto_prepend_file', $prevPrepend);
+    }
+    if ($prevAppend !== '') {
+        @ini_set('auto_append_file', $prevAppend);
     }
 }
 

@@ -1,0 +1,7 @@
+build/
+*.rpm
+*.tar.gz
+*.tar.gz.partial
+
+as_rpms/
+as_srpms/

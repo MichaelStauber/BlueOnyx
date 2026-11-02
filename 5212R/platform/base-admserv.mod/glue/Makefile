@@ -33,4 +33,7 @@ install:
 	mkdir -p $(PREFIX)/usr/libexec
 	install ./systemd/admserv-ssl-gencerts $(PREFIX)/usr/libexec/admserv-ssl-gencerts
 	chmod 0755 $(PREFIX)/usr/libexec/admserv-ssl-gencerts
+	# Default /var/www/html bounce page -> HTTPS :81 (no port 444)
+	mkdir -p $(PREFIX)/var/www/html
+	install -m 0644 ./var/www/html/index.html $(PREFIX)/var/www/html/index.html
 

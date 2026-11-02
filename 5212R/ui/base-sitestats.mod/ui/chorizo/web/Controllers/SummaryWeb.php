@@ -197,7 +197,13 @@ class SummaryWeb extends BaseController {
             }
 
             // Set access-cookie for GoAccess that expires at end of the browser session. 
-            setcookie("BXGoAccess", $CI->BX_SESSION['sessionId'], "0", "/");
+            setcookie("BXGoAccess", $CI->BX_SESSION['sessionId'], [
+            'expires' => 0,
+            'path' => '/',
+            'secure' => true,
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
 
             $statspath_top = '/home/.sites/server/logs/';
             $most_recent_stats = $statspath_top . 'web.json';

@@ -35,15 +35,16 @@ class OutgoingRequest extends Message implements OutgoingRequestInterface
     protected $uri;
 
     /**
-     * @param string      $method HTTP method
-     * @param string|null $body
+     * @param string                                         $method  HTTP method
+     * @param array<string, array<array-key, string>|string> $headers
+     * @param string|null                                    $body
      */
     public function __construct(
         string $method,
         ?URI $uri = null,
         array $headers = [],
         $body = null,
-        string $version = '1.1'
+        string $version = '1.1',
     ) {
         $this->method = $method;
         $this->uri    = $uri;
@@ -64,7 +65,7 @@ class OutgoingRequest extends Message implements OutgoingRequestInterface
     {
         $host = $uri->getHost();
 
-        return $host . ($uri->getPort() ? ':' . $uri->getPort() : '');
+        return $host . ($uri->getPort() > 0 ? ':' . $uri->getPort() : '');
     }
 
     /**

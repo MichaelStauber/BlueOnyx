@@ -31,3 +31,7 @@ node_modules/
 .env
 *.key
 *.pem
+
+# Local LLM weights - too large for GitHub
+*.gguf
+**/*.gguf

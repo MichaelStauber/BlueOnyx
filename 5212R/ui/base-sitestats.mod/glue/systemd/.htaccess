@@ -1,4 +1,5 @@
 RewriteEngine On
 RewriteBase /
-RewriteCond %{HTTP_COOKIE} !BXGoAccess
-RewriteRule ^index.html$ /expired/true/target/base/sitestats/ [R,L]
+# Live GoAccess HTML: only browsers that obtained BXGoAccess via authenticated GUI
+RewriteCond %{HTTP_COOKIE} !(^|;\s*)BXGoAccess=[^;]+
+RewriteRule ^index\.html$ /expired/true/target/base/sitestats/ [R,L]

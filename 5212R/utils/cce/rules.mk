@@ -39,7 +39,13 @@ SYSTEMD_INITDIR = $(PREFIX)/usr/lib/systemd/system
 SYS_PAMDIR = $(PREFIX)/etc/pam.d
 SYS_APACHELIBDIR = $(PREFIX)/usr/lib/apache
 
-RPM_TOPDIR = /usr/src/redhat
+# rpmbuild topdir: EL7-era /usr/src/redhat, modern systems use ~/rpmbuild
+RPM_TOPDIR := $(shell rpm --eval '%{_topdir}' 2>/dev/null)
+ifeq ($(strip $(RPM_TOPDIR)),)
+  RPM_TOPDIR := $(shell if [ -d /root/rpmbuild ]; then echo /root/rpmbuild; \
+	elif [ -d $(HOME)/rpmbuild ]; then echo $(HOME)/rpmbuild; \
+	else echo /usr/src/redhat; fi)
+endif
 
 # install flags
 INST_DEFAULT = -o root -g root

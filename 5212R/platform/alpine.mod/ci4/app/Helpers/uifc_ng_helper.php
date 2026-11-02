@@ -1340,7 +1340,7 @@ function simplify_number_pages ($number, $literal, $cnt) {
         // Get the length of the string and set the unit accordingly:
         $len = strlen($number);
         if ($len <= "3") {
-            //return sprintf("%.${cnt}f$format", "$number");
+            //return sprintf("%.{$cnt}f$format", "$number");
         }
         if (($len > "3") && ($len <= "6")) {
             $format = "K";
@@ -1362,7 +1362,7 @@ function simplify_number_pages ($number, $literal, $cnt) {
             $mod = $multi*$multi*$multi*$multi;
             $number = $number/$mod;
         }
-        return sprintf("%.${cnt}f$format", "$number");
+        return sprintf("%.{$cnt}f$format", "$number");
     }
 }
 
@@ -1410,7 +1410,7 @@ function simplify_number_diskspace ($number, $literal, $cnt, $extra) {
         $len = strlen($number);
         if ($len <= "3") {
             $format = "";
-            return sprintf("%.${cnt}f$format$extra", "$number");
+            return sprintf("%.{$cnt}f$format$extra", "$number");
         }
         if (($len > "3") && ($len <= "6")) {
             $format = "M";
@@ -1432,7 +1432,7 @@ function simplify_number_diskspace ($number, $literal, $cnt, $extra) {
             $mod = $multi*$multi*$multi*$multi;
             $number = $number/$mod;
         }
-        return sprintf("%.${cnt}f$format$extra", "$number");
+        return sprintf("%.{$cnt}f$format$extra", "$number");
     }
 }
 

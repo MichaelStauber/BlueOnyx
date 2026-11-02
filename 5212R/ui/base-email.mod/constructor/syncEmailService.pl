@@ -181,7 +181,7 @@ system("echo \"\" > /etc/admserv/certs/blank.txt");
 system("cat /etc/admserv/certs/key /etc/admserv/certs/blank.txt /etc/admserv/certs/certificate > /usr/share/ssl/certs/sendmail.pem");
 system("chmod 0600 /usr/share/ssl/certs/sendmail.pem");
 system("cp /usr/share/ssl/certs/sendmail.pem /etc/pki/tls/certs/postfix.pem");
-system("chmod 0644 /etc/pki/tls/certs/postfix.pem");
+system("chmod 0600 /etc/pki/tls/certs/postfix.pem");
 
 system("/bin/cp /etc/admserv/certs/key /etc/pki/dovecot/private/dovecot.pem");
 system("/bin/cp /etc/admserv/certs/certificate /etc/pki/dovecot/certs/dovecot.pem");

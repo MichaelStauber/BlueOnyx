@@ -2,9 +2,71 @@
 
 # Externalized base-blueonyx-glue POST-INSTALL script:
 
-# Make sure that this install has a unique /etc/machine-id:
-rm -f /etc/machine-id
-/usr/bin/systemd-machine-id-setup &>/dev/null || :
+# ---------------------------------------------------------------------------
+# /etc/machine-id  (NewLinQ serialNumber / license identity)
+#
+# Intent: every *new* install must get a unique machine-id (firstboot /
+# missing id). It must NOT be regenerated on routine package updates:
+# serialNumber is derived from machine-id, and rotating it breaks NewLinQ
+# association and can leave surplus rescue initramfs images in /boot.
+# Never "rm -f /etc/machine-id" here. Admin-driven rotation stays manual.
+# ---------------------------------------------------------------------------
+if [ ! -s /etc/machine-id ]; then
+  /usr/bin/systemd-machine-id-setup &>/dev/null || :
+fi
+
+# ---------------------------------------------------------------------------
+# Surplus rescue kernels in /boot
+#
+# Earlier glue updates regenerated machine-id on every %post. Each new id
+# caused a later kernel update to drop another vmlinuz/initramfs-0-rescue-*
+# without removing the old ones, filling small /boot partitions.
+#
+# One-shot cleanup: only when more than one rescue kernel is present.
+# Prefer the rescue image matching the current machine-id; otherwise keep
+# the newest by mtime. Rebuild grub.cfg only if we actually deleted files.
+# No-op on hosts with 0 or 1 rescue image (normal steady state).
+# ---------------------------------------------------------------------------
+if [ -d /boot ]; then
+  _bx_rescue_count=0
+  for _bx_f in /boot/vmlinuz-0-rescue-*; do
+    [ -e "$_bx_f" ] || continue
+    _bx_rescue_count=$((_bx_rescue_count + 1))
+  done
+  if [ "$_bx_rescue_count" -gt 1 ]; then
+    _bx_keep=""
+    if [ -s /etc/machine-id ]; then
+      _bx_mid=$(tr -d ' \n\r\t' < /etc/machine-id)
+      if [ -n "$_bx_mid" ] && [ -f "/boot/vmlinuz-0-rescue-$_bx_mid" ]; then
+        _bx_keep="$_bx_mid"
+      fi
+    fi
+    if [ -z "$_bx_keep" ]; then
+      # newest by mtime
+      _bx_keep=$(ls -1t /boot/vmlinuz-0-rescue-* 2>/dev/null | head -1 | sed 's#.*/vmlinuz-0-rescue-##')
+    fi
+    _bx_cleaned=0
+    if [ -n "$_bx_keep" ]; then
+      for _bx_f in /boot/vmlinuz-0-rescue-*; do
+        [ -e "$_bx_f" ] || continue
+        _bx_id=$(echo "$_bx_f" | sed 's#.*/vmlinuz-0-rescue-##')
+        if [ "$_bx_id" != "$_bx_keep" ]; then
+          rm -f "/boot/vmlinuz-0-rescue-$_bx_id" \
+                "/boot/initramfs-0-rescue-$_bx_id.img" \
+                "/boot/.vmlinuz-0-rescue-$_bx_id.hmac" \
+                "/boot/System.map-0-rescue-$_bx_id" \
+                "/boot/initrd-0-rescue-$_bx_id.img" 2>/dev/null || :
+          _bx_cleaned=1
+        fi
+      done
+    fi
+    if [ "$_bx_cleaned" = "1" ] && [ -x /usr/sbin/grub2-mkconfig ] && [ -d /boot/grub2 ]; then
+      # Always write /boot/grub2/grub.cfg (also on EFI); ESP grub.cfg is a stub.
+      /usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg >/dev/null 2>&1 || :
+    fi
+  fi
+  unset _bx_rescue_count _bx_f _bx_keep _bx_mid _bx_id _bx_cleaned 2>/dev/null || :
+fi
 
 # update procmailrc
 if [ ! -f /etc/procmailrc ] || [ ! -f /etc/sysconfig/bxmbox ]; then

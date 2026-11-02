@@ -403,13 +403,24 @@ class Login extends BaseController {
 
         bx_error_log("Login.php: redirect()");
 
-        // This fires if the URL is /login and we are not yet athenticated.
+        $CI =& get_instance();
+
+        // Fresh ISO / unfinished setup: never park the operator on /login.
+        // Route 'gui' is claimed by this method (User module) and can win over
+        // ErrorPages::Redirect, so the license gate must live here too.
+        $System = $CI->cceClient->getObject('System', array('cce_nocache' => 'cce_nocache'));
+        if ((!is_array($System)) || (!isset($System['isLicenseAccepted'])) || ($System['isLicenseAccepted'] == '0')) {
+            bx_error_log("Login.php: redirect(): setup incomplete (isLicenseAccepted!=1) - sending to /wizard");
+            header("Location: /wizard");
+            exit;
+        }
+
+        // This fires if the URL is /gui and we are not yet authenticated.
         if (!session()->get('isLoggedIn')) {
             return redirect()->to(base_url('login'));
         }
 
         // If we *are* authenticated, we rely on BxPage() to redirect us to whatever start-page we're privileged to in the GUI:
-        $CI =& get_instance();
 
         // Prepare Page:
         $factory = $CI->serverScriptHelper->getHtmlComponentFactory("base-swupdate", "/swupdate/news");
@@ -505,16 +516,21 @@ class Login extends BaseController {
             }
         }
 
-        //    // Our $system['isLicenseAccepted'] is in the session cache, so we manually check it here to be *really* sure what it is:
-        //    $TmpSystem = $CI->cceClient->getObject('System', array('cce_nocache' => 'cce_nocache'));
-        //    if (($TmpSystem['isLicenseAccepted'] == '0') && ($wizard == FALSE)) {
-        //        //
-        //        //-- Run initial setup wizard:
-        //        //
-        //
-        //        header("Location: /wizard");
-        //        exit;
-        //    }
+        // Our isLicenseAccepted may be stale in session cache - read live CODB.
+        // Direct hits on /login during unfinished setup must still reach /wizard
+        // (the old gate was commented out and left first-boot on the login form).
+        $TmpSystem = $CI->cceClient->getObject('System', array('cce_nocache' => 'cce_nocache'));
+        if ((is_array($TmpSystem)) && (isset($TmpSystem['isLicenseAccepted'])) && ($TmpSystem['isLicenseAccepted'] == '0') && ($wizard == FALSE)) {
+            bx_error_log("Login.php: login(): isLicenseAccepted=0 - redirecting to /wizard");
+            header("Location: /wizard");
+            exit;
+        }
+        if (((!is_array($TmpSystem)) || (!isset($TmpSystem['isLicenseAccepted']))) && ($wizard == FALSE)) {
+            // Constructors not finished / System not readable yet.
+            bx_error_log("Login.php: login(): System not ready - redirecting to /wizard");
+            header("Location: /wizard");
+            exit;
+        }
 
         // I18n for our text elements on the login page:
         $page_title = $i18n->getHtml("loginPageTitle", "base-alpine", array("hostname" => $servername));

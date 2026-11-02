@@ -18,7 +18,8 @@ if (-f '/etc/admserv/certs/ca-certs') {
 system("cp /usr/share/ssl/certs/sendmail.pem /etc/pki/tls/certs/postfix.pem");
 chmod 0600, "/usr/share/ssl/certs/sendmail.pem";
 chmod 0600, "/usr/share/ssl/certs/ca-bundle.crt";
-chmod 0644, "/etc/pki/tls/certs/postfix.pem";
+# postfix.pem is key+cert (same as sendmail.pem) - must stay 0600
+chmod 0600, "/etc/pki/tls/certs/postfix.pem";
 Sauce::Service::service_run_init('sendmail', 'restart');
 
 # Handle Dovecot key and cert:

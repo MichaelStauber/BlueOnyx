@@ -97,6 +97,21 @@ if [ ! -d /etc/mail ]; then \
 	mkdir -p /etc/mail; \
 fi
 
+
+# Security: postfix.pem is a key+cert bundle (copy of sendmail.pem).
+# Older packages left it mode 0644 under /etc/pki/tls/certs (0755), so
+# any local account could read the System private key. Heal on upgrade
+# even if cced is down and constructors do not run. Scripts now write
+# 0600 going forward; keep writing the file (no deprecation).
+if [ -f /etc/pki/tls/certs/postfix.pem ]; then
+    chown root:root /etc/pki/tls/certs/postfix.pem 2>/dev/null || :
+    chmod 0600 /etc/pki/tls/certs/postfix.pem 2>/dev/null || :
+fi
+if [ -f /usr/share/ssl/certs/sendmail.pem ]; then
+    chown root:root /usr/share/ssl/certs/sendmail.pem 2>/dev/null || :
+    chmod 0600 /usr/share/ssl/certs/sendmail.pem 2>/dev/null || :
+fi
+
 if [ $1 -gt 1 ]; then
     /usr/sausalito/bin/remove_domain.pl &>/dev/null || :
 fi
@@ -190,6 +205,15 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+
+* Thu Oct 29 2026 Michael Stauber <mstauber@solarspeed.net> 2.2.8-10
+- Security: /etc/pki/tls/certs/postfix.pem holds the System private key
+  (key+cert bundle copied from sendmail.pem) but was chmod 0644 while
+  /etc/pki/tls/certs is 0755. Local accounts could read the key after
+  boot or System certificate re-key. Set mode 0600 in copy_certs.pl and
+  syncEmailService.pl (same as sendmail.pem). Keep writing postfix.pem
+  for legacy consumers. %post heals existing postfix.pem and sendmail.pem
+  to root:root 0600 on upgrade.
 
 * Sat Oct 17 2026 Michael Stauber <mstauber@solarspeed.net> 2.2.8-9
 - Ship a pre-generated 2048-bit /etc/dovecot/dh.pem (%config noreplace)

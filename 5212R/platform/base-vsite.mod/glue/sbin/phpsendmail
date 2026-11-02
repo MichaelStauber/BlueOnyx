@@ -5,12 +5,17 @@
 # These give us a good indication about which PHP script is
 # sending emails:
 
-$HTTP_HOST = $ENV{_HTTP_HOST};
-$REMOTE_ADDR = $ENV{_REMOTE_ADDR};
-$PWD = $ENV{PWD};
-$SCRIPT_NAME = $ENV{_SCRIPT_NAME};
-$UID = $ENV{SUID};
-$OWNER = $ENV{_SOWNER};
+# Env values may contain shell metacharacters (e.g. Host header /
+# mail() 5th parameter path). Never interpolate them into a single
+# string passed to system() - that would invoke /bin/sh. Use list-form
+# system() only (no shell).
+
+$HTTP_HOST = defined $ENV{_HTTP_HOST} ? $ENV{_HTTP_HOST} : '';
+$REMOTE_ADDR = defined $ENV{_REMOTE_ADDR} ? $ENV{_REMOTE_ADDR} : '';
+$PWD = defined $ENV{PWD} ? $ENV{PWD} : '';
+$SCRIPT_NAME = defined $ENV{_SCRIPT_NAME} ? $ENV{_SCRIPT_NAME} : '';
+$UID = defined $ENV{SUID} ? $ENV{SUID} : '';
+$OWNER = defined $ENV{_SOWNER} ? $ENV{_SOWNER} : '';
 
 # If the AV-SPAM and Milter-GeoIP are installed, then we include the somewhat
 # more sophisticated libraries of it to check if PHP scripts send more email
@@ -24,18 +29,19 @@ if (-f "/home/solarspeed/milter-geoip/bin/libs/phpsendmail_include.pl") {
     }
 }
 
-# Get the Bash $* equivalent:
-$options = join(" " , @ARGV);
+# Log the activity into /var/log/maillog with all the info we have gathered.
+# Message is one argv to logger - content is not parsed by a shell.
+$log_msg = "sendmail-wrapper-php: site=$HTTP_HOST, client=$REMOTE_ADDR, script=$PWD$SCRIPT_NAME, uid=$UID, user=$OWNER";
+system('/usr/bin/logger', '-p', 'mail.info', $log_msg);
 
-# Log the activity into /var/log/maillog with all the info we have gathered:
-system("/usr/bin/logger -p mail.info sendmail-wrapper-php: site=$HTTP_HOST, client=$REMOTE_ADDR, script=$PWD$SCRIPT_NAME, uid=$UID, user=$OWNER");
-
-# Actually send the email by passing it to Sendmail:
-system("/usr/sbin/sendmail -t -i $options");
+# Actually send the email by passing it to Sendmail.
+# Same flags as before (-t -i) plus PHP mail() / sendmail_path argv.
+# List form: no shell, so shell metacharacters in @ARGV are not executed.
+system('/usr/sbin/sendmail', '-t', '-i', @ARGV);
 
 # 
-# Copyright (c) 2015-2022 Michael Stauber, SOLARSPEED.NET
-# Copyright (c) 2015-2022 Team BlueOnyx, BLUEONYX.IT
+# Copyright (c) 2015-2026 Michael Stauber, SOLARSPEED.NET
+# Copyright (c) 2015-2026 Team BlueOnyx, BLUEONYX.IT
 # All Rights Reserved.
 # 
 # 1. Redistributions of source code must retain the above copyright 

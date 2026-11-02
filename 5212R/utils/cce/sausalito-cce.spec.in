@@ -246,6 +246,11 @@ if [ "$1" -ge "1" ]; then
 fi
 
 %changelog
+* Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-15
+- CCE.pm: drop unused $self->{io_timeout}; document pack('l!l!') timeval
+  (Greg Kuhnert minor)
+
+
 * Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-14
 - CCE.pm: default CCE_IO_TIMEOUT=0 again (Greg Kuhnert). SO_RCVTIMEO+readline
   turns slow cced into false EOF; bound hangs via cce_construct wall clock.

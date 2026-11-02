@@ -138,6 +138,9 @@ sub connectuds
     eval {
       require Socket;
       # struct timeval { time_t tv_sec; suseconds_t tv_usec; }
+      # pack('l!l!'): native long - matches timeval on 64-bit EL10 x86_64 (8+8)
+      # and on 32-bit (4+4). 5212R is x86_64-only; no separate 32-bit branch.
+      # (Greg Kuhnert minor review note)
       my $tv = pack('l!l!', int($io_timeout), 0);
       setsockopt($sock, Socket::SOL_SOCKET(), Socket::SO_RCVTIMEO(), $tv)
         or warn "CCE: SO_RCVTIMEO failed: $!\n";
@@ -150,7 +153,7 @@ sub connectuds
   }
   $self->{rdsock} = $sock;
   $self->{wrsock} = $sock;
-  $self->{io_timeout} = $io_timeout;
+  # intentionally not storing io_timeout on $self (was unused — Greg Kuhnert)
   $self->{suspendedmsg} = undef;
   $self->{rollbackflag} = 0;
 

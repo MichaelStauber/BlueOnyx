@@ -70,13 +70,19 @@ class Modules extends BaseModules
      *
      * If it is not listed, only the base application elements will be used.
      *
+     * BlueOnyx/Chorizo: do NOT auto-discover "routes". Module Config/Routes.php
+     * files are loaded explicitly from app/Config/Routes.php with an ionCube
+     * compatibility gate (bx_module_routes_helper). CI discovery would bypass
+     * that gate and 500 the GUI on PHP 8.2+ when old encode_81 shop packages
+     * are still installed.
+     *
      * @var list<string>
      */
     public $aliases = [
         'events',
         'filters',
         'registrars',
-        'routes',
+        // 'routes' — intentional: manual load only (see app/Config/Routes.php)
         'services',
     ];
 }

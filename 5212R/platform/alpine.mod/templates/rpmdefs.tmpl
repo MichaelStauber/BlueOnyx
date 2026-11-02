@@ -235,6 +235,12 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+* Mon Nov 02 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-59
+- Skip ionCube PHP-8.1/license-bound module Routes.php on AdmServ PHP 8.2+ so
+  YUM base updates do not 500-loop the GUI when old shop packages are still installed.
+- Helper: app/Helpers/bx_module_routes_helper.php (ICB0 target parse + legacy //00xxx).
+- encode_83 / ICB0 with 8.3+ targets still load; plain PHP Routes unchanged.
+- Config\Modules: remove routes from auto-discover aliases (CI discovery bypassed the gate).
 * Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-58
 - Drop legacy HTTP :444 GUI URLs; always use HTTPS GUI_PORT (81)
 

@@ -43,9 +43,21 @@ $routes->get('/', 'Gui\Controllers\ErrorPages::Redirect');
 // ionCube-encoded module Routes.php cannot run while auto_prepend_file /
 // auto_append_file are set (admserv-php ships set_php_headers.php as prepend).
 // Clear them only for the duration of these requires.
+//
+// Shop packages encoded with the PHP 8.1 + license pipeline (encode_81.sh)
+// fatal the whole GUI on AdmServ PHP 8.2+ if require()'d. Skip those files
+// so base YUM updates stay safe until shop RPMs are re-encoded (encode_83).
+//
+// Config\Modules must NOT list "routes" in $aliases — CI auto-discovery would
+// include the same files again without this gate.
 $modulesPath = ROOTPATH . 'Modules/';
 if (! is_dir($modulesPath)) {
     $modulesPath = '/usr/sausalito/ui/chorizo/ci4/Modules/';
+}
+
+$bxRoutesHelper = APPPATH . 'Helpers/bx_module_routes_helper.php';
+if (is_readable($bxRoutesHelper)) {
+    require_once $bxRoutesHelper;
 }
 
 $prevPrepend = ini_get('auto_prepend_file') ?: '';
@@ -63,7 +75,12 @@ try {
 
         foreach ($iterator as $file) {
             if ($file->isFile() && $file->getFilename() === 'Routes.php') {
-                require $file->getPathname();
+                $path = $file->getPathname();
+                if (function_exists('bx_module_routes_require_safe')) {
+                    bx_module_routes_require_safe($path);
+                } else {
+                    require $path;
+                }
             }
         }
     }

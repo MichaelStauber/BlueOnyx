@@ -704,17 +704,26 @@ if ($HAVE_DHCP > 0) {
     }
 
     # Check if we already have an 'IPPoolingRange' for our new IPv4:
-    my @pri_ipv4_oids = $cce->find('IPPoolingRange', {'min' => $primary_dhcp_ipv4});
-    if ($#pri_ipv4_oids < 0) {
-        # We don't. Create it:
-        $ok = $cce->create('IPPoolingRange', {'min' => $primary_dhcp_ipv4, 'max' => $primary_dhcp_ipv4, 'admin' => '&admin&' });
+    # Never CREATE with empty min/max - range_ok.pl FAIL, and on first-boot
+    # the long cleanup/rollback handler list can trip a cced SIGSEGV
+    # (run_handlers deref NULL list nodes after a failed nested CREATE).
+    if (defined($primary_dhcp_ipv4) && $primary_dhcp_ipv4 ne '') {
+        my @pri_ipv4_oids = $cce->find('IPPoolingRange', {'min' => $primary_dhcp_ipv4});
+        if ($#pri_ipv4_oids < 0) {
+            $ok = $cce->create('IPPoolingRange', {'min' => $primary_dhcp_ipv4, 'max' => $primary_dhcp_ipv4, 'admin' => '&admin&' });
+        }
+    } else {
+        debug_msg("DHCP: skip IPv4 IPPoolingRange create (no primary IPv4 yet)\n");
     }
 
-    # Check if we already have an 'IPPoolingRange' for our new IPv6:
-    my @pri_ipv6_oids = $cce->find('IPPoolingRange', {'min' => $primary_dhcp_ipv6});
-    if ($#pri_ipv6_oids < 0) {
-        # We don't. Create it:
-        $ok = $cce->create('IPPoolingRange', {'min' => $primary_dhcp_ipv6, 'max' => $primary_dhcp_ipv6, 'admin' => '&admin&' });
+    # Same for IPv6 - common on DHCP/IPv4-only first boot (empty string).
+    if (defined($primary_dhcp_ipv6) && $primary_dhcp_ipv6 ne '') {
+        my @pri_ipv6_oids = $cce->find('IPPoolingRange', {'min' => $primary_dhcp_ipv6});
+        if ($#pri_ipv6_oids < 0) {
+            $ok = $cce->create('IPPoolingRange', {'min' => $primary_dhcp_ipv6, 'max' => $primary_dhcp_ipv6, 'admin' => '&admin&' });
+        }
+    } else {
+        debug_msg("DHCP: skip IPv6 IPPoolingRange create (no primary IPv6 yet)\n");
     }
 
     # Turn IP Address Allocation back on:

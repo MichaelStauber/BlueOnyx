@@ -125,6 +125,11 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+* Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 3.0.21-11
+- Skip empty DHCP IPPoolingRange CREATE (IPv4/IPv6); avoids range_ok FAIL
+  and first-boot cced SIGSEGV on long rollback handler lists (Greg)
+- range_ok.pl: exit after protocol mismatch FAIL
+
 
 * Sat Oct 17 2026 Michael Stauber <mstauber@solarspeed.net> 3.0.21-10
 - 30_addNetwork.pl: if isLicenseAccepted is 1, unlink

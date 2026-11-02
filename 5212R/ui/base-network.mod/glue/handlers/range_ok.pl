@@ -40,6 +40,7 @@ $Proto_IP_two = $ip_two->version();
 if ($Proto_IP_one ne $Proto_IP_two) {
     $cce->warn('both_ips_must_be_ipv4_or_ipv6', { 'range_min' => $object->{min}, 'range_max' => $object->{max}});
     $cce->bye('FAIL');
+    exit 1;
 }
 
 # Check if min is smaller than max IP:

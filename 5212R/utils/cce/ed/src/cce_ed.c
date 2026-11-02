@@ -287,7 +287,8 @@ cce_ed_dispatch(cce_ed *ed, codb_handle *odb)
         for (cursor=ed->old_rollback_handlers; cursor;
                 cursor=g_slist_next(cursor))
         {
-            handler_event_destroy_events(cursor->data);
+            if (cursor->data)
+                handler_event_destroy_events(cursor->data);
         }
         g_slist_free(ed->old_rollback_handlers);
         ed->old_rollback_handlers = NULL;
@@ -307,7 +308,8 @@ cce_ed_dispatch(cce_ed *ed, codb_handle *odb)
         for (cursor=ed->old_rollback_handlers; cursor;
                 cursor=g_slist_next(cursor))
         {
-            handler_event_destroy_events(cursor->data);
+            if (cursor->data)
+                handler_event_destroy_events(cursor->data);
         }
         g_slist_free(ed->old_rollback_handlers);
         ed->old_rollback_handlers = NULL;
@@ -527,9 +529,10 @@ translate_events_to_handlers(cce_ed *ed, oid_t oid, GSList *events,
              g_hash_iter_next (it, &key, &val)) {
 	    /* append to the list of unique handler events */
             ed_handler_event *he = (ed_handler_event *)val;
-            *handlers = g_slist_append(*handlers, he);
-
-            count++;
+            if (he) {
+                *handlers = g_slist_append(*handlers, he);
+                count++;
+            }
             //DPRINTF(DBG_ED, "----handler %d: %s:%s\n", count,
                 //cce_conf_handler_type(he->handler),
                 //cce_conf_handler_data(he->handler));
@@ -547,7 +550,9 @@ translate_events_to_handlers(cce_ed *ed, oid_t oid, GSList *events,
              g_hash_iter_next (it, &key, &val)) {
 
             ed_handler_event *he = (ed_handler_event *)val;
-            *rollback_handlers = g_slist_append(*rollback_handlers, he);
+            if (he) {
+                *rollback_handlers = g_slist_append(*rollback_handlers, he);
+            }
         }
         g_hash_iter_destroy (it);
     }
@@ -577,6 +582,9 @@ handler_event_new(cce_conf_handler *h)
 void
 handler_event_destroy(ed_handler_event *e)
 {
+    if (!e) {
+        return;
+    }
     if (e->events) {
         g_slist_free(e->events);
     }
@@ -586,11 +594,16 @@ handler_event_destroy(ed_handler_event *e)
 void
 handler_event_destroy_events(ed_handler_event *e)
 {
+    if (!e) {
+        return;
+    }
     if (e->events) {
         GSList *cursor = e->events;
         while(cursor)
         {
-            codb_event_destroy(cursor->data);
+            if (cursor->data) {
+                codb_event_destroy(cursor->data);
+            }
             cursor = g_slist_next(cursor);
         }
         g_slist_free(e->events);
@@ -655,8 +668,10 @@ dispatch_events(cce_ed *ed, GHashTable *event_hash, GSList **rollback_handlers)
             if (ret)
                 break;
         }
-        for (cursor=handlers; cursor; cursor=g_slist_next(cursor))
-            handler_event_destroy(cursor->data);
+        for (cursor=handlers; cursor; cursor=g_slist_next(cursor)) {
+            if (cursor->data)
+                handler_event_destroy(cursor->data);
+        }
         g_slist_free(handlers);
     }
 
@@ -724,6 +739,17 @@ run_handlers(cce_ed *ed, oid_t oid, GSList *handlers, int stage, int isrollback)
         print_handler_queue(defered, remaining);
         for (cursor=remaining; cursor && !ret; cursor=g_slist_next(cursor)){
             he = (ed_handler_event *)cursor->data;
+            /* Defensive: corrupted/partial rollback lists have been observed
+             * with NULL node data after nested CREATE failures (e.g. empty
+             * IPPoolingRange) on long first-boot handler queues. Skipping
+             * avoids SIGSEGV in he->handler; log so it remains diagnosable.
+             */
+            if (!he || !he->handler) {
+                CCE_SYSLOG("run_handlers: skipping NULL handler event node (stage %d, rollback=%d)",
+                    stage, isrollback);
+                DPRINTF(DBG_ED, "-- skip NULL ed_handler_event\n");
+                continue;
+            }
             handler = he->handler;
             type = cce_conf_handler_type(handler);
 

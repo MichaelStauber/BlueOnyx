@@ -246,6 +246,10 @@ if [ "$1" -ge "1" ]; then
 fi
 
 %changelog
+* Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-10
+- run_handlers: skip NULL ed_handler_event nodes (first-boot nested CREATE FAIL)
+- handler_event_destroy*: tolerate NULL
+
 
 * Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-9
 - %%post: also remove cce.ini.rpmsave leftovers from noreplace transition

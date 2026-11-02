@@ -6,7 +6,7 @@
 %define instdir .base-alpine-ci4-vendor
 
 Name:           %{pkgname}
-Version:        4.5.5
+Version:        4.7.5
 Release:        1
 Packager:       Michael Stauber <mstauber@blueonyx.it>
 Vendor:         BLUEONYX.IT
@@ -58,6 +58,11 @@ rm -R -f $RPM_BUILD_ROOT
 %attr(-,root,root) /usr/sausalito/ui/chorizo/ci4/vendor
 
 %changelog
+* Mon Nov 02 2026 Michael Stauber <mstauber@solarspeed.net> 4.7.5-1
+- CodeIgniter framework vendor 4.5.5 -> 4.7.5
+- PHP 8.4: TimeTrait::createFromTimestamp compatible (float|int): static
+
+
 
 * Sat Nov 30 2024 Michael Stauber <mstauber@blueonyx.it>
 - [4.5.5-1] Version number bump to match installed CI

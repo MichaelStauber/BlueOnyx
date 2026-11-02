@@ -466,10 +466,10 @@ translate_events_to_handlers(cce_ed *ed, oid_t oid, GSList *events,
                             codb_event_dup(event));
                 } else {
                     he = handler_event_new(htmp);
-                    /* OOM: never insert NULL into hash/list (Greg) */
+                    /* OOM: never insert NULL; fail txn so config is not half-applied (Greg) */
                     if (!he) {
-                        CCE_SYSLOG("translate_events_to_handlers: handler_event_new OOM (rollback)");
-                        continue;
+                        CCE_SYSLOG("translate_events_to_handlers: handler_event_new OOM (rollback) - failing transaction");
+                        goto oom_fail;
                     }
                     he->events = g_slist_append(he->events,
                             codb_event_dup(event));
@@ -482,8 +482,8 @@ translate_events_to_handlers(cce_ed *ed, oid_t oid, GSList *events,
             } else {
                 he = handler_event_new(htmp);
                 if (!he) {
-                    CCE_SYSLOG("translate_events_to_handlers: handler_event_new OOM (handler)");
-                    continue;
+                    CCE_SYSLOG("translate_events_to_handlers: handler_event_new OOM (handler) - failing transaction");
+                    goto oom_fail;
                 }
                 he->events = g_slist_append(he->events, event);
                 g_hash_table_insert(handler_hash, htmp, he);
@@ -515,8 +515,8 @@ translate_events_to_handlers(cce_ed *ed, oid_t oid, GSList *events,
                 } else {
                     he = handler_event_new(htmp);
                     if (!he) {
-                        CCE_SYSLOG("translate_events_to_handlers: handler_event_new OOM (star rollback)");
-                        continue;
+                        CCE_SYSLOG("translate_events_to_handlers: handler_event_new OOM (star rollback) - failing transaction");
+                        goto oom_fail;
                     }
                     he->events = g_slist_append(he->events,
                             codb_event_dup(event));
@@ -527,8 +527,8 @@ translate_events_to_handlers(cce_ed *ed, oid_t oid, GSList *events,
             if (!he) {
                 he = handler_event_new(htmp);
                 if (!he) {
-                    CCE_SYSLOG("translate_events_to_handlers: handler_event_new OOM (star handler)");
-                    continue;
+                    CCE_SYSLOG("translate_events_to_handlers: handler_event_new OOM (star handler) - failing transaction");
+                    goto oom_fail;
                 }
                 g_hash_table_insert(handler_hash, htmp, he);
             }
@@ -584,6 +584,40 @@ translate_events_to_handlers(cce_ed *ed, oid_t oid, GSList *events,
     free (class);
 
     return count;
+
+oom_fail:
+    /* Free any handler_event objects already staged in the hashes.
+     * Do not leave a commit running without the handlers it required.
+     * Greg Kuhnert: skip-on-OOM is weaker than failing the transaction.
+     */
+    {
+        GHashIter *it;
+        gpointer key, val;
+        if (handler_hash) {
+            it = g_hash_iter_new(handler_hash);
+            for (g_hash_iter_first(it, &key, &val); key;
+                 g_hash_iter_next(it, &key, &val)) {
+                if (val)
+                    handler_event_destroy((ed_handler_event *)val);
+            }
+            g_hash_iter_destroy(it);
+            g_hash_table_destroy(handler_hash);
+            handler_hash = NULL;
+        }
+        if (rollback_hash) {
+            it = g_hash_iter_new(rollback_hash);
+            for (g_hash_iter_first(it, &key, &val); key;
+                 g_hash_iter_next(it, &key, &val)) {
+                if (val)
+                    handler_event_destroy_events((ed_handler_event *)val);
+            }
+            g_hash_iter_destroy(it);
+            g_hash_table_destroy(rollback_hash);
+            rollback_hash = NULL;
+        }
+    }
+    free(class);
+    return -1;
 }
 
 ed_handler_event *
@@ -682,7 +716,20 @@ dispatch_events(cce_ed *ed, GHashTable *event_hash, GSList **rollback_handlers)
 
         DPRINTF(DBG_ED, "object %ld\n", oid);
 
-        translate_events_to_handlers(ed, oid, eventlist, &handlers, rollback_handlers);
+        {
+            int nhandlers;
+            nhandlers = translate_events_to_handlers(ed, oid, eventlist,
+                    &handlers, rollback_handlers);
+            if (nhandlers < 0) {
+                /* OOM while building handler list - fail whole dispatch (Greg) */
+                CCE_SYSLOG("dispatch_events: translate_events_to_handlers failed (oid %ld)",
+                    (long)oid);
+                ret = -1;
+                g_slist_free(handlers);
+                handlers = NULL;
+                break;
+            }
+        }
 
         /* run handlers for this object */
         for (stage = H_STAGE_NONE + 1; (!ret) && (stage < H_STAGE_CLEANUP); stage++)
@@ -715,9 +762,12 @@ void print_handler_queue(GSList *defered, GSList *remaining)
     while (remaining) {
         fprintf(stderr, "%lx:%lx:", (long)remaining, (long)(remaining->data));
         he = (ed_handler_event *)remaining->data;
-        h = he->handler;
-
-        fprintf(stderr, "%s ", cce_conf_handler_data(h));
+        if (!he || !he->handler) {
+            fprintf(stderr, "(NULL) ");
+        } else {
+            h = he->handler;
+            fprintf(stderr, "%s ", cce_conf_handler_data(h));
+        }
         remaining = remaining->next;
     }
     fprintf(stderr, "\n");
@@ -725,9 +775,12 @@ void print_handler_queue(GSList *defered, GSList *remaining)
     fprintf(stderr, "Defered: ");
     while (defered) {
         he = (ed_handler_event *)defered->data;
-        h = he->handler;
-
-        fprintf(stderr, "%s ", cce_conf_handler_data(h));
+        if (!he || !he->handler) {
+            fprintf(stderr, "(NULL) ");
+        } else {
+            h = he->handler;
+            fprintf(stderr, "%s ", cce_conf_handler_data(h));
+        }
         defered = defered->next;
     }
     fprintf(stderr, "\n\n");

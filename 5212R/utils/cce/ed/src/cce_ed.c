@@ -450,6 +450,9 @@ translate_events_to_handlers(cce_ed *ed, oid_t oid, GSList *events,
             ed_handler_event *he;
 
             htmp = (cce_conf_handler *)cursor->data;
+            if (!htmp) {
+                continue;
+            }
             //DPRINTF(DBG_ED, "----handler: %s:%s\n", cce_conf_handler_type(htmp),
                 // cce_conf_handler_data(htmp));
 
@@ -463,6 +466,11 @@ translate_events_to_handlers(cce_ed *ed, oid_t oid, GSList *events,
                             codb_event_dup(event));
                 } else {
                     he = handler_event_new(htmp);
+                    /* OOM: never insert NULL into hash/list (Greg) */
+                    if (!he) {
+                        CCE_SYSLOG("translate_events_to_handlers: handler_event_new OOM (rollback)");
+                        continue;
+                    }
                     he->events = g_slist_append(he->events,
                             codb_event_dup(event));
                     g_hash_table_insert(rollback_hash, htmp, he);
@@ -473,6 +481,10 @@ translate_events_to_handlers(cce_ed *ed, oid_t oid, GSList *events,
                 he->events = g_slist_append(he->events, event);
             } else {
                 he = handler_event_new(htmp);
+                if (!he) {
+                    CCE_SYSLOG("translate_events_to_handlers: handler_event_new OOM (handler)");
+                    continue;
+                }
                 he->events = g_slist_append(he->events, event);
                 g_hash_table_insert(handler_hash, htmp, he);
             }
@@ -486,6 +498,9 @@ translate_events_to_handlers(cce_ed *ed, oid_t oid, GSList *events,
             ed_handler_event *he;
 
             htmp = (cce_conf_handler *) cursor->data;
+            if (!htmp) {
+                continue;
+            }
             //DPRINTF(DBG_ED, "----handler: %s:%s\n", 
                 //cce_conf_handler_type(htmp), cce_conf_handler_data (htmp));
 
@@ -499,6 +514,10 @@ translate_events_to_handlers(cce_ed *ed, oid_t oid, GSList *events,
                             codb_event_dup(event));
                 } else {
                     he = handler_event_new(htmp);
+                    if (!he) {
+                        CCE_SYSLOG("translate_events_to_handlers: handler_event_new OOM (star rollback)");
+                        continue;
+                    }
                     he->events = g_slist_append(he->events,
                             codb_event_dup(event));
                     g_hash_table_insert(rollback_hash, htmp, he);
@@ -507,6 +526,10 @@ translate_events_to_handlers(cce_ed *ed, oid_t oid, GSList *events,
             he = g_hash_table_lookup(handler_hash, htmp);
             if (!he) {
                 he = handler_event_new(htmp);
+                if (!he) {
+                    CCE_SYSLOG("translate_events_to_handlers: handler_event_new OOM (star handler)");
+                    continue;
+                }
                 g_hash_table_insert(handler_hash, htmp, he);
             }
             he->events = g_slist_append(he->events, event);

@@ -115,13 +115,15 @@ sub connectuds
 {
   my $self = shift;
   my $filename = shift || '/usr/sausalito/cced.socket';
-  # Optional I/O timeout (seconds). Default 60 so a dead cced cannot hang
-  # constructors forever on unix_stream_data_wait. Override: CCE_IO_TIMEOUT=N
-  # or connectuds($path, $timeout). 0 = unlimited (legacy).
-  # Credit: Greg Kuhnert (first-boot wedge after cced death).
+  # Optional I/O timeout (seconds). Default 0 = unlimited.
+  # SO_RCVTIMEO + readline treats EAGAIN as EOF ("connection closed"), so a
+  # short default falsely fails slow-but-healthy cced (long first-boot queues).
+  # Bound stuck constructors with cce_construct wall-clock timeout instead.
+  # Override only if you really want socket timeouts: CCE_IO_TIMEOUT=N or
+  # connectuds($path, $timeout). Credit: Greg Kuhnert.
   my $io_timeout = shift;
   if (!defined $io_timeout) {
-    $io_timeout = defined $ENV{CCE_IO_TIMEOUT} ? $ENV{CCE_IO_TIMEOUT} : 60;
+    $io_timeout = defined $ENV{CCE_IO_TIMEOUT} ? $ENV{CCE_IO_TIMEOUT} : 0;
   }
   require IO::Socket::UNIX;
   import IO::Socket::UNIX;

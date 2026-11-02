@@ -246,6 +246,12 @@ if [ "$1" -ge "1" ]; then
 fi
 
 %changelog
+* Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-14
+- CCE.pm: default CCE_IO_TIMEOUT=0 again (Greg Kuhnert). SO_RCVTIMEO+readline
+  turns slow cced into false EOF; bound hangs via cce_construct wall clock.
+- cce_construct: force CCE_IO_TIMEOUT=0 for children unless explicitly set
+
+
 * Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-13
 - translate_events_to_handlers: on handler_event_new OOM fail the transaction
   (return -1) instead of silently dropping the handler (Greg Kuhnert)

@@ -32,6 +32,11 @@ my $lockfile = '/var/lock/subsys/cce_construct.lock';
 my $CONSTRUCT_TIMEOUT = $ENV{CCE_CONSTRUCT_TIMEOUT} || 300;
 my $TIMEOUT_BIN = '/usr/bin/timeout';
 
+# Do not put SO_RCVTIMEO on constructor CCE clients by default (Greg Kuhnert):
+# readline+EAGAIN looks like EOF. The wall clock below bounds wedged scripts.
+$ENV{CCE_IO_TIMEOUT} = '0' unless exists $ENV{CCE_IO_TIMEOUT};
+
+
 system('/usr/bin/logger', 'cce_construct started');
 
 # Always drop the lock on exit (normal, die, signal) so swatch cannot wedge.

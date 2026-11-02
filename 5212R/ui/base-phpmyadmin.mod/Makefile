@@ -6,8 +6,8 @@ VENDOR=base
 VENDORNAME='Project BlueOnyx'
 SERVICE=phpmyadmin
 
-VERSION=2.2.0
-RELEASE=2
+VERSION=2.3.0
+RELEASE=1
 
 # add a buildarch if desired
 BUILDARCH=noarch
@@ -20,6 +20,7 @@ BUILDGLUE=yes
 BUILDLOCALE=yes
 BUILDSRC=no
 
+# blueonyx-phpMyAdmin is built from src/blueonyx-phpMyAdmin (make rpm there)
 REQUIRES = blueonyx-phpMyAdmin
 
 #########
@@ -30,3 +31,12 @@ INSTALL_OTH=$(INSTALL) -m 644
 TMPDIR=/tmp
 
 include /usr/sausalito/devel/module.mk
+
+.PHONY: pma-rpm pma-clean
+
+# Build/install helper for the upstream+SSO package
+pma-rpm:
+	$(MAKE) -C src/blueonyx-phpMyAdmin rpm
+
+pma-clean:
+	$(MAKE) -C src/blueonyx-phpMyAdmin clean

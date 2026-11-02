@@ -1,0 +1,55 @@
+Name:           blueonyx-phpMyAdmin
+Version:        XXX_VERSION_XXX
+Release:        XXX_RELEASE_XXX%{?dist}
+Packager:       Michael Stauber <mstauber@solarspeed.net>
+Vendor:         Team BlueOnyx
+URL:            https://www.phpmyadmin.net/
+License:        GPLv2+
+Group:          Applications/Internet
+Distribution:   BlueOnyx
+Source:         %{name}-%{version}.tar.gz
+Provides:       phpMyAdmin = %{version}-%{release}
+Obsoletes:      phpMyAdmin < %{version}-%{release}
+Summary:        phpMyAdmin for BlueOnyx (GUI single sign-on)
+Requires:       admserv-php
+AutoReqProv:    no
+
+%description
+phpMyAdmin packaged for BlueOnyx AdmServ with automated GUI sign-on
+(auth_type=signon, signon-script-blueonyx.php, cookies set by Chorizo).
+
+%prep
+%setup -q -n %{name}-%{version}
+
+%build
+echo "Staging tree only - upstream already extracted at package time."
+
+%install
+%{__rm} -rf %{buildroot}
+mkdir -p %{buildroot}
+# Payload is already rooted at /usr /etc in the source tarball
+cp -a * %{buildroot}/
+
+%post
+# Harden setup/ if present (upstream ships it; we deny HTTP access in conf)
+if [ -d /usr/sausalito/ui/web/base/phpMyAdmin/setup ]; then
+    chmod 700 /usr/sausalito/ui/web/base/phpMyAdmin/setup 2>/dev/null || true
+fi
+# Ensure blowfish secret exists (generate once if still placeholder empty)
+CFG=/usr/sausalito/ui/web/base/phpMyAdmin/config.inc.php
+if [ -f "$CFG" ] && grep -q "CHANGE_ME_BLOWFISH" "$CFG" 2>/dev/null; then
+    SEC=$(openssl rand -hex 16 2>/dev/null || head -c 32 /dev/urandom | xxd -p)
+    sed -i "s/CHANGE_ME_BLOWFISH/${SEC}/" "$CFG" || true
+fi
+systemctl try-restart admserv.service >/dev/null 2>&1 || :
+
+%files
+%defattr(-,root,root,-)
+# Full tree including SSO overlays (config.inc.php + signon-script-blueonyx.php)
+%attr(0755,root,root) /usr/sausalito/ui/web/base/phpMyAdmin
+%config(noreplace) /etc/admserv/conf.d/phpMyAdmin.conf
+
+%changelog
+* Mon Nov 02 2026 Michael Stauber <mstauber@solarspeed.net> XXX_VERSION_XXX-XXX_RELEASE_XXX
+- Build from module Makefile: download latest 5.2.x to /tmp, apply BlueOnyx SSO
+- Retain signon auth (PMA_USER/PMA_PASSWORD cookies + signon-script-blueonyx.php)

@@ -115,6 +115,14 @@ sub connectuds
 {
   my $self = shift;
   my $filename = shift || '/usr/sausalito/cced.socket';
+  # Optional I/O timeout (seconds). Default 60 so a dead cced cannot hang
+  # constructors forever on unix_stream_data_wait. Override: CCE_IO_TIMEOUT=N
+  # or connectuds($path, $timeout). 0 = unlimited (legacy).
+  # Credit: Greg Kuhnert (first-boot wedge after cced death).
+  my $io_timeout = shift;
+  if (!defined $io_timeout) {
+    $io_timeout = defined $ENV{CCE_IO_TIMEOUT} ? $ENV{CCE_IO_TIMEOUT} : 60;
+  }
   require IO::Socket::UNIX;
   import IO::Socket::UNIX;
   my $sock = new IO::Socket::UNIX(
@@ -124,8 +132,23 @@ sub connectuds
   if (!$sock) {
     die "Could not connect to $filename: $!\n";
   }
+  if ($io_timeout && $io_timeout > 0) {
+    eval {
+      require Socket;
+      # struct timeval { time_t tv_sec; suseconds_t tv_usec; }
+      my $tv = pack('l!l!', int($io_timeout), 0);
+      setsockopt($sock, Socket::SOL_SOCKET(), Socket::SO_RCVTIMEO(), $tv)
+        or warn "CCE: SO_RCVTIMEO failed: $!\n";
+      setsockopt($sock, Socket::SOL_SOCKET(), Socket::SO_SNDTIMEO(), $tv)
+        or warn "CCE: SO_SNDTIMEO failed: $!\n";
+    };
+    if ($@) {
+      warn "CCE: could not set socket I/O timeout: $@\n";
+    }
+  }
   $self->{rdsock} = $sock;
   $self->{wrsock} = $sock;
+  $self->{io_timeout} = $io_timeout;
   $self->{suspendedmsg} = undef;
   $self->{rollbackflag} = 0;
 

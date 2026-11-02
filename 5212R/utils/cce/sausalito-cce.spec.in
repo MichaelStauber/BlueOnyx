@@ -246,6 +246,12 @@ if [ "$1" -ge "1" ]; then
 fi
 
 %changelog
+* Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-12
+- cce_construct: per-constructor timeout + always clear lock (Greg Kuhnert)
+- CCE.pm connectuds: default SO_RCV/SND TIMEO 60s so dead cced cannot hang
+  forever on unix_stream_data_wait (reported/diagnosed by Greg Kuhnert)
+
+
 * Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-11
 - translate_events_to_handlers: check handler_event_new OOM; never insert NULL
   into handler/rollback hashes (Greg belt-and-braces half 2)

@@ -72,6 +72,11 @@ if [ -f /etc/swatch.conf.rpmnew ]; then
 fi
 
 %changelog
+* Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 4.1.1
+- swatch.sh: drop stale cce_construct.lock when no construct process remains
+  (Greg Kuhnert: lock forever -> AM never updates)
+
+
 
 * Tue Jan 12 2016 Michael Stauber <mstauber@solarspeed.net> 4.0.0-0BX28
 - Added $globalState var to allow us with one glance to check the AM state.

@@ -17,7 +17,7 @@ OUT_RPMS := $(TOP)/as_rpms
 OUT_SRPMS := $(TOP)/as_srpms
 
 TARBALL_CACHE ?= /tmp/phpsysinfo-src
-RELEASE ?= 1
+RELEASE ?= 2
 
 RESOLVE := $(TOP)/scripts/resolve-psi-version.sh
 SKEL := $(TOP)/skel
@@ -31,8 +31,7 @@ PSI_PARENT := /usr/sausalito/ui/web/base/phpsysinfo
 
 RPM_TOPDIR := $(shell rpm --eval '%{_topdir}' 2>/dev/null || echo $(HOME)/rpmbuild)
 
-# Optional BX ini from module glue (preferred over bare upstream .new)
-MOD_GLUE_INI := $(TOP)/../../glue/phpsysinfo/phpsysinfo.ini.org
+# BX ini lives in module glue (base-phpsysinfo-ui/glue), not this RPM
 
 .PHONY: all help rpm install clean distclean-cache download unpack stage package
 
@@ -94,13 +93,11 @@ stage: unpack
 	@test -f "$(COOKIE_INC)"
 	@chmod +x $(TOP)/scripts/inject-cookie-auth.sh
 	@$(TOP)/scripts/inject-cookie-auth.sh "$(STAGE)$(PSI_WEB)" "$(COOKIE_INC)"
-	@# Config: BX glue ini as .org (constructor/installfixer + %post)
-	@if [ -f "$(MOD_GLUE_INI)" ]; then \
-		install -m 0644 "$(MOD_GLUE_INI)" $(STAGE)$(PSI_WEB)/phpsysinfo.ini.org; \
-		install -m 0644 "$(MOD_GLUE_INI)" $(STAGE)$(PSI_WEB)/phpsysinfo.ini; \
-	elif [ -f $(STAGE)$(PSI_WEB)/phpsysinfo.ini.new ]; then \
-		cp -a $(STAGE)$(PSI_WEB)/phpsysinfo.ini.new $(STAGE)$(PSI_WEB)/phpsysinfo.ini; \
-	fi
+	@# Config ownership: base-phpsysinfo-glue ships phpsysinfo.ini.org + constructor
+	@# promotes to phpsysinfo.ini. Do NOT ship .org/.ini here (RPM file conflict).
+	@rm -f $(STAGE)$(PSI_WEB)/phpsysinfo.ini.org \
+		$(STAGE)$(PSI_WEB)/phpsysinfo.ini 2>/dev/null || true
+	@# Keep upstream sample only as .new (not live config)
 	@echo "Staged under $(STAGE)"
 
 package: stage

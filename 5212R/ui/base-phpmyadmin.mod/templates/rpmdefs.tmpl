@@ -68,18 +68,40 @@ information for [VENDOR]-[SERVICE].
 <end HEADER>
 <begin capstone>
 # capstone post-install
+# blueonyx-phpMyAdmin-5.2.3+ ships config only under the UI tree (not /etc/phpMyAdmin).
+# Missing path must not fail POSTIN (Anaconda aborts the whole payload transaction).
+# Credit: Greg Kuhnert - ISO install POSTIN diagnosis 2026-11-02.
 
-ADMINCONFIG="/etc/phpMyAdmin/config.inc.php"
+ADMINCONFIG="/usr/sausalito/ui/web/base/phpMyAdmin/config.inc.php"
+# Legacy path from older blueonyx-phpMyAdmin / distro phpMyAdmin packages
+LEGACYCONFIG="/etc/phpMyAdmin/config.inc.php"
 
-AUTH_TYPE=`grep auth_type $ADMINCONFIG | grep signon`
-if [ "$AUTH_TYPE" ] ; then
-    chmod 644 $ADMINCONFIG
-    exit 0
-else
-    cat /etc/phpMyAdmin/config.inc.php|	sed "s/\['auth_type'\]     = 'http';/\['auth_type'\]     = 'signon';\n\$cfg\['Servers'\]\[\$i\]\['SignonSession'\] = 'SignonSession';\n\$cfg\['Servers'\]\[\$i\]\['SignonURL'\]     = '\/phpmyadmin\/login';\n\/\/ \$cfg\['Servers'\]\[\$i\]\['auth_type'\]     = 'http';/g" > $ADMINCONFIG.new
-    mv $ADMINCONFIG.new $ADMINCONFIG
-    chmod 644 $ADMINCONFIG
+if [ ! -f "$ADMINCONFIG" ] && [ -f "$LEGACYCONFIG" ]; then
+    ADMINCONFIG="$LEGACYCONFIG"
 fi
+
+if [ ! -f "$ADMINCONFIG" ]; then
+    exit 0
+fi
+
+AUTH_TYPE=`grep auth_type "$ADMINCONFIG" 2>/dev/null | grep signon || true`
+if [ -n "$AUTH_TYPE" ] ; then
+    chmod 644 "$ADMINCONFIG" || true
+    exit 0
+fi
+
+# Best-effort migrate auth_type http -> signon (SSO). Failures must not fail the RPM.
+if grep -q "auth_type" "$ADMINCONFIG" 2>/dev/null; then
+    sed "s/\['auth_type'\]     = 'http';/['auth_type']     = 'signon';\n\$cfg['Servers'][\$i]['SignonSession'] = 'SignonSession';\n\$cfg['Servers'][\$i]['SignonURL']     = '\/phpmyadmin\/login';\n\/\/ \$cfg['Servers'][\$i]['auth_type']     = 'http';/g" \
+        "$ADMINCONFIG" > "$ADMINCONFIG.new" 2>/dev/null || true
+    if [ -s "$ADMINCONFIG.new" ]; then
+        mv -f "$ADMINCONFIG.new" "$ADMINCONFIG" || true
+    else
+        rm -f "$ADMINCONFIG.new" 2>/dev/null || true
+    fi
+fi
+chmod 644 "$ADMINCONFIG" || true
+exit 0
 <end capstone>
 <begin glue>
 # glue post-install
@@ -115,6 +137,9 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+* Mon Nov 02 2026 Michael Stauber <mstauber@solarspeed.net> 2.3.0-2
+- capstone %post: ADMINCONFIG under UI tree; missing file exits 0 (Anaconda-safe).
+  Credit: Greg Kuhnert (ISO POSTIN /etc/phpMyAdmin chmod abort).
 * Mon Nov 02 2026 Michael Stauber <mstauber@solarspeed.net> 2.3.0-1
 - src/blueonyx-phpMyAdmin: make rpm downloads latest 5.2.x, applies BlueOnyx SSO
 - Keep GUI signon (Signon/Pusher + PMA cookies + signon-script-blueonyx.php)

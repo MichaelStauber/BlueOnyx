@@ -304,6 +304,10 @@ fi
 
 <begin $CHANGELOG>
 
+* Mon Nov 03 2026 Michael Stauber <mstauber@solarspeed.net>
+- initServices.sh: enable monitorix and goaccess with other needed services
+  (first-boot AM green; glue %post alone runs before monitorix RPM). Credit: Greg Kuhnert.
+
 * Tue Oct 27 2026 Michael Stauber <mstauber@solarspeed.net> 8.20261027-16
 - glue/scripts/init.sh: stop regenerating /etc/machine-id on every
   base-blueonyx-glue %post. The old unconditional rm +

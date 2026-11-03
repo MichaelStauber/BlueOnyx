@@ -247,6 +247,9 @@ if [ "$1" -ge "1" ]; then
 fi
 
 %changelog
+* Mon Nov 02 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-17
+- cced_unstuck.sh: flock, 90s cooldown, skip during cce_construct, probe CCE
+  before kill storm; avoid parallel cced-api restarts from FPM workers.
 * Mon Nov 02 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-16
 - adm_extension_dir: use admserv-php php-config --extension-dir (not hardcoded
   Zend API path). Same fix as 5211R 0.99.6-7.

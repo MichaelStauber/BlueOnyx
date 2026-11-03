@@ -9,13 +9,14 @@
  * fatals the entire GUI during boot (YUM base update must not brick boxes that
  * still have old shop RPMs installed).
  *
- * Policy:
+ * Policy (PHP >= 8.2 AdmServ):
  * - Plain (non-ionCube) Routes.php: always load.
- * - ionCube with ICB0 targets including 8.3 or 8.4: load (5212 encode_83 style).
- * - ionCube 8.1-only / legacy //00xxx license-era encodes: skip when PHP >= 8.2.
- * - On PHP 8.1 AdmServ: still load 8.1 encodes (legacy behaviour).
- * - Skipped modules: register placeholder routes from chorizo menu XML so clicks
- *   show an upgrade notice instead of a bare 404.
+ * - ionCube ICB0 with any target >= 8.2 (e.g. 81+83 bundle): load.
+ * - Single-target modern encodes (header //0038e, encode_83.sh): load.
+ * - ICB0 listing only 8.1 (or older): skip.
+ * - Legacy //0030b / old license-era single encodes: skip.
+ * - On PHP 8.1 AdmServ: load everything (legacy behaviour).
+ * - Skipped modules: menu XML URLs -> ShopModuleUpgrade placeholder.
  */
 
 if (! function_exists('bx_module_routes_is_ioncube')) {
@@ -92,7 +93,7 @@ if (! function_exists('bx_module_routes_should_skip')) {
 
         $targets = bx_module_routes_icb0_targets($head);
 
-        // Multi/newer target line (encode_83 and similar): allow if 8.2+ present.
+        // ICB0 present: allow if any runtime target is 8.2+ (Greg 81,83 bundle etc.).
         if ($targets !== []) {
             foreach ($targets as $t) {
                 if ($t >= 82) {
@@ -103,10 +104,32 @@ if (! function_exists('bx_module_routes_should_skip')) {
             return true;
         }
 
-        // No ICB0 multi-target block: legacy single-generation encode
-        // (typical encode_81.sh + --with-license output, "//0030b" style).
-        // Those require a matching license key and 8.1 runtime - skip on 8.2+.
-        return true;
+        // No ICB0: single-target file from version-specific encoder binary.
+        // encode_83.sh / modern Cerberus output uses marker //0038e — allow.
+        // (Previously we skipped ALL non-ICB0 ionCube and broke working 8.3 shops.)
+        if (preg_match('/<\?php\s*\/\/0038e\b/i', $head)
+            || preg_match('/^\/\/0038e\b/m', $head)) {
+            return false;
+        }
+
+        // Explicit modern multi-line copyright from encode_83 / encode_cmp (no license).
+        if (strpos($head, 'Greg Kuhnert') !== false
+            && strpos($head, 'BLUEONYX.IT') !== false
+            && stripos($head, 'solarspeed_generic') === false) {
+            return false;
+        }
+
+        // Legacy single-generation encode: //0030b and/or old license-era stamps.
+        // Typical encode_81 + --with-license; often fatals under Loader 15 + PHP 8.4.
+        if (preg_match('/<\?php\s*\/\/0030b\b/i', $head)
+            || preg_match('/^\/\/0030b\b/m', $head)
+            || stripos($head, 'solarspeed_generic') !== false
+            || (bool) preg_match('/Copyright 2006-\d{4} SOLARSPEED\.NET/i', $head)) {
+            return true;
+        }
+
+        // Unknown ionCube shape: prefer load (do not brick GUIs that used to work).
+        return false;
     }
 }
 

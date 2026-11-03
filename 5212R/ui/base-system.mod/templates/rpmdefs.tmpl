@@ -125,6 +125,14 @@ fi
 
 <begin $CHANGELOG>
 
+* Tue Nov 03 2026 Greg Kuhnert <gkuhnert@compassnetworks.com.au> 1.7.3-5
+- modsystem.pl: set the hostname with one hostnamectl call. The --static call repeated
+  it, --transient is refused while a static hostname exists, and the explicit
+  systemctl restart was redundant. Together they issued four systemd-hostnamed starts
+  per rename, and this handler plus etchosts.pl both run, which trips hostnamed's start
+  limit (5 per 10 s) and leaves hostnamed.service and .socket failed - the box then
+  reports "degraded" until reset-failed or a reboot.
+
 * Sun Oct 18 2026 Michael Stauber <mstauber@solarspeed.net> 1.7.3-4
 - modsystem.pl: new cleanup_firstboot(), runs once setup is done
   (isLicenseAccepted = 1). It removes the /root/network_settings.sh hook

@@ -46,11 +46,10 @@ $nw_update = $System->{nw_update};
 # a GUI inititaed network change.
 if ((-e '/usr/bin/hostnamectl') && ($nw_update ne '0')) {
     system('/bin/hostname', $servername);
+    # One hostnamectl call plus nmcli; see modsystem.pl for why the --static/--transient
+    # forms and the explicit systemctl restart were removed.
     system("/usr/bin/hostnamectl set-hostname $servername &>/dev/null || :");
-    system("/usr/bin/hostnamectl set-hostname $servername --static &>/dev/null || :");
-    system("/usr/bin/hostnamectl set-hostname $servername --transient &>/dev/null || :");
     system("/usr/bin/nmcli g hostname $servername &>/dev/null || :");
-    system("/usr/bin/systemctl restart systemd-hostnamed &>/dev/null || :");
 }
 
 #

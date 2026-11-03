@@ -104,10 +104,13 @@ if (defined($new->{hostname}) || defined($new->{domainname})) {
     Sauce::Util::addrollbackcommand("/bin/hostname " . `/bin/hostname`);
     system('/bin/hostname', $name);
     system("/usr/bin/nmcli g hostname $name");
+    # One hostnamectl call is enough: it sets the hostname and starts systemd-hostnamed
+    # on demand. --static repeated the same call and --transient is refused while a static
+    # hostname exists, so the three calls plus the explicit restart issued four
+    # systemd-hostnamed starts per rename. This handler and etchosts.pl both run on a
+    # rename, which trips hostnamed's start limit (5 per 10 s) and leaves
+    # hostnamed.service and .socket failed - the box then reports "degraded".
     system("/usr/bin/hostnamectl set-hostname $name");
-    system("/usr/bin/hostnamectl set-hostname $name --static");
-    system("/usr/bin/hostnamectl set-hostname $name --transient");
-    system("/usr/bin/systemctl restart systemd-hostnamed");
 }
 
 # If this runs on an OpenVZ VPS, then we can stop right here. Under no bloody

@@ -125,6 +125,12 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+* Tue Nov 03 2026 Greg Kuhnert <gkuhnert@compassnetworks.com.au> 3.0.21-13
+- etchosts.pl: one hostnamectl call plus nmcli, as in modsystem.pl. The three set-hostname
+  forms and the explicit systemctl restart issued four systemd-hostnamed starts per rename;
+  with both handlers running per change that trips hostnamed's start limit (5 per 10 s) and
+  leaves hostnamed.service and .socket failed, so the box reports "degraded".
+
 * Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 3.0.21-12
 - range_ok.pl: after Net::IP->new, guard undef before ->version() so empty/garbage
   min/max FAIL cleanly instead of die (Greg Kuhnert latent trap)

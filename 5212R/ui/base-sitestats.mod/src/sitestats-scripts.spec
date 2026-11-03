@@ -1,7 +1,7 @@
 Summary: Server and site statistics for web, ftp, email, and network traffic
 Name: base-sitestats-scripts
 Version: 2.3
-Release: 7%{?dist}
+Release: 8%{?dist}
 Vendor: Project BlueOnyx
 License: Sun modified BSD
 Group: System Environment/BlueOnax
@@ -37,6 +37,9 @@ fi
 
 %changelog
 
+* Mon Nov 03 2026 Michael Stauber <mstauber@solarspeed.net> 2.3-8
+- am_monitorix: NOINFO if service disabled/masked (no force-enable); wait 12s
+  after restart before RED. Credit: Greg Kuhnert (ISO still shipped 2.3-7).
 * Sat Oct 17 2026 Michael Stauber <mstauber@solarspeed.net> 2.3-7
 - Replaced iptables accounting in log_traffic with nftables table
   inet bxacct. Firewalld is no longer stopped or disabled.

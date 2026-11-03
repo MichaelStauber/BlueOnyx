@@ -60,7 +60,13 @@ class Goaccess extends BaseController {
         //
 
         // Set access-cookie for GoAccess that expires at end of the browser session. 
-        setcookie("BXGoAccess", $CI->BX_SESSION['sessionId'], "0", "/");
+        setcookie("BXGoAccess", $CI->BX_SESSION['sessionId'], [
+            'expires' => 0,
+            'path' => '/',
+            'secure' => true,
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
 
         //
         //-- Generate page:

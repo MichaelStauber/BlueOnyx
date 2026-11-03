@@ -287,7 +287,8 @@ cce_ed_dispatch(cce_ed *ed, codb_handle *odb)
         for (cursor=ed->old_rollback_handlers; cursor;
                 cursor=g_slist_next(cursor))
         {
-            handler_event_destroy_events(cursor->data);
+            if (cursor->data)
+                handler_event_destroy_events(cursor->data);
         }
         g_slist_free(ed->old_rollback_handlers);
         ed->old_rollback_handlers = NULL;
@@ -307,7 +308,8 @@ cce_ed_dispatch(cce_ed *ed, codb_handle *odb)
         for (cursor=ed->old_rollback_handlers; cursor;
                 cursor=g_slist_next(cursor))
         {
-            handler_event_destroy_events(cursor->data);
+            if (cursor->data)
+                handler_event_destroy_events(cursor->data);
         }
         g_slist_free(ed->old_rollback_handlers);
         ed->old_rollback_handlers = NULL;
@@ -448,6 +450,9 @@ translate_events_to_handlers(cce_ed *ed, oid_t oid, GSList *events,
             ed_handler_event *he;
 
             htmp = (cce_conf_handler *)cursor->data;
+            if (!htmp) {
+                continue;
+            }
             //DPRINTF(DBG_ED, "----handler: %s:%s\n", cce_conf_handler_type(htmp),
                 // cce_conf_handler_data(htmp));
 
@@ -461,6 +466,11 @@ translate_events_to_handlers(cce_ed *ed, oid_t oid, GSList *events,
                             codb_event_dup(event));
                 } else {
                     he = handler_event_new(htmp);
+                    /* OOM: never insert NULL; fail txn so config is not half-applied (Greg) */
+                    if (!he) {
+                        CCE_SYSLOG("translate_events_to_handlers: handler_event_new OOM (rollback) - failing transaction");
+                        goto oom_fail;
+                    }
                     he->events = g_slist_append(he->events,
                             codb_event_dup(event));
                     g_hash_table_insert(rollback_hash, htmp, he);
@@ -471,6 +481,10 @@ translate_events_to_handlers(cce_ed *ed, oid_t oid, GSList *events,
                 he->events = g_slist_append(he->events, event);
             } else {
                 he = handler_event_new(htmp);
+                if (!he) {
+                    CCE_SYSLOG("translate_events_to_handlers: handler_event_new OOM (handler) - failing transaction");
+                    goto oom_fail;
+                }
                 he->events = g_slist_append(he->events, event);
                 g_hash_table_insert(handler_hash, htmp, he);
             }
@@ -484,6 +498,9 @@ translate_events_to_handlers(cce_ed *ed, oid_t oid, GSList *events,
             ed_handler_event *he;
 
             htmp = (cce_conf_handler *) cursor->data;
+            if (!htmp) {
+                continue;
+            }
             //DPRINTF(DBG_ED, "----handler: %s:%s\n", 
                 //cce_conf_handler_type(htmp), cce_conf_handler_data (htmp));
 
@@ -497,6 +514,10 @@ translate_events_to_handlers(cce_ed *ed, oid_t oid, GSList *events,
                             codb_event_dup(event));
                 } else {
                     he = handler_event_new(htmp);
+                    if (!he) {
+                        CCE_SYSLOG("translate_events_to_handlers: handler_event_new OOM (star rollback) - failing transaction");
+                        goto oom_fail;
+                    }
                     he->events = g_slist_append(he->events,
                             codb_event_dup(event));
                     g_hash_table_insert(rollback_hash, htmp, he);
@@ -505,6 +526,10 @@ translate_events_to_handlers(cce_ed *ed, oid_t oid, GSList *events,
             he = g_hash_table_lookup(handler_hash, htmp);
             if (!he) {
                 he = handler_event_new(htmp);
+                if (!he) {
+                    CCE_SYSLOG("translate_events_to_handlers: handler_event_new OOM (star handler) - failing transaction");
+                    goto oom_fail;
+                }
                 g_hash_table_insert(handler_hash, htmp, he);
             }
             he->events = g_slist_append(he->events, event);
@@ -527,9 +552,10 @@ translate_events_to_handlers(cce_ed *ed, oid_t oid, GSList *events,
              g_hash_iter_next (it, &key, &val)) {
 	    /* append to the list of unique handler events */
             ed_handler_event *he = (ed_handler_event *)val;
-            *handlers = g_slist_append(*handlers, he);
-
-            count++;
+            if (he) {
+                *handlers = g_slist_append(*handlers, he);
+                count++;
+            }
             //DPRINTF(DBG_ED, "----handler %d: %s:%s\n", count,
                 //cce_conf_handler_type(he->handler),
                 //cce_conf_handler_data(he->handler));
@@ -547,7 +573,9 @@ translate_events_to_handlers(cce_ed *ed, oid_t oid, GSList *events,
              g_hash_iter_next (it, &key, &val)) {
 
             ed_handler_event *he = (ed_handler_event *)val;
-            *rollback_handlers = g_slist_append(*rollback_handlers, he);
+            if (he) {
+                *rollback_handlers = g_slist_append(*rollback_handlers, he);
+            }
         }
         g_hash_iter_destroy (it);
     }
@@ -556,6 +584,40 @@ translate_events_to_handlers(cce_ed *ed, oid_t oid, GSList *events,
     free (class);
 
     return count;
+
+oom_fail:
+    /* Free any handler_event objects already staged in the hashes.
+     * Do not leave a commit running without the handlers it required.
+     * Greg Kuhnert: skip-on-OOM is weaker than failing the transaction.
+     */
+    {
+        GHashIter *it;
+        gpointer key, val;
+        if (handler_hash) {
+            it = g_hash_iter_new(handler_hash);
+            for (g_hash_iter_first(it, &key, &val); key;
+                 g_hash_iter_next(it, &key, &val)) {
+                if (val)
+                    handler_event_destroy((ed_handler_event *)val);
+            }
+            g_hash_iter_destroy(it);
+            g_hash_table_destroy(handler_hash);
+            handler_hash = NULL;
+        }
+        if (rollback_hash) {
+            it = g_hash_iter_new(rollback_hash);
+            for (g_hash_iter_first(it, &key, &val); key;
+                 g_hash_iter_next(it, &key, &val)) {
+                if (val)
+                    handler_event_destroy_events((ed_handler_event *)val);
+            }
+            g_hash_iter_destroy(it);
+            g_hash_table_destroy(rollback_hash);
+            rollback_hash = NULL;
+        }
+    }
+    free(class);
+    return -1;
 }
 
 ed_handler_event *
@@ -577,6 +639,9 @@ handler_event_new(cce_conf_handler *h)
 void
 handler_event_destroy(ed_handler_event *e)
 {
+    if (!e) {
+        return;
+    }
     if (e->events) {
         g_slist_free(e->events);
     }
@@ -586,11 +651,16 @@ handler_event_destroy(ed_handler_event *e)
 void
 handler_event_destroy_events(ed_handler_event *e)
 {
+    if (!e) {
+        return;
+    }
     if (e->events) {
         GSList *cursor = e->events;
         while(cursor)
         {
-            codb_event_destroy(cursor->data);
+            if (cursor->data) {
+                codb_event_destroy(cursor->data);
+            }
             cursor = g_slist_next(cursor);
         }
         g_slist_free(e->events);
@@ -646,7 +716,20 @@ dispatch_events(cce_ed *ed, GHashTable *event_hash, GSList **rollback_handlers)
 
         DPRINTF(DBG_ED, "object %ld\n", oid);
 
-        translate_events_to_handlers(ed, oid, eventlist, &handlers, rollback_handlers);
+        {
+            int nhandlers;
+            nhandlers = translate_events_to_handlers(ed, oid, eventlist,
+                    &handlers, rollback_handlers);
+            if (nhandlers < 0) {
+                /* OOM while building handler list - fail whole dispatch (Greg) */
+                CCE_SYSLOG("dispatch_events: translate_events_to_handlers failed (oid %ld)",
+                    (long)oid);
+                ret = -1;
+                g_slist_free(handlers);
+                handlers = NULL;
+                break;
+            }
+        }
 
         /* run handlers for this object */
         for (stage = H_STAGE_NONE + 1; (!ret) && (stage < H_STAGE_CLEANUP); stage++)
@@ -655,8 +738,10 @@ dispatch_events(cce_ed *ed, GHashTable *event_hash, GSList **rollback_handlers)
             if (ret)
                 break;
         }
-        for (cursor=handlers; cursor; cursor=g_slist_next(cursor))
-            handler_event_destroy(cursor->data);
+        for (cursor=handlers; cursor; cursor=g_slist_next(cursor)) {
+            if (cursor->data)
+                handler_event_destroy(cursor->data);
+        }
         g_slist_free(handlers);
     }
 
@@ -677,9 +762,12 @@ void print_handler_queue(GSList *defered, GSList *remaining)
     while (remaining) {
         fprintf(stderr, "%lx:%lx:", (long)remaining, (long)(remaining->data));
         he = (ed_handler_event *)remaining->data;
-        h = he->handler;
-
-        fprintf(stderr, "%s ", cce_conf_handler_data(h));
+        if (!he || !he->handler) {
+            fprintf(stderr, "(NULL) ");
+        } else {
+            h = he->handler;
+            fprintf(stderr, "%s ", cce_conf_handler_data(h));
+        }
         remaining = remaining->next;
     }
     fprintf(stderr, "\n");
@@ -687,9 +775,12 @@ void print_handler_queue(GSList *defered, GSList *remaining)
     fprintf(stderr, "Defered: ");
     while (defered) {
         he = (ed_handler_event *)defered->data;
-        h = he->handler;
-
-        fprintf(stderr, "%s ", cce_conf_handler_data(h));
+        if (!he || !he->handler) {
+            fprintf(stderr, "(NULL) ");
+        } else {
+            h = he->handler;
+            fprintf(stderr, "%s ", cce_conf_handler_data(h));
+        }
         defered = defered->next;
     }
     fprintf(stderr, "\n\n");
@@ -724,6 +815,17 @@ run_handlers(cce_ed *ed, oid_t oid, GSList *handlers, int stage, int isrollback)
         print_handler_queue(defered, remaining);
         for (cursor=remaining; cursor && !ret; cursor=g_slist_next(cursor)){
             he = (ed_handler_event *)cursor->data;
+            /* Defensive: corrupted/partial rollback lists have been observed
+             * with NULL node data after nested CREATE failures (e.g. empty
+             * IPPoolingRange) on long first-boot handler queues. Skipping
+             * avoids SIGSEGV in he->handler; log so it remains diagnosable.
+             */
+            if (!he || !he->handler) {
+                CCE_SYSLOG("run_handlers: skipping NULL handler event node (stage %d, rollback=%d)",
+                    stage, isrollback);
+                DPRINTF(DBG_ED, "-- skip NULL ed_handler_event\n");
+                continue;
+            }
             handler = he->handler;
             type = cce_conf_handler_type(handler);
 

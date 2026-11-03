@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: cce_construct 259 2004-01-03 06:28:40Z shibuya $
+# $Id: cce_construct
 # Copyright 2001 Sun Microsystems, Inc.  All rights reserved.
 #
 # Copyright(c) 2000 Cobalt Networks, Inc.
@@ -9,65 +9,127 @@
 # it's like the old one, but it makes cce do all of the hard work.
 #
 # syntax: $0 <type>
-# where type can be one of 
+# where type can be one of
 #   sysinit
 #   sysreset
 #   [nothing]
+#
+# 2026-11-01: Per-constructor wall-clock timeout + always clear lockfile.
+# Without this, a dead cced leaves a constructor blocked on the Unix socket
+# forever, cce_construct.lock held, swatch skips forever, AM never updates.
+# Reported and diagnosed by Greg Kuhnert.
+
+use strict;
+use warnings;
 
 my $consdir = '/usr/sausalito/constructor';
 my $destroydir = '/usr/sausalito/destructor';
 my $preferdir = 'base';
-my $lockfile='/var/lock/subsys/cce_construct.lock';
+my $lockfile = '/var/lock/subsys/cce_construct.lock';
 
-system("/usr/bin/logger", "cce_construct started");
+# Seconds per constructor script (override with CCE_CONSTRUCT_TIMEOUT).
+# Long scripts (e.g. email sync) need headroom; dead-socket hangs were hours.
+my $CONSTRUCT_TIMEOUT = $ENV{CCE_CONSTRUCT_TIMEOUT} || 300;
+my $TIMEOUT_BIN = '/usr/bin/timeout';
+
+# Do not put SO_RCVTIMEO on constructor CCE clients by default (Greg Kuhnert):
+# readline+EAGAIN looks like EOF. The wall clock below bounds wedged scripts.
+$ENV{CCE_IO_TIMEOUT} = '0' unless exists $ENV{CCE_IO_TIMEOUT};
+
+
+system('/usr/bin/logger', 'cce_construct started');
+
+# Always drop the lock on exit (normal, die, signal) so swatch cannot wedge.
+sub clear_lock {
+    unlink $lockfile if defined $lockfile && -e $lockfile;
+}
+END { clear_lock(); }
+$SIG{TERM} = $SIG{INT} = $SIG{HUP} = sub {
+    system('/usr/bin/logger', 'cce_construct: caught signal, clearing lock');
+    clear_lock();
+    exit 143;
+};
 
 sub get_files
 {
     my ($dir, $allowpat, $excludepat) = @_;
     my $name;
-    my %hash, %dirhash;
+    my (%hash, %dirhash);
     local *DIR;
 
     if (opendir(DIR, $dir)) {
-	while ($_ = readdir(DIR)) {
+        while ($_ = readdir(DIR)) {
             next if /^\./; # always ignore stuff starting with .
-	    $name = "$dir/$_";
-	    if (-d $name) {
-		%dirhash = get_files($name, $allowpat, $excludepat);
-		foreach $name (keys %dirhash) {
-		    $hash{$name} = $dirhash{$name};
-		}
-	    } else {
-		next if $allowpat and not /^$allowpat/;
-		next if $excludepat and /^$excludepat/;
-		$hash{"$_$dir"} = $name;
-	    }
-	}
-	closedir(DIR);
+            $name = "$dir/$_";
+            if (-d $name) {
+                %dirhash = get_files($name, $allowpat, $excludepat);
+                foreach $name (keys %dirhash) {
+                    $hash{$name} = $dirhash{$name};
+                }
+            } else {
+                next if $allowpat and not /^$allowpat/;
+                next if $excludepat and /^$excludepat/;
+                $hash{"$_$dir"} = $name;
+            }
+        }
+        closedir(DIR);
     }
     return %hash;
 }
 
+# Run one constructor with a hard wall-clock limit so a dead cced cannot
+# block forever (unix_stream_data_wait on dead socket).
+sub run_constructor {
+    my ($script) = @_;
+    return 1 unless defined $script && length $script && -f $script;
+
+    my $timeout = $CONSTRUCT_TIMEOUT;
+    # Email sync and similar can be slow on first boot
+    if ($script =~ m{/email/syncEmailService\.pl$}) {
+        $timeout = $ENV{CCE_CONSTRUCT_TIMEOUT_LONG} || ($CONSTRUCT_TIMEOUT * 2);
+    }
+
+    my $rc;
+    if (-x $TIMEOUT_BIN) {
+        # TERM first, then KILL if still stuck (dead-socket read)
+        $rc = system($TIMEOUT_BIN, '--signal=TERM', '--kill-after=15',
+            "$timeout", $script);
+    } else {
+        $rc = system($script);
+    }
+
+    my $exit = $? >> 8;
+    my $sig  = $? & 127;
+    if ($exit == 124) {
+        system('/usr/bin/logger',
+            "***** cce_construct: TIMEOUT (${timeout}s): $script (Greg Kuhnert: dead cced must not wedge forever)");
+        print STDERR "   TIMEOUT after ${timeout}s: $script\n";
+        return 124;
+    }
+    if ($sig) {
+        system('/usr/bin/logger',
+            "***** cce_construct: killed by signal $sig: $script");
+        return 128 + $sig;
+    }
+    if ($exit != 0) {
+        system('/usr/bin/logger',
+            "***** cce_construct: exit $exit: $script");
+    }
+    return $exit;
+}
+
 # Create lockfile:
-system("touch $lockfile");
+system('mkdir', '-p', '/var/lock/subsys');
+system('touch', $lockfile);
 
 my %hash;
 my ($key, $allowpat, $excludepat);
 
-# if this were really working, it would go through the database
-# and destroy all of the objects in it before running the 
-# destructors.	
-while ($ARGV[0] =~ /^\-/) {
+while (@ARGV && $ARGV[0] =~ /^\-/) {
     if ($ARGV[0] eq '-f') {
-	print "i'm pretending to reset the machine to factory defaults.\n";
-#	print "----- destructing -----\n";
-#   destroy objects
-#   run other destructors
-#   run base destructors
-#	print "\n----- done -----\n";
+        print "i'm pretending to reset the machine to factory defaults.\n";
     }
-
-    shift;
+    shift @ARGV;
 }
 
 if ($ARGV[0]) {
@@ -77,25 +139,29 @@ if ($ARGV[0]) {
 }
 
 # Really, CentOS? I think you forgot something!
-if ( ! -d "/run/php-fpm") {
-    system("mkdir -p /run/php-fpm");
+if ( ! -d '/run/php-fpm') {
+    system('mkdir', '-p', '/run/php-fpm');
 }
 
 # We should run the Constructor that creates the 'System' Object first of all.
 # Too much stuff depends on the 'System' Object being there.
-if (-f "/usr/sausalito/constructor/base/system/10_addSystem.pl") {
-    system("/usr/sausalito/constructor/base/system/10_addSystem.pl")
+if (-f '/usr/sausalito/constructor/base/system/10_addSystem.pl') {
+    print("   /usr/sausalito/constructor/base/system/10_addSystem.pl\n");
+    system('/usr/bin/logger', '***** cce_construct: /usr/sausalito/constructor/base/system/10_addSystem.pl');
+    run_constructor('/usr/sausalito/constructor/base/system/10_addSystem.pl');
 }
 
 # running constructors
 print "----- constructing -----\n";
-# run the base one first 
+# run the base one first
 %hash = get_files("$consdir/$preferdir", $allowpat, $excludepat);
 if (%hash) {
     foreach $key (sort keys %hash) {
-	print("   $hash{$key}\n");
-	system('/usr/bin/logger', "***** cce_construct: $hash{$key}");
-	`$hash{$key}`;
+        # already ran 10_addSystem.pl first
+        next if $hash{$key} eq '/usr/sausalito/constructor/base/system/10_addSystem.pl';
+        print("   $hash{$key}\n");
+        system('/usr/bin/logger', "***** cce_construct: $hash{$key}");
+        run_constructor($hash{$key});
     }
 }
 
@@ -103,26 +169,27 @@ if (%hash) {
 # them in alphabetical order.
 
 my (@dirs, $dir);
-if (opendir(PDIR, $consdir)) {
-    while ($_ = readdir(PDIR)) {
-	next if /^\./;
-	next if /^$preferdir$/;
-	push @dirs, $_;
+if (opendir(my $PDIR, $consdir)) {
+    while ($_ = readdir($PDIR)) {
+        next if /^\./;
+        next if /^$preferdir$/;
+        push @dirs, $_;
     }
+    closedir($PDIR);
 }
 
 foreach $dir (sort @dirs) {
     %hash = get_files("$consdir/$dir", $allowpat, $excludepat);
     if (%hash) {
-	foreach $key (sort keys %hash) {
-	    print("   $hash{$key}\n");
-	    system("/usr/bin/logger", "*** cce_construct: $hash{$key}");
-	    `$hash{$key}`;
-	}
+        foreach $key (sort keys %hash) {
+            print("   $hash{$key}\n");
+            system('/usr/bin/logger', "*** cce_construct: $hash{$key}");
+            run_constructor($hash{$key});
+        }
     }
 }
-system("/usr/bin/logger", "***** cce_construct finished");
-system("rm -f $lockfile");
+system('/usr/bin/logger', '***** cce_construct finished');
+clear_lock();
 print "\n----- done -----\n";
 
-
+exit 0;

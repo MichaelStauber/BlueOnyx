@@ -19,6 +19,9 @@ if (file_exists(SYSTEMPATH . 'Config/Routes.php')) {
  * --------------------------------------------------------------------
  * Router Setup
  * --------------------------------------------------------------------
+ *
+ * Runtime route configuration is intentional for BlueOnyx/Chorizo
+ * (module discovery). Config\Routing.php defaults must not replace this.
  */
 $routes->setDefaultNamespace('');
 $routes->setDefaultController('Gui\Controllers\ErrorPages::Redirect');
@@ -36,17 +39,65 @@ $routes->setAutoRoute(false);
 // Default route
 $routes->get('/', 'Gui\Controllers\ErrorPages::Redirect');
 
-// Dynamically load routes from modules
-$modulesPath = '/usr/sausalito/ui/chorizo/ci4/Modules/';
-$iterator = new \RecursiveIteratorIterator(
-    new \RecursiveDirectoryIterator($modulesPath),
-    \RecursiveIteratorIterator::SELF_FIRST
-);
+// Dynamically load routes from modules.
+// ionCube-encoded module Routes.php cannot run while auto_prepend_file /
+// auto_append_file are set (admserv-php ships set_php_headers.php as prepend).
+// Clear them only for the duration of these requires.
+//
+// Shop packages encoded with the PHP 8.1 + license pipeline (encode_81.sh)
+// fatal the whole GUI on AdmServ PHP 8.2+ if require()'d. Skip those files
+// so base YUM updates stay safe until shop RPMs are re-encoded (encode_83).
+//
+// Config\Modules must NOT list "routes" in $aliases — CI auto-discovery would
+// include the same files again without this gate.
+//
+// Skipped modules: menu XML URLs are mapped to Gui\Controllers\ShopModuleUpgrade
+// so menu clicks show an upgrade notice instead of a bare 404.
+$modulesPath = ROOTPATH . 'Modules/';
+if (! is_dir($modulesPath)) {
+    $modulesPath = '/usr/sausalito/ui/chorizo/ci4/Modules/';
+}
 
-foreach ($iterator as $file) {
-    if ($file->getFilename() === 'Routes.php') {
-        require $file->getPathname();
+$bxRoutesHelper = APPPATH . 'Helpers/bx_module_routes_helper.php';
+if (is_readable($bxRoutesHelper)) {
+    require_once $bxRoutesHelper;
+}
+
+$prevPrepend = ini_get('auto_prepend_file') ?: '';
+$prevAppend  = ini_get('auto_append_file') ?: '';
+// @ - may be blocked under php_admin_*; best-effort for ionCube modules.
+@ini_set('auto_prepend_file', '');
+@ini_set('auto_append_file', '');
+
+try {
+    if (is_dir($modulesPath)) {
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($modulesPath, \FilesystemIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::SELF_FIRST
+        );
+
+        foreach ($iterator as $file) {
+            if ($file->isFile() && $file->getFilename() === 'Routes.php') {
+                $path = $file->getPathname();
+                if (function_exists('bx_module_routes_require_safe')) {
+                    bx_module_routes_require_safe($path);
+                } else {
+                    require $path;
+                }
+            }
+        }
     }
+} finally {
+    if ($prevPrepend !== '') {
+        @ini_set('auto_prepend_file', $prevPrepend);
+    }
+    if ($prevAppend !== '') {
+        @ini_set('auto_append_file', $prevAppend);
+    }
+}
+
+if (function_exists('bx_module_routes_register_placeholders')) {
+    bx_module_routes_register_placeholders($routes);
 }
 
 /**

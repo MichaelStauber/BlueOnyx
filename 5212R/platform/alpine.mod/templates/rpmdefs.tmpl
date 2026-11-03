@@ -235,6 +235,34 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+* Mon Nov 02 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-61
+- ionCube Routes gate: allow single-target //0038e (encode_83) and modern
+  copyright; only skip ICB0-81-only and legacy //0030b / license-era encodes.
+* Mon Nov 02 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-60
+- Shop module upgrade notice: skipped encode_81 Routes map menu XML URLs to
+  Gui/Controllers/ShopModuleUpgrade (Please upgrade… BlueOnyx Shop).
+- Multi-XML modules supported; 404 safety-net forwards placeholder URIs.
+* Mon Nov 02 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-59
+- Skip ionCube PHP-8.1/license-bound module Routes.php on AdmServ PHP 8.2+ so
+  YUM base updates do not 500-loop the GUI when old shop packages are still installed.
+- Helper: app/Helpers/bx_module_routes_helper.php (ICB0 target parse + legacy //00xxx).
+- encode_83 / ICB0 with 8.3+ targets still load; plain PHP Routes unchanged.
+- Config\Modules: remove routes from auto-discover aliases (CI discovery bypassed the gate).
+* Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-58
+- Drop legacy HTTP :444 GUI URLs; always use HTTPS GUI_PORT (81)
+
+
+* Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-57
+- CodeIgniter 4.5.5 -> 4.7.5 (composer pin + base-alpine-ci4-vendor tree).
+- Sacred BX overlays + bx_ci4_fixer.sh (App/Paths/Routes/Session/Autoload/Filters).
+- validation_helper: do not reuse $data for preg_match (session numeric key 0).
+- blueonyx_helper: bx_session_sanitize_numeric_keys(); Events.php shutdown/post_system.
+- uifc_ng_helper addIframe: prefer HTTP_HOST for iframe origin.
+- New Config Hostnames.php, WorkerMode.php; Kint without removed richSort.
+- Docs: docs/ci-4.7.5-merge-inventory.md (vendor ADD/REMOVE lists for 5212R merge),
+  docs/admserv-php-no-auto-prepend.md.
+- Merge note: delete vendor paths listed in docs/ci-4.7.5-vendor-REMOVED.txt;
+  do not ship alpine.mod/ci4/vendor duplicate (SoT is ci4-vendor package tree).
 
 * Tue Oct 27 2026 Michael Stauber <mstauber@solarspeed.net> 5.2-56
 - CceApiClient::getObject(): give $class a default so optional $username/

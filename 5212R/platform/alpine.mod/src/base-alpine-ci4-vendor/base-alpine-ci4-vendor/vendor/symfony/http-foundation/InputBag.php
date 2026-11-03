@@ -29,13 +29,13 @@ final class InputBag extends ParameterBag
     public function get(string $key, mixed $default = null): string|int|float|bool|null
     {
         if (null !== $default && !\is_scalar($default) && !$default instanceof \Stringable) {
-            throw new \InvalidArgumentException(sprintf('Expected a scalar value as a 2nd argument to "%s()", "%s" given.', __METHOD__, get_debug_type($default)));
+            throw new \InvalidArgumentException(\sprintf('Expected a scalar value as a 2nd argument to "%s()", "%s" given.', __METHOD__, get_debug_type($default)));
         }
 
         $value = parent::get($key, $this);
 
         if (null !== $value && $this !== $value && !\is_scalar($value) && !$value instanceof \Stringable) {
-            throw new BadRequestException(sprintf('Input value "%s" contains a non-scalar value.', $key));
+            throw new BadRequestException(\sprintf('Input value "%s" contains a non-scalar value.', $key));
         }
 
         return $this === $value ? $default : $value;
@@ -68,7 +68,7 @@ final class InputBag extends ParameterBag
     public function set(string $key, mixed $value): void
     {
         if (null !== $value && !\is_scalar($value) && !\is_array($value) && !$value instanceof \Stringable) {
-            throw new \InvalidArgumentException(sprintf('Expected a scalar, or an array as a 2nd argument to "%s()", "%s" given.', __METHOD__, get_debug_type($value)));
+            throw new \InvalidArgumentException(\sprintf('Expected a scalar, or an array as a 2nd argument to "%s()", "%s" given.', __METHOD__, get_debug_type($value)));
         }
 
         $this->parameters[$key] = $value;
@@ -112,20 +112,37 @@ final class InputBag extends ParameterBag
         }
 
         if (\is_array($value) && !(($options['flags'] ?? 0) & (\FILTER_REQUIRE_ARRAY | \FILTER_FORCE_ARRAY))) {
-            throw new BadRequestException(sprintf('Input value "%s" contains an array, but "FILTER_REQUIRE_ARRAY" or "FILTER_FORCE_ARRAY" flags were not set.', $key));
+            throw new BadRequestException(\sprintf('Input value "%s" contains an array, but "FILTER_REQUIRE_ARRAY" or "FILTER_FORCE_ARRAY" flags were not set.', $key));
         }
 
         if ((\FILTER_CALLBACK & $filter) && !(($options['options'] ?? null) instanceof \Closure)) {
-            throw new \InvalidArgumentException(sprintf('A Closure must be passed to "%s()" when FILTER_CALLBACK is used, "%s" given.', __METHOD__, get_debug_type($options['options'] ?? null)));
+            throw new \InvalidArgumentException(\sprintf('A Closure must be passed to "%s()" when FILTER_CALLBACK is used, "%s" given.', __METHOD__, get_debug_type($options['options'] ?? null)));
         }
 
         $options['flags'] ??= 0;
         $nullOnFailure = $options['flags'] & \FILTER_NULL_ON_FAILURE;
         $options['flags'] |= \FILTER_NULL_ON_FAILURE;
 
-        $value = filter_var($value, $filter, $options);
+        $invalid = false;
+        $forceArray = !\is_array($value) && ($options['flags'] & \FILTER_FORCE_ARRAY) && !($options['flags'] & \FILTER_REQUIRE_ARRAY);
 
-        if (null !== $value || $nullOnFailure) {
+        if (!$nullOnFailure && \is_array($value) && $value && !($options['flags'] & \FILTER_REQUIRE_SCALAR) && ($options['flags'] & (\FILTER_REQUIRE_ARRAY | \FILTER_FORCE_ARRAY))) {
+            $options['flags'] &= ~(\FILTER_REQUIRE_ARRAY | \FILTER_FORCE_ARRAY);
+            $value = self::filterArray($value, $filter, $options, $invalid);
+        } else {
+            if ($forceArray) {
+                $options['flags'] &= ~\FILTER_FORCE_ARRAY;
+            }
+
+            $value = filter_var($value, $filter, $options);
+            $invalid = null === $value;
+
+            if ($forceArray) {
+                $value = [$value];
+            }
+        }
+
+        if (!$invalid || $nullOnFailure) {
             return $value;
         }
 
@@ -135,6 +152,33 @@ final class InputBag extends ParameterBag
 
         trigger_deprecation('symfony/http-foundation', '6.3', 'Ignoring invalid values when using "%s::%s(\'%s\')" is deprecated and will throw a "%s" in 7.0; '.$hint.' flag "FILTER_NULL_ON_FAILURE" to keep ignoring them.', $this::class, $method, $key, BadRequestException::class);
 
-        return false;
+        return $value ?? false;
+    }
+
+    private static function filterArray(array $value, int $filter, array $options, bool &$invalid, array &$references = []): array
+    {
+        foreach ($value as $key => $item) {
+            if (!\is_array($item)) {
+                $value[$key] = filter_var($item, $filter, $options);
+                $invalid = $invalid || null === $value[$key];
+                continue;
+            }
+
+            $id = \ReflectionReference::fromArrayElement($value, $key)?->getId();
+            if (null !== $id && isset($references[$id])) {
+                continue;
+            }
+            if (null !== $id) {
+                $references[$id] = true;
+            }
+
+            $value[$key] = self::filterArray($item, $filter, $options, $invalid, $references);
+
+            if (null !== $id) {
+                unset($references[$id]);
+            }
+        }
+
+        return $value;
     }
 }

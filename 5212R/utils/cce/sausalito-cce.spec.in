@@ -6,7 +6,8 @@
 
 %define extension_dir %(php-config --extension-dir)
 %define adm_php_prefix /home/solarspeed/admserv-php
-%define adm_extension_dir %(echo %{adm_php_prefix}/lib/php/20230831)
+# Always take Zend API dir from installed AdmServ php-config (8.4 = 20240924, etc.)
+%define adm_extension_dir %( %{adm_php_prefix}/bin/php-config --extension-dir 2>/dev/null || echo %{adm_php_prefix}/lib/php/20240924 )
 %define adm_php_ini_dir %{adm_php_prefix}/etc/php.d
 
 Summary: Cobalt CCE Server and Clients
@@ -175,7 +176,8 @@ rm -f $RPM_BUILD_ROOT/share/man/man8/pam_abl.8.gz
 /usr/sausalito/ui/libPhp/*
 /usr/sausalito/perl/*
 %{adm_extension_dir}/cce.so
-%config(noreplace) %{adm_php_ini_dir}/cce.ini
+# MUST replace on upgrade (extension path/API changes) - never %config(noreplace)
+%{adm_php_ini_dir}/cce.ini
 /usr/share/locale/*
 %config(noreplace) /etc/httpd/conf.d/blueonyx.conf
 
@@ -233,6 +235,10 @@ if [ -x /bin/systemctl ]; then
 	/bin/systemctl try-restart admserv-php-fpm.service >/dev/null 2>&1 || :
 fi
 
+# Drop leftover rpmnew/rpmsave from older %config(noreplace) packaging
+rm -f /home/solarspeed/admserv-php/etc/php.d/cce.ini.rpmnew \
+      /home/solarspeed/admserv-php/etc/php.d/cce.ini.rpmsave 2>/dev/null || :
+
 %postun client
 # reload httpd
 if [ "$1" -ge "1" ]; then
@@ -241,6 +247,56 @@ if [ "$1" -ge "1" ]; then
 fi
 
 %changelog
+* Mon Nov 02 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-17
+- cced_unstuck.sh: flock, 90s cooldown, skip during cce_construct, probe CCE
+  before kill storm; avoid parallel cced-api restarts from FPM workers.
+* Mon Nov 02 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-16
+- adm_extension_dir: use admserv-php php-config --extension-dir (not hardcoded
+  Zend API path). Same fix as 5211R 0.99.6-7.
+
+* Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-15
+- CCE.pm: drop unused $self->{io_timeout}; document pack('l!l!') timeval
+  (Greg Kuhnert minor)
+
+
+* Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-14
+- CCE.pm: default CCE_IO_TIMEOUT=0 again (Greg Kuhnert). SO_RCVTIMEO+readline
+  turns slow cced into false EOF; bound hangs via cce_construct wall clock.
+- cce_construct: force CCE_IO_TIMEOUT=0 for children unless explicitly set
+
+
+* Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-13
+- translate_events_to_handlers: on handler_event_new OOM fail the transaction
+  (return -1) instead of silently dropping the handler (Greg Kuhnert)
+- print_handler_queue (DEBUG_ED): NULL-check he before he->handler (Greg Kuhnert)
+
+
+* Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-12
+- cce_construct: per-constructor timeout + always clear lock (Greg Kuhnert)
+- CCE.pm connectuds: default SO_RCV/SND TIMEO 60s so dead cced cannot hang
+  forever on unix_stream_data_wait (reported/diagnosed by Greg Kuhnert)
+
+
+* Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-11
+- translate_events_to_handlers: check handler_event_new OOM; never insert NULL
+  into handler/rollback hashes (Greg belt-and-braces half 2)
+
+* Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-10
+- run_handlers: skip NULL ed_handler_event nodes (first-boot nested CREATE FAIL)
+- handler_event_destroy*: tolerate NULL
+
+
+* Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-9
+- %%post: also remove cce.ini.rpmsave leftovers from noreplace transition
+
+
+* Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-8
+- cce.ini is a plain packaged file (not %%config(noreplace)) so PHP 8.x
+  extension path/API updates replace the live ini instead of writing .rpmnew
+- %%post client: remove leftover cce.ini.rpmnew from older packaging
+
+* Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-7
+- Rebuilt for PHP-8.4 support in cce.so
 
 * Fri Jul 24 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-6
 - Added 5212R detection to SACPAM PAM config selection in server/Makefile

@@ -6,8 +6,8 @@ VENDOR=base
 VENDORNAME='Project BlueOnyx'
 SERVICE=phpsysinfo
 
-VERSION=1.4.1
-RELEASE=2
+VERSION=1.4.2
+RELEASE=1
 
 # add a buildarch if desired
 BUILDARCH=noarch
@@ -18,7 +18,8 @@ BUILDARCH=noarch
 BUILDUI=new
 BUILDGLUE=yes
 BUILDLOCALE=yes
-BUILDSRC=no
+# yes: module.mk src_rpms runs make -C src rpm → phpsysinfo app package
+BUILDSRC=yes
 REQUIRES= php-xml phpsysinfo
 
 #########

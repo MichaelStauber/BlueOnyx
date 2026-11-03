@@ -194,6 +194,20 @@ class ErrorPages extends BaseController {
         $data['text'] = 'PageNotFound404';
         helper(['form']);
 
+        // Skipped ionCube shop module (menu URL registered or safety-net match):
+        // show upgrade notice instead of bare File Not Found.
+        $reqUri = isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : '';
+        try {
+            $reqUri = (string) uri_string();
+        } catch (\Throwable $e) {
+            // keep REQUEST_URI
+        }
+        if (function_exists('bx_module_routes_is_placeholder_uri')
+            && bx_module_routes_is_placeholder_uri($reqUri)) {
+            $upgrade = new ShopModuleUpgrade();
+            return $upgrade->index();
+        }
+
         $CI =& get_instance();
         $BX_SESSION = $CI->getBX_SESSION();
 

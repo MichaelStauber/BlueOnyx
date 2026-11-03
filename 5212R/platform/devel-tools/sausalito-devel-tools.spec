@@ -1,7 +1,7 @@
 Summary: Cobalt development tools
 Name: sausalito-devel-tools
 Version: 0.7.3
-Release: 1%{?dist}
+Release: 2%{?dist}
 Vendor: %{vendor}
 License: Sun modified BSD
 Group: System Environment/BlueOnyx
@@ -10,7 +10,7 @@ Prefix: /usr/sausalito
 BuildRoot: /var/tmp/devel-root
 Provides: perl(BTO)
 BuildRequires: glib-devel
-Requires: cpp gcc glib-ghash imake subversion rpm-build autoconf automake re2c glib-devel file-libs popt-devel rpm-devel libstdc++-devel zlib-devel gcc-c++ libxml2-devel pam-devel glib2-devel flex bison cmake flex-devel php-devel libdb-devel python3-devel rpm-sign perl-generators golang gettext valkey-devel
+Requires: cpp gcc glib-ghash imake subversion rpm-build autoconf automake re2c glib-devel file-libs popt-devel rpm-devel libstdc++-devel zlib-devel gcc-c++ libxml2-devel pam-devel glib2-devel flex bison cmake flex-devel php-devel libdb-devel python3-devel rpm-sign perl-generators golang gettext valkey-devel chrpath CUnit-devel hiredis-devel
 
 # Modified for EL9: python2-devel changed to python3-devel
 
@@ -61,6 +61,9 @@ done
 /etc/rpm/macros.blueonyx
 
 %changelog
+
+* Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 0.7.3-2
+- Added requirement for chrpath, CUnit-devel and hiredis-devel
 
 * Sat Aug 22 2026 Michael Stauber <mstauber@solarspeed.net> 0.7.3-1
 - Rolled back devel-tools to SVN r6300 baseline and bumped version/release

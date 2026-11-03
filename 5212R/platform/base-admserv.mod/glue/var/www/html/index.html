@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="expires" content="-1">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<title>BlueOnyx Admin Server</title>
+<script>
+(function () {
+  // Always send browser to AdmServ HTTPS GUI on port 81.
+  // Strip any existing :port from host (e.g. :80, :443, :444).
+  var host = window.location.hostname || window.location.host.replace(/:\d+$/, '');
+  if (!host) {
+    host = window.location.host.replace(/:\d+$/, '');
+  }
+  var target = 'https://' + host + ':81/';
+  if (window.location.replace) {
+    window.location.replace(target);
+  } else {
+    window.location.href = target;
+  }
+})();
+</script>
+<meta http-equiv="refresh" content="0;url=https://localhost:81/">
+</head>
+<body>
+<p>Redirecting to the BlueOnyx Admin Server (HTTPS port 81)&hellip;
+<a href="https://localhost:81/">Continue</a></p>
+<script>
+// Fix meta refresh host if JS ran (replace localhost meta is backup only)
+(function () {
+  var host = window.location.hostname || 'localhost';
+  var a = document.querySelector('a');
+  if (a) a.href = 'https://' + host + ':81/';
+})();
+</script>
+</body>
+</html>

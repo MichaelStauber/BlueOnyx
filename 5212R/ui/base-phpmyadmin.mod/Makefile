@@ -6,8 +6,8 @@ VENDOR=base
 VENDORNAME='Project BlueOnyx'
 SERVICE=phpmyadmin
 
-VERSION=2.2.0
-RELEASE=2
+VERSION=2.3.0
+RELEASE=3
 
 # add a buildarch if desired
 BUILDARCH=noarch
@@ -18,8 +18,10 @@ BUILDARCH=noarch
 BUILDUI=new
 BUILDGLUE=yes
 BUILDLOCALE=yes
-BUILDSRC=no
+# yes: module.mk src_rpms runs "make -C src rpm" → blueonyx-phpMyAdmin
+BUILDSRC=yes
 
+# GUI capstone Requires the app package produced under src/
 REQUIRES = blueonyx-phpMyAdmin
 
 #########

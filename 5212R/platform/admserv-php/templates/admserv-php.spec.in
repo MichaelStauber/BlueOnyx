@@ -1,0 +1,140 @@
+%global debug_package %{nil}
+%define __debug_install_post %{nil}
+%global __brp_mangle_build_id %{nil}
+%global __build_id %{nil}
+%define _build_id_links none
+
+Name:		XXX_MASTER_XXX
+Version:	XXX_VERSION_XXX
+Release:	XXX_RELEASE_XXX
+Packager:	Michael Stauber <mstauber@solarspeed.net>
+Vendor:		SOLARSPEED.NET
+URL:		http://www.solarspeed.net
+License:	Proprietory
+Group:		System
+BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root
+BuildArch:      x86_64
+Distribution: 	BlueOnyx 5212R
+Source:		%{name}-%{version}-%{release}.tar.gz
+Requires:	ImageMagick
+Requires:       icu
+Requires:       libmhash
+Requires:       libssh2
+Requires:       solarspeed-ioncube
+Requires:       aspell
+Requires:       libsodium
+Requires:       libargon2
+Requires:       valgrind
+Requires:       tmpwatch
+Obsoletes:      admserv-php <= 8.1.999
+Obsoletes:      admserv-php <= 8.2.999
+Obsoletes:      admserv-php <= 8.3.999
+#Requires:       solarspeed-libzip
+#Requires:       solarspeed-curl
+
+AutoReq: 	no
+Summary:	Separate PHP-FPM instance for BlueOnyx 5212R AdmServ
+
+%description
+Separate PHP-FPM instance for BlueOnyx 5212R AdmServ.
+GUI/Chorizo runtime under /home/solarspeed/admserv-php.
+cce.so and i18n.so are NOT owned by this package (sausalito-cce / i18n modules).
+php.ini ships with empty auto_prepend_file / auto_append_file (Vsite prepend stays on vsite pools only).
+PHP file sessions use /usr/sausalito/sessions/php (admserv:admserv), cleaned by daily tmpwatch.
+
+%prep
+%setup -q -n %{name}-%{version}-%{release}
+
+%build
+
+%install
+%{__rm} -rf %{buildroot}
+# Payload top-level: home/ etc/ usr/
+%{__install} -d -m 0755 %{buildroot}
+cp -a home etc usr %{buildroot}/ 2>/dev/null || true
+# ensure docs/
+%{__install} -d -m 0755 %{buildroot}/home/solarspeed/admserv-php/docs
+# never ship cce/i18n even if present in staged tree
+rm -f %{buildroot}/home/solarspeed/admserv-php/etc/php.d/cce.ini \
+      %{buildroot}/home/solarspeed/admserv-php/etc/php.d/i18n.ini
+rm -f %{buildroot}/home/solarspeed/admserv-php/lib/php/*/cce.so \
+      %{buildroot}/home/solarspeed/admserv-php/lib/php/*/i18n.so \
+      %{buildroot}/home/solarspeed/admserv-php/lib/php/*/i18.so
+# session dir
+%{__install} -d -m 0700 %{buildroot}/usr/sausalito/sessions/php
+# cron.daily
+%{__install} -d -m 0755 %{buildroot}/etc/cron.daily
+
+%pre
+
+%post
+# AdmServ PHP file-session directory (not shared /var/lib/php/session)
+SESS=/usr/sausalito/sessions/php
+mkdir -p "$SESS"
+chown admserv:admserv "$SESS" 2>/dev/null || chown 49:49 "$SESS" 2>/dev/null || true
+chmod 0700 "$SESS" || true
+
+# Never leave rpmnew/rpmsave for files we manage and must force-replace
+rm -f /etc/cron.daily/tmpwatch-admserv-php-sessions.rpmnew \
+      /etc/cron.daily/tmpwatch-admserv-php-sessions.rpmsave 2>/dev/null || :
+rm -f /home/solarspeed/admserv-php/etc/php.d/*.rpmnew \
+      /home/solarspeed/admserv-php/etc/php.d/*.rpmsave 2>/dev/null || :
+
+# FPM uses /etc/admserv/php.ini (base-admserv-glue), NOT PREFIX/etc/php.ini.
+# Keep extension_dir + session path in sync on every admserv-php install/upgrade.
+if [ -f /etc/admserv/php.ini ]; then
+    # Prefer live php-config extension dir when available
+    EXTDIR=""
+    if [ -x /home/solarspeed/admserv-php/bin/php-config ]; then
+        EXTDIR=$(/home/solarspeed/admserv-php/bin/php-config --extension-dir 2>/dev/null || true)
+    fi
+    [ -n "$EXTDIR" ] || EXTDIR="/home/solarspeed/admserv-php/lib/php/20240924"
+    sed -i "s|^extension_dir *=.*|extension_dir = \"$EXTDIR\"|" /etc/admserv/php.ini
+    sed -i 's|^session.save_path *=.*|session.save_path = "/usr/sausalito/sessions/php"|' /etc/admserv/php.ini
+    sed -i 's|^auto_prepend_file *=.*|auto_prepend_file =|' /etc/admserv/php.ini
+    sed -i 's|^auto_append_file *=.*|auto_append_file =|' /etc/admserv/php.ini || true
+fi
+if [ -f /etc/admserv/php-fpm/pools/admserv.conf ]; then
+    sed -i 's|php_value\[session.save_path\] *=.*|php_value[session.save_path] = /usr/sausalito/sessions/php|' \
+        /etc/admserv/php-fpm/pools/admserv.conf || true
+fi
+
+# Enable and start Redis (aka: Valkey) if present (optional app cache)
+if systemctl list-unit-files | grep -q '^valkey\.service'; then
+    systemctl enable valkey.service >/dev/null 2>&1 || :
+    systemctl start valkey.service >/dev/null 2>&1 || :
+fi
+
+if [ -f /usr/lib/systemd/system/admserv-php-fpm.service ];then
+        systemctl restart admserv-php-fpm.service --no-block >/dev/null 2>&1
+fi
+
+if [ -f /usr/lib/systemd/system/admserv.service ];then
+        systemctl restart admserv.service --no-block >/dev/null 2>&1
+fi
+
+%preun
+
+if [ -f /usr/lib/systemd/system/admserv-php-fpm.service ];then
+        systemctl restart admserv-php-fpm.service --no-block >/dev/null 2>&1
+fi
+
+if [ -f /usr/lib/systemd/system/admserv.service ];then
+        systemctl restart admserv.service --no-block >/dev/null 2>&1
+fi
+
+
+%postun
+
+%clean
+%{__rm} -rf %{buildroot}
+
+%files
+%defattr(-,root,root,-)
+/home/solarspeed/admserv-php
+# Replace on every upgrade - not admin-local config
+/etc/cron.daily/tmpwatch-admserv-php-sessions
+%dir %attr(0700,admserv,admserv) /usr/sausalito/sessions
+%dir %attr(0700,admserv,admserv) /usr/sausalito/sessions/php
+
+%changelog

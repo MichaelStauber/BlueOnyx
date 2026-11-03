@@ -1,43 +1,87 @@
-#!/bin/bash
-
-if [ -f /etc/admserv/certs/nginx_cert_ca_combined ];then
-    /usr/bin/goaccess /var/log/httpd/access_log --addr=127.0.0.1 --log-format='%v %h %l %u %^[%d:%t %^] \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"' --date-format=%d/%b/%Y --time-format=%T -o /usr/sausalito/ui/web/base/sitestats/index.html --real-time-html --ssl-cert=/etc/admserv/certs/nginx_cert_ca_combined --ssl-key=/etc/admserv/certs/key
-else
-    /usr/bin/goaccess /var/log/httpd/access_log --addr=127.0.0.1 --log-format='%v %h %l %u %^[%d:%t %^] \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"' --date-format=%d/%b/%Y --time-format=%T -o /usr/sausalito/ui/web/base/sitestats/index.html --real-time-html --ssl-cert=/etc/admserv/certs/certificate --ssl-key=/etc/admserv/certs/key
-fi
-
+#!/usr/bin/bash
 #
-# Copyright (c) 2022-2024 Michael Stauber, SOLARSPEED.NET
-# Copyright (c) 2022-2024 Team BlueOnyx, BLUEONYX.IT
+# Start GoAccess real-time HTML generator (loopback only).
+#
+# Security model:
+#   - GoAccess binds 127.0.0.1:7890 without TLS (not public).
+#   - AdmServ terminates TLS and reverse-proxies /goaccess-ws/ with
+#     BXGoAccess cookie gate (goaccess-admserv.conf).
+#   - /base/sitestats/index.html is gated by .htaccess (BXGoAccess).
+#   - connection{} in the HTML is rewritten so the browser opens
+#     wss://<GUI-host>:<GUI-port>/goaccess-ws/ (not :7890).
+#
+# Copyright (c) 2022-2026 Michael Stauber, SOLARSPEED.NET
+# Copyright (c) 2022-2026 Team BlueOnyx, BLUEONYX.IT
 # All Rights Reserved.
 #
-# 1. Redistributions of source code must retain the above copyright
-#     notice, this list of conditions and the following disclaimer.
-#
-# 2. Redistributions in binary form must reproduce the above copyright
-#     notice, this list of conditions and the following disclaimer in
-#     the documentation and/or other materials provided with the
-#     distribution.
-#       
-# 3. Neither the name of the copyright holder nor the names of its
-#     contributors may be used to endorse or promote products derived
-#     from this software without specific prior written permission.
-#   
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
-#
-# You acknowledge that this software is not designed or intended for
-# use in the design, construction, operation or maintenance of any
-# nuclear facility.
-#
 
+set -u
+
+OUT_HTML="/usr/sausalito/ui/web/base/sitestats/index.html"
+OUT_DIR="$(dirname "$OUT_HTML")"
+LOG_FORMAT='%v %h %l %u %^[%d:%t %^] \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"'
+ACCESS_LOG="/var/log/httpd/access_log"
+LISTEN_ADDR="127.0.0.1"
+LISTEN_PORT="7890"
+WS_URL_PLACEHOLDER="wss://127.0.0.1/goaccess-ws/"
+
+mkdir -p "$OUT_DIR"
+
+patch_connection() {
+	local html="$1"
+	[ -f "$html" ] || return 0
+	grep -q 'BX_GOACCESS_WS_DYNAMIC' "$html" 2>/dev/null && return 0
+	python3 - "$html" <<'PY' 2>/dev/null || true
+import re, sys
+path = sys.argv[1]
+try:
+    text = open(path, encoding="utf-8", errors="replace").read()
+except OSError:
+    sys.exit(0)
+# GoAccess buildWSURI():
+#   if url already has wss?:// keep it; else prefix wss:// or ws://
+#   then: protocol + '//' + hostname + ':' + port + pathname
+# So url must be either "host/goaccess-ws/" (no scheme) or full "wss://host/goaccess-ws/".
+# NEVER pass "https://host/..." - that becomes wss://https://... -> wss://https:port//host/...
+repl = (
+    "/* BX_GOACCESS_WS_DYNAMIC */"
+    "var connection = (function () {"
+    "  var p = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');"
+    "  return {"
+    "    url: window.location.hostname + '/goaccess-ws/',"
+    "    port: parseInt(p, 10) || 81,"
+    "    ping_interval: 0"
+    "  };"
+    "})();"
+)
+# goaccess often omits trailing semicolon before </script>
+new, n = re.subn(
+    r"var\s+connection\s*=\s*\{.*?\}\s*;?",
+    repl,
+    text,
+    count=1,
+    flags=re.DOTALL,
+)
+if n:
+    open(path, "w", encoding="utf-8").write(new)
+PY
+}
+
+/usr/bin/goaccess "$ACCESS_LOG" \
+	--addr="$LISTEN_ADDR" \
+	--port="$LISTEN_PORT" \
+	--log-format="$LOG_FORMAT" \
+	--date-format=%d/%b/%Y \
+	--time-format=%T \
+	-o "$OUT_HTML" \
+	--real-time-html \
+	--ws-url="$WS_URL_PLACEHOLDER" &
+GA_PID=$!
+
+while kill -0 "$GA_PID" 2>/dev/null; do
+	patch_connection "$OUT_HTML"
+	sleep 2
+done
+
+wait "$GA_PID"
+exit $?

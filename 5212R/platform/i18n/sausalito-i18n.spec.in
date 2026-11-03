@@ -1,5 +1,6 @@
 %define admserv_php_prefix /home/solarspeed/admserv-php
-%define admserv_extension_dir %{admserv_php_prefix}/lib/php/20230831
+# Resolve at rpmbuild time from installed admserv-php (BuildRequires)
+%define admserv_extension_dir %( %{admserv_php_prefix}/bin/php-config --extension-dir 2>/dev/null || echo %{admserv_php_prefix}/lib/php/20240924 )
 %define admserv_php_ini_dir %{admserv_php_prefix}/etc/php.d
 
 Summary: Cobalt i18n library
@@ -48,6 +49,7 @@ rm -f $RPM_BUILD_ROOT/usr/sausalito/ui/web/test_i18n.php
 /usr/sausalito/bin/i18n_translate
 /usr/sausalito/bin/i18n_locales
 %{admserv_extension_dir}/i18n.so
+# MUST replace on upgrade (extension path/API) - never %config(noreplace)
 %{admserv_php_ini_dir}/i18n.ini
 /usr/sausalito/perl/I18n.pm
 /usr/sausalito/perl/SendEmail.pm
@@ -101,7 +103,24 @@ if [ -x /bin/systemctl ]; then
 	/bin/systemctl try-restart admserv-php-fpm.service >/dev/null 2>&1 || :
 fi
 
+# Drop leftover rpmnew/rpmsave from any older noreplace packaging of i18n.ini
+rm -f /home/solarspeed/admserv-php/etc/php.d/i18n.ini.rpmnew \
+      /home/solarspeed/admserv-php/etc/php.d/i18n.ini.rpmsave 2>/dev/null || :
+
 %changelog
+
+* Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 0.82.3-5
+- %%post: also remove i18n.ini.rpmsave leftovers
+
+
+* Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 0.82.3-4
+- i18n.ini is a plain packaged file (not %%config(noreplace)); replace on
+  PHP API upgrades instead of leaving .rpmnew
+- %%post: remove leftover i18n.ini.rpmnew
+
+* Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 0.82.3-3
+- Rebuilt for admserv-php-8.4
+- Installs i18n.so into AdmServ extension_dir from php-config (20240924)
 
 * Sat Apr 25 2026 Michael Stauber <mstauber@solarspeed.net> 0.82.3-2
 - Re-enabled the native i18n PHP extension for AdmServ PHP 8.3.

@@ -36,6 +36,8 @@ final class FileLocatorCached implements FileLocatorInterface
      * [
      *     'search' => [$path => $foundPaths],
      * ]
+     *
+     * @var array<string, array<string, mixed>>
      */
     private array $cache = [];
 
@@ -82,6 +84,7 @@ final class FileLocatorCached implements FileLocatorInterface
      */
     public function deleteCache(): void
     {
+        $this->cache        = [];
         $this->cacheUpdated = false;
         $this->cacheHandler->delete($this->cacheKey);
     }
@@ -114,6 +117,9 @@ final class FileLocatorCached implements FileLocatorInterface
         return $classname;
     }
 
+    /**
+     * @return list<non-empty-string>
+     */
     public function search(string $path, string $ext = 'php', bool $prioritizeApp = true): array
     {
         if (isset($this->cache['search'][$path][$ext][$prioritizeApp])) {
@@ -158,14 +164,16 @@ final class FileLocatorCached implements FileLocatorInterface
 
     public function locateFile(string $file, ?string $folder = null, string $ext = 'php'): false|string
     {
-        if (isset($this->cache['locateFile'][$file][$folder][$ext])) {
-            return $this->cache['locateFile'][$file][$folder][$ext];
+        $folderKey = $folder ?? '';
+
+        if (isset($this->cache['locateFile'][$file][$folderKey][$ext])) {
+            return $this->cache['locateFile'][$file][$folderKey][$ext];
         }
 
         $files = $this->locator->locateFile($file, $folder, $ext);
 
-        $this->cache['locateFile'][$file][$folder][$ext] = $files;
-        $this->cacheUpdated                              = true;
+        $this->cache['locateFile'][$file][$folderKey][$ext] = $files;
+        $this->cacheUpdated                                 = true;
 
         return $files;
     }

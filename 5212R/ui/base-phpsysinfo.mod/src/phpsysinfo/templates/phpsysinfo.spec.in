@@ -1,0 +1,59 @@
+%global _default_package_excludes_dotfiles 0
+
+Name:           phpsysinfo
+Version:        XXX_VERSION_XXX
+Release:        XXX_RELEASE_XXX%{?dist}
+Packager:       Michael Stauber <mstauber@solarspeed.net>
+Vendor:         Team BlueOnyx
+URL:            https://phpsysinfo.github.io/phpsysinfo/
+License:        GPLv2+
+Group:          System Environment/Base
+Distribution:   BlueOnyx
+Source:         %{name}-%{version}.tar.gz
+Summary:        phpSysInfo for BlueOnyx GUI (cookie-gated)
+Requires:       admserv-php
+AutoReqProv:    no
+
+%description
+phpSysInfo packaged for BlueOnyx AdmServ under
+/usr/sausalito/ui/web/base/phpsysinfo/.phpsysinfo/
+Access requires the sysinfoAccess cookie set by the Chorizo GUI controller.
+Live config (phpsysinfo.ini / .ini.org) is owned by base-phpsysinfo glue.
+
+%prep
+%setup -q -n %{name}-%{version}
+
+%build
+echo "Staging tree only - upstream already extracted at package time."
+
+%install
+%{__rm} -rf %{buildroot}
+mkdir -p %{buildroot}
+cp -a * %{buildroot}/
+# Never ship BX-owned config names (base-phpsysinfo-glue owns .org)
+rm -f %{buildroot}/usr/sausalito/ui/web/base/phpsysinfo/.phpsysinfo/phpsysinfo.ini.org \
+      %{buildroot}/usr/sausalito/ui/web/base/phpsysinfo/.phpsysinfo/phpsysinfo.ini \
+      2>/dev/null || true
+
+%post
+# Live config: base-phpsysinfo glue .org + constructor → .ini
+# Fallback only if nothing is present yet
+WEB=/usr/sausalito/ui/web/base/phpsysinfo/.phpsysinfo
+if [ ! -f "$WEB/phpsysinfo.ini" ] && [ ! -f "$WEB/phpsysinfo.ini.org" ] \
+   && [ -f "$WEB/phpsysinfo.ini.new" ]; then
+    cp -a "$WEB/phpsysinfo.ini.new" "$WEB/phpsysinfo.ini" 2>/dev/null || true
+fi
+systemctl try-restart admserv.service >/dev/null 2>&1 || :
+
+%files
+%defattr(-,root,root,-)
+%attr(0755,root,root) /usr/sausalito/ui/web/base/phpsysinfo
+%exclude /usr/sausalito/ui/web/base/phpsysinfo/.phpsysinfo/phpsysinfo.ini.org
+%exclude /usr/sausalito/ui/web/base/phpsysinfo/.phpsysinfo/phpsysinfo.ini
+
+%changelog
+* Mon Nov 02 2026 Michael Stauber <mstauber@solarspeed.net> XXX_VERSION_XXX-XXX_RELEASE_XXX
+- Build from module src/: download latest phpSysInfo to /tmp
+- Cookie gate sysinfoAccess on index.php and js.php (GUI iframe)
+- Config: phpsysinfo.ini.org owned by base-phpsysinfo-glue only (no file conflict)
+- Target PHP 8.4-friendly upstream (3.4.7+)

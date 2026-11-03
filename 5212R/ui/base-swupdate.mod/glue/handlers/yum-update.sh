@@ -24,8 +24,21 @@ fi
 /bin/touch /tmp/yum.updating
 /bin/rm -f /tmp/yum.check-update
 
-# Fake Sauce::Service restart event to get /gui/service to report the running update process:
-echo "restart" > /usr/sausalito/services/yum ; date +%s >> /usr/sausalito/services/yum
+# Fake Sauce::Service restart event for /gui/service (pending yum update).
+# Atomic publish (Greg Kuhnert PR #4): temp + rename so sauce_serviced never
+# sees a truncated file and deletes it as "older than allowed".
+QUEUE_DIR=/usr/sausalito/services
+if [ -d "$QUEUE_DIR" ]; then
+    TMPFILE=$(mktemp "$QUEUE_DIR/.yum.XXXXXXXX")
+    if [ -n "$TMPFILE" ]; then
+        if printf 'restart\n%s\n' "$(/bin/date +%s)" > "$TMPFILE"; then
+            /bin/chmod 600 "$TMPFILE"
+            /bin/mv -f "$TMPFILE" "$QUEUE_DIR/yum"
+        else
+            /bin/rm -f "$TMPFILE"
+        fi
+    fi
+fi
 
 /usr/bin/dnf clean all &>/dev/null || :
 LC_ALL=C /usr/bin/dnf -y update > /tmp/yum.update
@@ -48,7 +61,8 @@ LC_ALL=C /usr/bin/dnf check-update > /tmp/yum.check-update
 
 # Various permission fixes:
 /bin/chmod 644 /var/log/yum.log
-/bin/chmod 777 /var/lib/php/session
+# /var/lib/php/session: OS default 0770 root:apache via hotfixes.sh / tmpfiles (Ken Marcus)
+# Do NOT chmod 777 here.
 
 exit 0
 
@@ -69,21 +83,4 @@ exit 0
 # 3. Neither the name of the copyright holder nor the names of its 
 #   contributors may be used to endorse or promote products derived 
 #   from this software without specific prior written permission.
-# 
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
-# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
-# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
-# POSSIBILITY OF SUCH DAMAGE.
-# 
-# You acknowledge that this software is not designed or intended for 
-# use in the design, construction, operation or maintenance of any 
-# nuclear facility.
-# 
+#

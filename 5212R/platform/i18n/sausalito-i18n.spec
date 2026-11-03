@@ -1,11 +1,11 @@
 %define admserv_php_prefix /home/solarspeed/admserv-php
-%define admserv_extension_dir %{admserv_php_prefix}/lib/php/20230831
+%define admserv_extension_dir %{admserv_php_prefix}/lib/php/20240924
 %define admserv_php_ini_dir %{admserv_php_prefix}/etc/php.d
 
 Summary: Cobalt i18n library
 Name: sausalito-i18n
 Version: 0.82.3
-Release: 2%{?dist}
+Release: 3%{?dist}
 Vendor: %{vendor}
 License: Sun modified BSD
 Group: System Environment/BlueOnyx
@@ -102,6 +102,11 @@ if [ -x /bin/systemctl ]; then
 fi
 
 %changelog
+
+* Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 0.82.3-3
+- Rebuilt for admserv-php-8.4
+- The RPM now builds and installs i18n.so into
+  /home/solarspeed/admserv-php/lib/php/20240924/.
 
 * Sat Apr 25 2026 Michael Stauber <mstauber@solarspeed.net> 0.82.3-2
 - Re-enabled the native i18n PHP extension for AdmServ PHP 8.3.

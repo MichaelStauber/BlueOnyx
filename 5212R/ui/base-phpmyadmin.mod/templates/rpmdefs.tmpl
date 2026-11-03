@@ -68,18 +68,14 @@ information for [VENDOR]-[SERVICE].
 <end HEADER>
 <begin capstone>
 # capstone post-install
+# blueonyx-phpMyAdmin-5.2.3+ ships config under the UI tree only (not /etc/phpMyAdmin).
+# Missing path must not fail POSTIN (Anaconda aborts the payload). Credit: Greg Kuhnert.
+# 5.2.3 skel already has signon; only ensure mode 644 (RPM may ship 755).
 
-ADMINCONFIG="/etc/phpMyAdmin/config.inc.php"
-
-AUTH_TYPE=`grep auth_type $ADMINCONFIG | grep signon`
-if [ "$AUTH_TYPE" ] ; then
-    chmod 644 $ADMINCONFIG
-    exit 0
-else
-    cat /etc/phpMyAdmin/config.inc.php|	sed "s/\['auth_type'\]     = 'http';/\['auth_type'\]     = 'signon';\n\$cfg\['Servers'\]\[\$i\]\['SignonSession'\] = 'SignonSession';\n\$cfg\['Servers'\]\[\$i\]\['SignonURL'\]     = '\/phpmyadmin\/login';\n\/\/ \$cfg\['Servers'\]\[\$i\]\['auth_type'\]     = 'http';/g" > $ADMINCONFIG.new
-    mv $ADMINCONFIG.new $ADMINCONFIG
-    chmod 644 $ADMINCONFIG
-fi
+ADMINCONFIG="/usr/sausalito/ui/web/base/phpMyAdmin/config.inc.php"
+[ -f "$ADMINCONFIG" ] || exit 0
+chmod 644 "$ADMINCONFIG" || true
+exit 0
 <end capstone>
 <begin glue>
 # glue post-install
@@ -115,6 +111,16 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+* Mon Nov 02 2026 Michael Stauber <mstauber@solarspeed.net> 2.3.0-3
+- capstone %post simplified (Greg): UI path only, [ -f ] || exit 0, chmod 644, no sed.
+* Mon Nov 02 2026 Michael Stauber <mstauber@solarspeed.net> 2.3.0-2
+- capstone %post: ADMINCONFIG under UI tree; missing file exits 0 (Anaconda-safe).
+  Credit: Greg Kuhnert (ISO POSTIN /etc/phpMyAdmin chmod abort).
+* Mon Nov 02 2026 Michael Stauber <mstauber@solarspeed.net> 2.3.0-1
+- src/blueonyx-phpMyAdmin: make rpm downloads latest 5.2.x, applies BlueOnyx SSO
+- Keep GUI signon (Signon/Pusher + PMA cookies + signon-script-blueonyx.php)
+
+
 
 * Mon Feb 19 2024 Michael Stauber <mstauber@solarspeed.net> 2.2.0-2
 - Version number bump for Elmer release

@@ -45,7 +45,7 @@ class ParameterBag implements \IteratorAggregate, \Countable
         }
 
         if (!\is_array($value = $this->parameters[$key] ?? [])) {
-            throw new BadRequestException(sprintf('Unexpected value for parameter "%s": expecting "array", got "%s".', $key, get_debug_type($value)));
+            throw new BadRequestException(\sprintf('Unexpected value for parameter "%s": expecting "array", got "%s".', $key, get_debug_type($value)));
         }
 
         return $value;
@@ -141,7 +141,7 @@ class ParameterBag implements \IteratorAggregate, \Countable
     {
         $value = $this->get($key, $default);
         if (!\is_scalar($value) && !$value instanceof \Stringable) {
-            throw new UnexpectedValueException(sprintf('Parameter value "%s" cannot be converted to "string".', $key));
+            throw new UnexpectedValueException(\sprintf('Parameter value "%s" cannot be converted to "string".', $key));
         }
 
         return (string) $value;
@@ -185,7 +185,7 @@ class ParameterBag implements \IteratorAggregate, \Countable
         try {
             return $class::from($value);
         } catch (\ValueError|\TypeError $e) {
-            throw new UnexpectedValueException(sprintf('Parameter "%s" cannot be converted to enum: %s.', $key, $e->getMessage()), $e->getCode(), $e);
+            throw new UnexpectedValueException(\sprintf('Parameter "%s" cannot be converted to enum: %s.', $key, $e->getMessage()), $e->getCode(), $e);
         }
     }
 
@@ -212,20 +212,37 @@ class ParameterBag implements \IteratorAggregate, \Countable
         }
 
         if (\is_object($value) && !$value instanceof \Stringable) {
-            throw new UnexpectedValueException(sprintf('Parameter value "%s" cannot be filtered.', $key));
+            throw new UnexpectedValueException(\sprintf('Parameter value "%s" cannot be filtered.', $key));
         }
 
         if ((\FILTER_CALLBACK & $filter) && !(($options['options'] ?? null) instanceof \Closure)) {
-            throw new \InvalidArgumentException(sprintf('A Closure must be passed to "%s()" when FILTER_CALLBACK is used, "%s" given.', __METHOD__, get_debug_type($options['options'] ?? null)));
+            throw new \InvalidArgumentException(\sprintf('A Closure must be passed to "%s()" when FILTER_CALLBACK is used, "%s" given.', __METHOD__, get_debug_type($options['options'] ?? null)));
         }
 
         $options['flags'] ??= 0;
         $nullOnFailure = $options['flags'] & \FILTER_NULL_ON_FAILURE;
         $options['flags'] |= \FILTER_NULL_ON_FAILURE;
 
-        $value = filter_var($value, $filter, $options);
+        $invalid = false;
+        $forceArray = !\is_array($value) && ($options['flags'] & \FILTER_FORCE_ARRAY) && !($options['flags'] & \FILTER_REQUIRE_ARRAY);
 
-        if (null !== $value || $nullOnFailure) {
+        if (!$nullOnFailure && \is_array($value) && $value && !($options['flags'] & \FILTER_REQUIRE_SCALAR) && ($options['flags'] & (\FILTER_REQUIRE_ARRAY | \FILTER_FORCE_ARRAY))) {
+            $options['flags'] &= ~(\FILTER_REQUIRE_ARRAY | \FILTER_FORCE_ARRAY);
+            $value = self::filterArray($value, $filter, $options, $invalid);
+        } else {
+            if ($forceArray) {
+                $options['flags'] &= ~\FILTER_FORCE_ARRAY;
+            }
+
+            $value = filter_var($value, $filter, $options);
+            $invalid = null === $value;
+
+            if ($forceArray) {
+                $value = [$value];
+            }
+        }
+
+        if (!$invalid || $nullOnFailure) {
             return $value;
         }
 
@@ -235,7 +252,7 @@ class ParameterBag implements \IteratorAggregate, \Countable
 
         trigger_deprecation('symfony/http-foundation', '6.3', 'Ignoring invalid values when using "%s::%s(\'%s\')" is deprecated and will throw an "%s" in 7.0; '.$hint.' flag "FILTER_NULL_ON_FAILURE" to keep ignoring them.', $this::class, $method, $key, UnexpectedValueException::class);
 
-        return false;
+        return $value ?? false;
     }
 
     /**
@@ -254,5 +271,32 @@ class ParameterBag implements \IteratorAggregate, \Countable
     public function count(): int
     {
         return \count($this->parameters);
+    }
+
+    private static function filterArray(array $value, int $filter, array $options, bool &$invalid, array &$references = []): array
+    {
+        foreach ($value as $key => $item) {
+            if (!\is_array($item)) {
+                $value[$key] = filter_var($item, $filter, $options);
+                $invalid = $invalid || null === $value[$key];
+                continue;
+            }
+
+            $id = \ReflectionReference::fromArrayElement($value, $key)?->getId();
+            if (null !== $id && isset($references[$id])) {
+                continue;
+            }
+            if (null !== $id) {
+                $references[$id] = true;
+            }
+
+            $value[$key] = self::filterArray($item, $filter, $options, $invalid, $references);
+
+            if (null !== $id) {
+                unset($references[$id]);
+            }
+        }
+
+        return $value;
     }
 }

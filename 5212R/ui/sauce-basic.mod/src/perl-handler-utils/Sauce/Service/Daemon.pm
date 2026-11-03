@@ -62,8 +62,6 @@ sub _daemonize {
 
 sub process_queue {
 
-    my $file_count = `ls -k1 $QUEUE_DIR`;
-
     opendir(my $dh, $QUEUE_DIR) || do {
         &_logmsg("Can't open $QUEUE_DIR: $!");
         die "Can't open $QUEUE_DIR: $!";
@@ -114,14 +112,49 @@ sub process_queue {
 
         close($fh);
 
-        chomp($event);
-        chomp($timestamp);
+        chomp($event) if defined $event;
+        chomp($timestamp) if defined $timestamp;
+
+        # A file caught mid-write, or written by anything that is not atomic, leaves us with a
+        # missing or unparsable field. Subtracting that from time() gives ~1.7e9, which is greater
+        # than any purge age, so the entry below would be deleted as "older than allowed" - throwing
+        # away a request that was never even read. Leave it alone and look again next cycle instead.
+        # The safety valve stays: a file that is still unreadable after QUEUE_PURGE_TIME is not
+        # mid-write, it is rubbish, so judge its age by mtime (which a writer refreshes) and purge it
+        # then. Without that, a permanently broken file would sit in the queue forever.
+        if (!defined($event) || !defined($timestamp) ||
+            $event !~ /^[a-z]+$/ || $timestamp !~ /^\d+$/) {
+            my $seen_event = defined($event) ? $event : '<undef>';
+            my $seen_stamp = defined($timestamp) ? $timestamp : '<undef>';
+            my $mtime = (stat($path))[9];
+            my $age = defined($mtime) ? (time() - $mtime) : $QUEUE_PURGE_TIME;
+
+            if ($age >= $QUEUE_PURGE_TIME) {
+                unlink($path);
+                &_logmsg("Queue file $file has been unreadable for ${age}s (event=$seen_event, timestamp=$seen_stamp). Removing it as it cannot be executed.");
+            }
+            else {
+                &_logmsg("Queue file $file is incomplete (event=$seen_event, timestamp=$seen_stamp). Leaving it for the next cycle.");
+            }
+            next;
+        }
 
         my $current_time = time();
         my $time_difference = $current_time - $timestamp;
 
-        # Stop gets executed (more or less) right away. Anything else must wait for $QUEUE_WAIT_TIME seconds: 
-        if ($event eq 'stop' || (($event eq 'reload' || $event eq 'restart' || $event eq 'condrestart' || $event eq 'condreload') && $time_difference >= $QUEUE_WAIT_TIME)) {
+        # Stop and start get executed (more or less) right away. Anything else must wait for
+        # $QUEUE_WAIT_TIME seconds, so that a burst of restarts fired by one transaction collapses
+        # into a single action:
+        #
+        # 'start' belongs in the immediate group. It has nothing to coalesce with - starting an
+        # already running service is a no-op - and until now it was not executable at all:
+        # Client.pm accepted 'start' and wrote a queue file, this list did not include it, so the
+        # request matched no branch. It was never run and never cleared, and its only exit was the
+        # $QUEUE_PURGE_TIME purge five minutes later, while the GUI reported a pending transaction
+        # for that whole time (DaemonServices.php reads the file count published below, so the
+        # existence of this queue file IS the badge). Callers that pass 'start':
+        # base-mysql's glue/handlers/mysql-runner.pl and base-apache's glue/handlers/reload_httpd.pl.
+        if ($event eq 'stop' || $event eq 'start' || (($event eq 'reload' || $event eq 'restart' || $event eq 'condrestart' || $event eq 'condreload') && $time_difference >= $QUEUE_WAIT_TIME)) {
             my $service = basename($file);
 
             # Special MTA provisions:

@@ -115,6 +115,16 @@ sub connectuds
 {
   my $self = shift;
   my $filename = shift || '/usr/sausalito/cced.socket';
+  # Optional I/O timeout (seconds). Default 0 = unlimited.
+  # SO_RCVTIMEO + readline treats EAGAIN as EOF ("connection closed"), so a
+  # short default falsely fails slow-but-healthy cced (long first-boot queues).
+  # Bound stuck constructors with cce_construct wall-clock timeout instead.
+  # Override only if you really want socket timeouts: CCE_IO_TIMEOUT=N or
+  # connectuds($path, $timeout). Credit: Greg Kuhnert.
+  my $io_timeout = shift;
+  if (!defined $io_timeout) {
+    $io_timeout = defined $ENV{CCE_IO_TIMEOUT} ? $ENV{CCE_IO_TIMEOUT} : 0;
+  }
   require IO::Socket::UNIX;
   import IO::Socket::UNIX;
   my $sock = new IO::Socket::UNIX(
@@ -124,8 +134,26 @@ sub connectuds
   if (!$sock) {
     die "Could not connect to $filename: $!\n";
   }
+  if ($io_timeout && $io_timeout > 0) {
+    eval {
+      require Socket;
+      # struct timeval { time_t tv_sec; suseconds_t tv_usec; }
+      # pack('l!l!'): native long - matches timeval on 64-bit EL10 x86_64 (8+8)
+      # and on 32-bit (4+4). 5212R is x86_64-only; no separate 32-bit branch.
+      # (Greg Kuhnert minor review note)
+      my $tv = pack('l!l!', int($io_timeout), 0);
+      setsockopt($sock, Socket::SOL_SOCKET(), Socket::SO_RCVTIMEO(), $tv)
+        or warn "CCE: SO_RCVTIMEO failed: $!\n";
+      setsockopt($sock, Socket::SOL_SOCKET(), Socket::SO_SNDTIMEO(), $tv)
+        or warn "CCE: SO_SNDTIMEO failed: $!\n";
+    };
+    if ($@) {
+      warn "CCE: could not set socket I/O timeout: $@\n";
+    }
+  }
   $self->{rdsock} = $sock;
   $self->{wrsock} = $sock;
+  # intentionally not storing io_timeout on $self (was unused — Greg Kuhnert)
   $self->{suspendedmsg} = undef;
   $self->{rollbackflag} = 0;
 

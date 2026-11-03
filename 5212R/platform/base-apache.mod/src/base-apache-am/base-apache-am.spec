@@ -1,6 +1,6 @@
 Summary: Active Monitor support for base-apache-am
 Name: base-apache-am
-Version: 1.1.0
+Version: 1.1.1
 Release: 0BX01%{?dist}
 Vendor: %{vendor}
 License: Sun modified BSD
@@ -25,6 +25,12 @@ This package contains binaries and scripts used by the Active Monitor
 subsystem for base-apache-am.  
 
 %changelog
+
+* Mon Nov 02 2026 Michael Stauber <mstauber@solarspeed.net> 1.1.1-0BX01
+- am_admserv.exp: probe https://127.0.0.1:81/ (curl) instead of telnet :444;
+  AdmServ is HTTPS-only after Listen 444 removal. Stops false RED + swatch restarts.
+
+
 
 * Mon Nov 14 2022 Michael Stauber <mstauber@solarspeed.net> 1.1.0-0BX01
 - PHP-Support now ranges from 5.6 to 9.4.

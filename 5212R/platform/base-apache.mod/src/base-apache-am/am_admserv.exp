@@ -1,45 +1,46 @@
 #!/usr/bin/expect
+#
+# Active Monitor probe for AdmServ (Admin GUI).
+# Historically telnet localhost:444 (HTTP). AdmServ is HTTPS-only on :81 now
+# (CI requires TLS; Listen 444 removed). Probe with curl against https://127.0.0.1:81/
+#
 
 source /usr/sausalito/swatch/statecodes.tcl
 
-# don't echo the dialog
 log_user 0
 
-# we use telnet to connect
-spawn telnet localhost 444
-expect {
-    "Connected to" {}
-    default {
-	# try to restart
-	# use catch so we don't report errors on the exec,
-	# only on the dialog itself
-	catch {exec /sbin/service admserv restart >&/dev/null}
-	sleep 5
-	# redo test, fail if get an error again
-	spawn telnet localhost 444
-	expect {
-	    "Connected to" {}
-	    default {
-		puts -nonewline $env(redMsg);
-		flush stdout;
-		exit $AM_STATE_RED;
-	    }
-	}
+proc admserv_http_code {} {
+    # Any TCP+TLS success that yields an HTTP status means httpd.admsrv is up.
+    # Login may 200/302; auth walls 401/403 still prove the service answers.
+    set code "000"
+    catch {
+        set code [exec /usr/bin/curl -sk --max-time 8 -o /dev/null -w "%{http_code}" https://127.0.0.1:81/]
     }
+    return $code
 }
 
-send "HEAD / HTTP/1.0\r"
-send "\r"
-expect {
-    "HTTP/1.1" {}
-    default { # fail if we don't get an OK
-	puts -nonewline $env(redMsg);
-	flush stdout;
-	exit $AM_STATE_RED
+proc code_ok {code} {
+    if {[string is integer -strict $code] && $code >= 100 && $code < 600} {
+        return 1
+    }
+    return 0
+}
+
+set code [admserv_http_code]
+
+if {![code_ok $code]} {
+    # try to restart (try-restart preferred; fall back to service)
+    catch {exec /usr/bin/systemctl try-restart admserv.service >&/dev/null}
+    catch {exec /sbin/service admserv restart >&/dev/null}
+    sleep 5
+    set code [admserv_http_code]
+    if {![code_ok $code]} {
+        puts -nonewline $env(redMsg)
+        flush stdout
+        exit $AM_STATE_RED
     }
 }
 
 puts -nonewline $env(greenMsg)
-flush stdout;
+flush stdout
 exit $AM_STATE_GREEN
-

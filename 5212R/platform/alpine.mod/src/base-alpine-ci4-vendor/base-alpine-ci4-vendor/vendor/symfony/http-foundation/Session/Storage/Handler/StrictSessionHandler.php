@@ -24,7 +24,7 @@ class StrictSessionHandler extends AbstractSessionHandler
     public function __construct(\SessionHandlerInterface $handler)
     {
         if ($handler instanceof \SessionUpdateTimestampHandlerInterface) {
-            throw new \LogicException(sprintf('"%s" is already an instance of "SessionUpdateTimestampHandlerInterface", you cannot wrap it with "%s".', get_debug_type($handler), self::class));
+            throw new \LogicException(\sprintf('"%s" is already an instance of "SessionUpdateTimestampHandlerInterface", you cannot wrap it with "%s".', get_debug_type($handler), self::class));
         }
 
         $this->handler = $handler;
@@ -47,7 +47,7 @@ class StrictSessionHandler extends AbstractSessionHandler
         return $this->handler->open($savePath, $sessionName);
     }
 
-    protected function doRead(#[\SensitiveParameter] string $sessionId): string
+    protected function doRead(#[\SensitiveParameter] string $sessionId): string|false
     {
         return $this->handler->read($sessionId);
     }

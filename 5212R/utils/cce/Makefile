@@ -19,7 +19,7 @@ CCE_V_MAJ=0
 CCE_V_MIN=99
 CCE_V_PATCH=6
 CCE_VERSION=$(CCE_V_MAJ).$(CCE_V_MIN).$(CCE_V_PATCH)
-RPMRELEASE=6
+RPMRELEASE=17
 
 DIRS = common scalar conf codb ed cscp sessionmgr server client pam pam_abl ccewrap pperl
 
@@ -47,7 +47,8 @@ depend: .depend dynamic.mk
 dynamic.mk: Makefile
 	@rm -f $@
 	@( \
-		echo 'CCE_TOPDIR=$(CCE_TOPDIR)'; \
+		echo '# Auto-detect CCE module root (this file lives at the cce tree top).'; \
+		echo 'CCE_TOPDIR := $$(abspath $$(dir $$(lastword $$(MAKEFILE_LIST))))'; \
 		echo 'CCE_V_MAJ=$(CCE_V_MAJ)'; \
 		echo 'CCE_V_MIN=$(CCE_V_MIN)'; \
 		echo 'CCE_V_PATCH=$(CCE_V_PATCH)'; \
@@ -164,9 +165,17 @@ endif
 		$(RPMBUILD) -ta /tmp/sausalito-cce.tar.gz; \
 	fi
 	-@mkdir as_rpms || /bin/true
-	cp `find $(RPM_TOPDIR)/RPMS -follow -type f -newer $(TIMEFILE)` as_rpms
+	@rpms=$$(find $(RPM_TOPDIR)/RPMS -follow -type f -name '*.rpm' -newer $(TIMEFILE) 2>/dev/null); \
+	if [ -z "$$rpms" ]; then \
+		echo "ERROR: no RPMs newer than $(TIMEFILE) under $(RPM_TOPDIR)/RPMS"; \
+		echo "  (rpm --eval %_topdir => $$(rpm --eval '%{_topdir}' 2>/dev/null))"; \
+		exit 1; \
+	fi; \
+	cp -a $$rpms as_rpms/ && ls -la as_rpms/
 	-@mkdir as_srpms || /bin/true
-	cp `find $(RPM_TOPDIR)/SRPMS -follow -type f -newer $(TIMEFILE)` as_srpms
+	@srpms=$$(find $(RPM_TOPDIR)/SRPMS -follow -type f -name '*.rpm' -newer $(TIMEFILE) 2>/dev/null); \
+	if [ -n "$$srpms" ]; then cp -a $$srpms as_srpms/; ls -la as_srpms/; \
+	else echo "NOTE: no SRPMs found under $(RPM_TOPDIR)/SRPMS (ok if none)"; fi
 	-@/bin/rm -f $(TIMEFILE)
 
 specfile: $(CCERPMSPEC).in

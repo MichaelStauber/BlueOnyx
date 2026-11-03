@@ -53,6 +53,8 @@ class NativeSessionStorage implements SessionStorageInterface
      */
     protected $metadataBag;
 
+    private static bool $shutdownRegistered = false;
+
     /**
      * Depending on how you want the storage driver to behave you probably
      * want to override this constructor entirely.
@@ -103,7 +105,10 @@ class NativeSessionStorage implements SessionStorageInterface
             'use_strict_mode' => 1,
         ];
 
-        session_register_shutdown();
+        if (!self::$shutdownRegistered) {
+            session_register_shutdown();
+            self::$shutdownRegistered = true;
+        }
 
         $this->setMetadataBag($metaBag);
         $this->setOptions($options);
@@ -129,7 +134,7 @@ class NativeSessionStorage implements SessionStorageInterface
         }
 
         if (filter_var(\ini_get('session.use_cookies'), \FILTER_VALIDATE_BOOL) && headers_sent($file, $line)) {
-            throw new \RuntimeException(sprintf('Failed to start the session because headers have already been sent by "%s" at line %d.', $file, $line));
+            throw new \RuntimeException(\sprintf('Failed to start the session because headers have already been sent by "%s" at line %d.', $file, $line));
         }
 
         $sessionId = $_COOKIE[session_name()] ?? null;
@@ -139,7 +144,7 @@ class NativeSessionStorage implements SessionStorageInterface
          * ---------- Part 1
          *
          * The part `[a-zA-Z0-9,-]` is related to the PHP ini directive `session.sid_bits_per_character` defined as 6.
-         * See https://www.php.net/manual/en/session.configuration.php#ini.session.sid-bits-per-character.
+         * See https://php.net/session.configuration#ini.session.sid-bits-per-character
          * Allowed values are integers such as:
          * - 4 for range `a-f0-9`
          * - 5 for range `a-v0-9`
@@ -148,7 +153,7 @@ class NativeSessionStorage implements SessionStorageInterface
          * ---------- Part 2
          *
          * The part `{22,250}` is related to the PHP ini directive `session.sid_length`.
-         * See https://www.php.net/manual/en/session.configuration.php#ini.session.sid-length.
+         * See https://php.net/session.configuration#ini.session.sid-length
          * Allowed values are integers between 22 and 256, but we use 250 for the max.
          *
          * Where does the 250 come from?
@@ -249,7 +254,7 @@ class NativeSessionStorage implements SessionStorageInterface
         $previousHandler = set_error_handler(function ($type, $msg, $file, $line) use (&$previousHandler) {
             if (\E_WARNING === $type && str_starts_with($msg, 'session_write_close():')) {
                 $handler = $this->saveHandler instanceof SessionHandlerProxy ? $this->saveHandler->getHandler() : $this->saveHandler;
-                $msg = sprintf('session_write_close(): Failed to write session data with "%s" handler', $handler::class);
+                $msg = \sprintf('session_write_close(): Failed to write session data with "%s" handler', $handler::class);
             }
 
             return $previousHandler ? $previousHandler($type, $msg, $file, $line) : false;
@@ -302,7 +307,7 @@ class NativeSessionStorage implements SessionStorageInterface
     public function getBag(string $name): SessionBagInterface
     {
         if (!isset($this->bags[$name])) {
-            throw new \InvalidArgumentException(sprintf('The SessionBagInterface "%s" is not registered.', $name));
+            throw new \InvalidArgumentException(\sprintf('The SessionBagInterface "%s" is not registered.', $name));
         }
 
         if (!$this->started && $this->saveHandler->isActive()) {

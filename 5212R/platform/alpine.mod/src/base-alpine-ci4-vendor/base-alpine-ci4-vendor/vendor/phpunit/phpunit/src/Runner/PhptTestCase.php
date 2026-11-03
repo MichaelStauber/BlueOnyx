@@ -90,17 +90,13 @@ final class PhptTestCase implements SelfDescribing, Test
      */
     public function __construct(string $filename, ?AbstractPhpProcess $phpUtil = null)
     {
-        if (!is_file($filename)) {
-            throw new Exception(
-                sprintf(
-                    'File "%s" does not exist.',
-                    $filename
-                )
-            );
-        }
+        $this->ensureFileExists($filename);
 
         $this->filename = $filename;
-        $this->phpUtil  = $phpUtil ?: AbstractPhpProcess::factory();
+
+        $this->ensureCoverageFileDoesNotExist();
+
+        $this->phpUtil = $phpUtil ?: AbstractPhpProcess::factory();
     }
 
     /**
@@ -605,6 +601,7 @@ final class PhptTestCase implements SelfDescribing, Test
         );
 
         file_put_contents($files['job'], $job);
+
         $job = $template->render();
     }
 
@@ -617,7 +614,7 @@ final class PhptTestCase implements SelfDescribing, Test
             $buffer = @file_get_contents($files['coverage']);
 
             if ($buffer !== false) {
-                $coverage = @unserialize($buffer);
+                $coverage = @unserialize($buffer, ['allowed_classes' => false]);
 
                 if ($coverage === false) {
                     $coverage = [];
@@ -791,7 +788,6 @@ final class PhptTestCase implements SelfDescribing, Test
             'open_basedir=',
             'output_buffering=Off',
             'output_handler=',
-            'report_memleaks=0',
             'report_zend_debug=0',
         ];
 
@@ -820,5 +816,38 @@ final class PhptTestCase implements SelfDescribing, Test
         }
 
         return $settings;
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function ensureFileExists(string $filename): void
+    {
+        if (!is_file($filename)) {
+            throw new Exception(
+                sprintf(
+                    'File "%s" does not exist.',
+                    $filename
+                )
+            );
+        }
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function ensureCoverageFileDoesNotExist(): void
+    {
+        $files = $this->getCoverageFiles();
+
+        if (file_exists($files['coverage'])) {
+            throw new Exception(
+                sprintf(
+                    'File %s exists, PHPT test %s will not be executed',
+                    $files['coverage'],
+                    $this->filename
+                )
+            );
+        }
     }
 }

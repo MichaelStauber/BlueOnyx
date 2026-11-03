@@ -24,8 +24,23 @@ function debug {
 }
 
 if [ -f $cce_lockfile ];then
-    debug "CCE Constructors are still running. Exiting for now. Trying again later."
-    exit
+    # Stale lock recovery (Greg Kuhnert): a dead/wedged construct left the
+    # lock forever -> swatch skipped, AM never updated. If no cce_construct
+    # process is alive and the lock is older than 10 minutes, drop it.
+    CONSTRUCT_ALIVE=0
+    if pgrep -f '/usr/sausalito/bin/cce_construct' >/dev/null 2>&1; then
+        CONSTRUCT_ALIVE=1
+    fi
+    NOW=$(date +%s)
+    MTIME=$(stat -c %Y "$cce_lockfile" 2>/dev/null || echo "$NOW")
+    LOCK_AGE=$((NOW - MTIME))
+    if [ $CONSTRUCT_ALIVE -eq 0 ] && [ $LOCK_AGE -gt 600 ]; then
+        debug "Stale cce_construct.lock (age ${LOCK_AGE}s, no process) - removing (Greg Kuhnert)"
+        rm -f "$cce_lockfile"
+    else
+        debug "CCE Constructors are still running. Exiting for now. Trying again later."
+        exit
+    fi
 fi
 
 # Locking mechanism

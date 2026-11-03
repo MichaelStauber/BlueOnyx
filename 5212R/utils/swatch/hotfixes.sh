@@ -33,11 +33,17 @@ if [ "$CRONISSUE" -gt "1" ];then
     /usr/bin/systemctl restart crond
 fi
 
-# Fix PHP Session dir GID if needed:
-if [ -d "/var/lib/php/session" ];then
-    SESSPERMS=`ls -la /var/lib/php|grep session|awk '{print $1}'`
-    if [ $SESSPERMS != "drwxrwxrwx" ];then
-        chmod 777 /var/lib/php/session
+# /var/lib/php/session: keep OS/php.tmpfiles defaults (Ken Marcus / tmpfiles.d/php.conf).
+# AdmServ uses /usr/sausalito/sessions/php; vsites use per-site php/sessions.
+# Do NOT force 0777 (no sticky) — that lets any local UID delete others' sessions.
+# Desired: 0770 root:apache (same as /usr/lib/tmpfiles.d/php.conf).
+if [ -d "/var/lib/php/session" ]; then
+    chown root:apache /var/lib/php/session 2>/dev/null || true
+    MODE=$(stat -c '%a' /var/lib/php/session 2>/dev/null || echo "")
+    OWNER=$(stat -c '%U:%G' /var/lib/php/session 2>/dev/null || echo "")
+    if [ "$MODE" != "770" ] || [ "$OWNER" != "root:apache" ]; then
+        chmod 0770 /var/lib/php/session
+        chown root:apache /var/lib/php/session 2>/dev/null || true
     fi
 fi
 

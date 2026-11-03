@@ -308,11 +308,27 @@ function addIframe ($url, $height, $BxPage) {
     $CI =& get_instance();
     $BX_SESSION = $CI->getBX_SESSION();
 
+    // Prefer Host header the browser used (HTTP_HOST) over SERVER_NAME so
+    // iframe origin matches cookies and GoAccess WS wss://host:port/goaccess-ws/.
+    $gui_host = $_SERVER['HTTP_HOST'] ?? ($_SERVER['SERVER_NAME'] ?? 'localhost');
+    // HTTP_HOST may already include :port - strip for rebuild with GUI_PORT
+    if (strpos($gui_host, ']') !== false) {
+        // IPv6 [addr]:port or [addr]
+        if (preg_match('/^\[(.+)\](?::(\d+))?$/', $gui_host, $m)) {
+            $gui_host = '[' . $m[1] . ']';
+        }
+    } elseif (preg_match('/^(.+):(\d+)$/', $gui_host, $m) && substr_count($gui_host, ':') === 1) {
+        $gui_host = $m[1];
+    }
+
     if (is_HTTPS() == TRUE) {
-        $url = 'https://' . $_SERVER['SERVER_NAME'] . ':' . $BX_SESSION['GUI_PORT'] . $url;
+        $port = $BX_SESSION['GUI_PORT'] ?? '81';
+        $url = 'https://' . $gui_host . ':' . $port . $url;
     }
     else {
-        $url = 'http://' . $_SERVER['SERVER_NAME'] . ':444' . $url; 
+        // Legacy HTTP :444 removed - force HTTPS GUI port
+        $port = $BX_SESSION['GUI_PORT'] ?? '81';
+        $url = 'https://' . $gui_host . ':' . $port . $url;
     }
 
     $out = '

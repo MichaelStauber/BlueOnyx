@@ -1,0 +1,10 @@
+#!/bin/sh
+# Clean AdmServ PHP file sessions (not the shared /var/lib/php/session tree).
+# 24h idle; tmpwatch ignores sticky bit issues on this private dir.
+DIR=/usr/sausalito/sessions/php
+TW=/usr/sbin/tmpwatch
+[ -x "$TW" ] || TW=/usr/bin/tmpwatch
+[ -x "$TW" ] || exit 0
+[ -d "$DIR" ] || exit 0
+# -m: mtime; 24 hours
+exec "$TW" -m 24 "$DIR"

@@ -11,7 +11,7 @@ endif
 
 PWD = $(shell pwd)
 
-install: install_sbin
+install: install_sbin install_admserv_conf
 
 install_sbin:
 	mkdir -p $(PREFIX)/usr/sausalito/sbin
@@ -23,3 +23,9 @@ install_sbin:
 	done
 	install -m 0644 ./systemd/goaccess.service $(PREFIX)/usr/lib/systemd/system/goaccess.service
 	install -m 0644 ./systemd/.htaccess $(PREFIX)/usr/sausalito/ui/web/base/sitestats/.htaccess
+
+# Cookie-gated WebSocket proxy + static gate (see goaccess-admserv.conf)
+install_admserv_conf:
+	mkdir -p $(PREFIX)/etc/admserv/conf.d
+	install -m 0644 ./etc/admserv/conf.d/goaccess-admserv.conf \
+		$(PREFIX)/etc/admserv/conf.d/goaccess-admserv.conf

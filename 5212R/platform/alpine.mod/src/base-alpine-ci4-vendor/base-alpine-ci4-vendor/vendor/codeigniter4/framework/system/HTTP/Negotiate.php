@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace CodeIgniter\HTTP;
 
 use CodeIgniter\HTTP\Exceptions\HTTPException;
+use Config\Feature;
 
 /**
  * Class Negotiate
@@ -39,7 +40,7 @@ class Negotiate
      */
     public function __construct(?RequestInterface $request = null)
     {
-        if ($request !== null) {
+        if ($request instanceof RequestInterface) {
             assert($request instanceof IncomingRequest);
 
             $this->request = $request;
@@ -68,8 +69,9 @@ class Negotiate
      * If no match is found, the first, highest-ranking client requested
      * type is returned.
      *
-     * @param bool $strictMatch If TRUE, will return an empty string when no match found.
-     *                          If FALSE, will return the first supported element.
+     * @param bool         $strictMatch If TRUE, will return an empty string when no match found.
+     *                                  If FALSE, will return the first supported element.
+     * @param list<string> $supported
      */
     public function media(array $supported, bool $strictMatch = false): string
     {
@@ -83,6 +85,8 @@ class Negotiate
      *
      * If no match is found, the first, highest-ranking client requested
      * type is returned.
+     *
+     * @param list<string> $supported
      */
     public function charset(array $supported): string
     {
@@ -90,7 +94,7 @@ class Negotiate
             $supported,
             $this->request->getHeaderLine('accept-charset'),
             false,
-            true
+            true,
         );
 
         // If no charset is shown as a match, ignore the directive
@@ -109,6 +113,8 @@ class Negotiate
      *
      * If no match is found, the first, highest-ranking client requested
      * type is returned.
+     *
+     * @param list<string> $supported
      */
     public function encoding(array $supported = []): string
     {
@@ -122,11 +128,17 @@ class Negotiate
      * types the application says it supports, and the types requested
      * by the client.
      *
-     * If no match is found, the first, highest-ranking client requested
+     * If strict locale negotiation is disabled and no match is found, the first, highest-ranking client requested
      * type is returned.
+     *
+     * @param list<string> $supported
      */
     public function language(array $supported): string
     {
+        if (config(Feature::class)->strictLocaleNegotiation) {
+            return $this->getBestLocaleMatch($supported, $this->request->getHeaderLine('accept-language'));
+        }
+
         return $this->getBestMatch($supported, $this->request->getHeaderLine('accept-language'), false, false, true);
     }
 
@@ -140,12 +152,12 @@ class Negotiate
      *
      * Portions of this code base on Aura.Accept library.
      *
-     * @param array  $supported    App-supported values
-     * @param string $header       header string
-     * @param bool   $enforceTypes If TRUE, will compare media types and sub-types.
-     * @param bool   $strictMatch  If TRUE, will return empty string on no match.
-     *                             If FALSE, will return the first supported element.
-     * @param bool   $matchLocales If TRUE, will match locale sub-types to a broad type (fr-FR = fr)
+     * @param list<string> $supported    App-supported values
+     * @param string       $header       header string
+     * @param bool         $enforceTypes If TRUE, will compare media types and sub-types.
+     * @param bool         $strictMatch  If TRUE, will return empty string on no match.
+     *                                   If FALSE, will return the first supported element.
+     * @param bool         $matchLocales If TRUE, will match locale sub-types to a broad type (fr-FR = fr)
      *
      * @return string Best match
      */
@@ -154,7 +166,7 @@ class Negotiate
         ?string $header = null,
         bool $enforceTypes = false,
         bool $strictMatch = false,
-        bool $matchLocales = false
+        bool $matchLocales = false,
     ): string {
         if ($supported === []) {
             throw HTTPException::forEmptySupportedNegotiations();
@@ -190,9 +202,74 @@ class Negotiate
     }
 
     /**
+     * Try to find the best matching locale. It supports strict locale comparison.
+     *
+     * If Config\App::$supportedLocales have "en-US" and "en-GB" locales, they can be recognized
+     * as two different locales. This method checks first for the strict match, then fallback
+     * to the most general locale (in this case "en") ISO 639-1 and finally to the locale variant
+     * "en-*" (ISO 639-1 plus "wildcard" for ISO 3166-1 alpha-2).
+     *
+     * If nothing from above is matched, then it returns the first option from the $supportedLocales array.
+     *
+     * @param list<string> $supportedLocales App-supported values
+     * @param ?string      $header           Compatible 'Accept-Language' header string
+     */
+    protected function getBestLocaleMatch(array $supportedLocales, ?string $header): string
+    {
+        if ($supportedLocales === []) {
+            throw HTTPException::forEmptySupportedNegotiations();
+        }
+
+        if ($header === null || $header === '') {
+            return $supportedLocales[0];
+        }
+
+        $acceptable      = $this->parseHeader($header);
+        $fallbackLocales = [];
+
+        foreach ($acceptable as $accept) {
+            // if acceptable quality is zero, skip it.
+            if ($accept['q'] === 0.0) {
+                continue;
+            }
+
+            // if acceptable value is "anything", return the first available
+            if ($accept['value'] === '*') {
+                return $supportedLocales[0];
+            }
+
+            // look for exact match
+            if (in_array($accept['value'], $supportedLocales, true)) {
+                return $accept['value'];
+            }
+
+            // set a fallback locale
+            $fallbackLocales[] = strtok($accept['value'], '-');
+        }
+
+        foreach ($fallbackLocales as $fallbackLocale) {
+            // look for exact match
+            if (in_array($fallbackLocale, $supportedLocales, true)) {
+                return $fallbackLocale;
+            }
+
+            // look for regional locale match
+            foreach ($supportedLocales as $locale) {
+                if (str_starts_with($locale, $fallbackLocale . '-')) {
+                    return $locale;
+                }
+            }
+        }
+
+        return $supportedLocales[0];
+    }
+
+    /**
      * Parses an Accept* header into it's multiple values.
      *
      * This is based on code from Aura.Accept library.
+     *
+     * @return list<array{value: string, q: float, params: array<string, string>}>
      */
     public function parseHeader(string $header): array
     {
@@ -212,7 +289,7 @@ class Negotiate
                 if (preg_match(
                     '/^(?P<name>.+?)=(?P<quoted>"|\')?(?P<value>.*?)(?:\k<quoted>)?$/',
                     $pair,
-                    $param
+                    $param,
                 )) {
                     $parameters[trim($param['name'])] = trim($param['value']);
                 }
@@ -233,7 +310,7 @@ class Negotiate
         }
 
         // Sort to get the highest results first
-        usort($results, static function ($a, $b) {
+        usort($results, static function ($a, $b): int {
             if ($a['q'] === $b['q']) {
                 $aAst = substr_count($a['value'], '*');
                 $bAst = substr_count($b['value'], '*');
@@ -271,7 +348,8 @@ class Negotiate
     /**
      * Match-maker
      *
-     * @param bool $matchLocales
+     * @param bool                                                          $matchLocales
+     * @param array{value: string, q: float, params: array<string, string>} $acceptable
      */
     protected function match(array $acceptable, string $supported, bool $enforceTypes = false, $matchLocales = false): bool
     {
@@ -302,6 +380,9 @@ class Negotiate
     /**
      * Checks two Accept values with matching 'values' to see if their
      * 'params' are the same.
+     *
+     * @param array{value: string, q: float, params: array<string, string>} $acceptable
+     * @param array{value: string, q: float, params: array<string, string>} $supported
      */
     protected function matchParameters(array $acceptable, array $supported): bool
     {
@@ -323,6 +404,9 @@ class Negotiate
     /**
      * Compares the types/subtypes of an acceptable Media type and
      * the supported string.
+     *
+     * @param array{value: string, q: float, params: array<string, string>} $acceptable
+     * @param array{value: string, q: float, params: array<string, string>} $supported
      */
     public function matchTypes(array $acceptable, array $supported): bool
     {
@@ -348,6 +432,9 @@ class Negotiate
     /**
      * Will match locales against their broader pairs, so that fr-FR would
      * match a supported localed of fr
+     *
+     * @param array{value: string, q: float, params: array<string, string>} $acceptable
+     * @param array{value: string, q: float, params: array<string, string>} $supported
      */
     public function matchLocales(array $acceptable, array $supported): bool
     {

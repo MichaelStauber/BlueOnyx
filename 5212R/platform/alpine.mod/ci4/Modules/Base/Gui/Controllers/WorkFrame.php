@@ -184,8 +184,10 @@ class WorkFrame extends BaseController {
         }
 
         if (is_HTTPS() == FALSE) {
-            $shorty = 'http://' . $target_hn_or_ip . ':444';
-            $our_redirect_URL = 'http://' . $target_hn_or_ip . ':444' . $redirectUrl;
+            // Legacy HTTP :444 removed - always force HTTPS GUI port
+            $gui_port = isset($BX_SESSION['GUI_PORT']) ? $BX_SESSION['GUI_PORT'] : '81';
+            $shorty = 'https://' . $target_hn_or_ip . ':' . $gui_port;
+            $our_redirect_URL = 'https://' . $target_hn_or_ip . ':' . $gui_port . $redirectUrl;
         }
         else {
             $shorty = 'https://' . $target_hn_or_ip . ':' . $BX_SESSION['GUI_PORT'];

@@ -134,6 +134,9 @@ fi
 
 <begin $CHANGELOG>
 
+* Mon Nov 02 2026 Michael Stauber <mstauber@solarspeed.net> 2.4-18
+- am_monitorix: NOINFO if disabled (no force-enable); longer post-restart wait.
+  First-boot enable via initServices. Credit: Greg Kuhnert.
 * Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 2.4-17
 - GoAccess live WS via AdmServ only: glue/etc/admserv/conf.d/goaccess-admserv.conf
   proxies /goaccess-ws/ to ws://127.0.0.1:7890/ gated by BXGoAccess cookie

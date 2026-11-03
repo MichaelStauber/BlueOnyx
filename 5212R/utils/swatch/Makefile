@@ -9,7 +9,7 @@ TOPDIR := $(shell pwd)
 
 V_MAJ=4
 V_MIN=1
-V_PATCH=2
+V_PATCH=3
 SWATCH_VERSION=$(V_MAJ).$(V_MIN).$(V_PATCH)
 
 CC = gcc
@@ -54,6 +54,8 @@ install: all
 	#install $(INSTFLAGS) -m 0755 incus_load.sh $(SAUSBINDIR)/incus_load.sh
 	install $(INSTFLAGS) -m 0750 fix_syslog.sh $(SAUSBINDIR)/fix_syslog.sh
 	install $(INSTFLAGS) -m 0644 swatch.service $(SWATCHDIR)
+	install $(INSTFLAGS) -d -m 0755 $(PREFIX)/etc/systemd/system/swatch.service.d
+	install $(INSTFLAGS) -m 0644 systemd/zz-blueonyx-order.conf $(PREFIX)/etc/systemd/system/swatch.service.d/zz-blueonyx-order.conf
 
 	# Handle golang version of incus_load:
 	go build -o incus_load incus_load.go

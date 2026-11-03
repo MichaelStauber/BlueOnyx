@@ -72,6 +72,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) /usr/sausalito/sbin/fix_syslog.sh
 %attr(644,root,root) /etc/ImageMagick/policy.xml.fixed
 %attr(644,root,root) /usr/sausalito/swatch/swatch.service
+%attr(644,root,root) /etc/systemd/system/swatch.service.d/zz-blueonyx-order.conf
 
 %pre
 if [ -f /etc/swatch.conf.rpmnew ]; then
@@ -91,6 +92,7 @@ fi
 if [ -f /usr/bin/systemctl ]; then
   cp /usr/sausalito/swatch/swatch.service /usr/lib/systemd/system/swatch.service
   test "$1" != "1" || systemctl daemon-reload >/dev/null 2>&1 || :
+  systemctl daemon-reload >/dev/null 2>&1 || :
   systemctl enable swatch.service >/dev/null 2>&1 || :
   systemctl restart crond.service >/dev/null 2>&1 || :
 fi
@@ -106,6 +108,10 @@ if [ -f /usr/bin/systemctl ]; then
 fi
 
 %changelog
+* Mon Nov 02 2026 Michael Stauber <mstauber@solarspeed.net> 4.1.3
+- swatch.service.d/zz-blueonyx-order.conf: After=monitorix goaccess (Greg).
+  No Wants= so admin-disabled units are not re-enabled.
+
 * Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 4.1.2
 - hotfixes.sh: enforce /var/lib/php/session 0770 root:apache (OS/php.tmpfiles)
   instead of 0777; AdmServ/vsites no longer need world-writable shared sessions

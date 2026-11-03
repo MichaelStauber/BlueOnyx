@@ -19,41 +19,43 @@ $cce->connectuds();
 
 my %am_states = am_get_statecodes();
 
-# Check if the service is enabled:
+# Check if the service is enabled (init + systemd).
 $enabled = Sauce::Service::service_get_init($service);
-&debug_msg("Service $service is enabled. \n");
+my $sys_en = `systemctl is-enabled $service.service 2>/dev/null`;
+chomp($sys_en);
 
-if ($enabled eq "0") {
-    Sauce::Service::service_set_init($service, 'on');
-    Sauce::Service::service_run_init($service, 'restart');
-    &debug_msg("Service $service was not enabled. But it is enabled now and has been started.\n");
+# Deliberately disabled: NOINFO, do not force-enable (jailkit pattern).
+# First-boot enable is initServices.sh. Credit: Greg Kuhnert.
+if ($enabled eq "0" || $sys_en eq "disabled" || $sys_en eq "masked") {
+    &debug_msg("Service $service is not enabled ($sys_en) — NOINFO, leave alone.\n");
+    print $ENV{greenMsg} if defined $ENV{greenMsg};
+    $cce->bye('SUCCESS');
+    exit $am_states{AM_STATE_NOINFO};
 }
 
-# Check Status:
-$status = `systemctl status $service.service|grep "Active: active (running)"|wc -l`;
+$status = `systemctl is-active $service.service 2>/dev/null`;
 chomp($status);
-if ($status eq "1") {
-    # Service is working:
+if ($status eq "active") {
     &debug_msg("Service $service is working. \n");
     print $ENV{greenMsg};
     $cce->bye('SUCCESS');
     exit $am_states{AM_STATE_GREEN};
 }
-else {
-    # Service failed. Attempting a restart:
-    &debug_msg("Service $service has failed and we are restarting it. \n");
-    Sauce::Service::service_run_init($service, 'restart');
-    sleep 3;
-    # Retest if service is working now:
-    $status = `systemctl status $service.service|grep "Active: active (running)"|wc -l`;
-    chomp($status);
-    if ($status eq "0") {
-        &debug_msg("Service $service has failed. \n");
-        print $ENV{redMsg};
-        $cce->bye('SUCCESS');
-        exit $am_states{AM_STATE_RED};
-    }
+
+&debug_msg("Service $service has failed and we are restarting it. \n");
+Sauce::Service::service_run_init($service, 'restart');
+sleep 12;
+$status = `systemctl is-active $service.service 2>/dev/null`;
+chomp($status);
+if ($status ne "active") {
+    &debug_msg("Service $service has failed. \n");
+    print $ENV{redMsg};
+    $cce->bye('SUCCESS');
+    exit $am_states{AM_STATE_RED};
 }
+print $ENV{greenMsg};
+$cce->bye('SUCCESS');
+exit $am_states{AM_STATE_GREEN};
 
 sub debug_msg {
     if ($DEBUG) {
@@ -64,38 +66,3 @@ sub debug_msg {
         closelog;
     }
 }
-
-# 
-# Copyright (c) 2008-2022 Michael Stauber, SOLARSPEED.NET
-# Copyright (c) 2008-2022 Team BlueOnyx, BLUEONYX.IT
-# All Rights Reserved.
-# 
-# 1. Redistributions of source code must retain the above copyright 
-#     notice, this list of conditions and the following disclaimer.
-# 
-# 2. Redistributions in binary form must reproduce the above copyright 
-#     notice, this list of conditions and the following disclaimer in 
-#     the documentation and/or other materials provided with the 
-#     distribution.
-# 
-# 3. Neither the name of the copyright holder nor the names of its 
-#     contributors may be used to endorse or promote products derived 
-#     from this software without specific prior written permission.
-# 
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
-# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
-# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
-# POSSIBILITY OF SUCH DAMAGE.
-# 
-# You acknowledge that this software is not designed or intended for 
-# use in the design, construction, operation or maintenance of any 
-# nuclear facility.
-# 

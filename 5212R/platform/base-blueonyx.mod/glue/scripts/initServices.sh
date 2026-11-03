@@ -141,7 +141,7 @@ LIB=/usr/sausalito/lib
 
 ## Enable all needed services:
 /bin/echo "Enabling all needed services ..."
-onservices="cced.init httpd admserv admserv-init.service admserv-php-fpm.service xinetd mariadb named-chroot network saslauthd"
+onservices="cced.init httpd admserv admserv-init.service admserv-php-fpm.service xinetd mariadb named-chroot network saslauthd monitorix goaccess"
 for service in $onservices; do
   service=${service%.service}
   systemctl enable "$service.service" >/dev/null 2>&1 || :

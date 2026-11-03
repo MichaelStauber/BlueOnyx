@@ -68,38 +68,12 @@ information for [VENDOR]-[SERVICE].
 <end HEADER>
 <begin capstone>
 # capstone post-install
-# blueonyx-phpMyAdmin-5.2.3+ ships config only under the UI tree (not /etc/phpMyAdmin).
-# Missing path must not fail POSTIN (Anaconda aborts the whole payload transaction).
-# Credit: Greg Kuhnert - ISO install POSTIN diagnosis 2026-11-02.
+# blueonyx-phpMyAdmin-5.2.3+ ships config under the UI tree only (not /etc/phpMyAdmin).
+# Missing path must not fail POSTIN (Anaconda aborts the payload). Credit: Greg Kuhnert.
+# 5.2.3 skel already has signon; only ensure mode 644 (RPM may ship 755).
 
 ADMINCONFIG="/usr/sausalito/ui/web/base/phpMyAdmin/config.inc.php"
-# Legacy path from older blueonyx-phpMyAdmin / distro phpMyAdmin packages
-LEGACYCONFIG="/etc/phpMyAdmin/config.inc.php"
-
-if [ ! -f "$ADMINCONFIG" ] && [ -f "$LEGACYCONFIG" ]; then
-    ADMINCONFIG="$LEGACYCONFIG"
-fi
-
-if [ ! -f "$ADMINCONFIG" ]; then
-    exit 0
-fi
-
-AUTH_TYPE=`grep auth_type "$ADMINCONFIG" 2>/dev/null | grep signon || true`
-if [ -n "$AUTH_TYPE" ] ; then
-    chmod 644 "$ADMINCONFIG" || true
-    exit 0
-fi
-
-# Best-effort migrate auth_type http -> signon (SSO). Failures must not fail the RPM.
-if grep -q "auth_type" "$ADMINCONFIG" 2>/dev/null; then
-    sed "s/\['auth_type'\]     = 'http';/['auth_type']     = 'signon';\n\$cfg['Servers'][\$i]['SignonSession'] = 'SignonSession';\n\$cfg['Servers'][\$i]['SignonURL']     = '\/phpmyadmin\/login';\n\/\/ \$cfg['Servers'][\$i]['auth_type']     = 'http';/g" \
-        "$ADMINCONFIG" > "$ADMINCONFIG.new" 2>/dev/null || true
-    if [ -s "$ADMINCONFIG.new" ]; then
-        mv -f "$ADMINCONFIG.new" "$ADMINCONFIG" || true
-    else
-        rm -f "$ADMINCONFIG.new" 2>/dev/null || true
-    fi
-fi
+[ -f "$ADMINCONFIG" ] || exit 0
 chmod 644 "$ADMINCONFIG" || true
 exit 0
 <end capstone>
@@ -137,6 +111,8 @@ exit 0
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+* Mon Nov 02 2026 Michael Stauber <mstauber@solarspeed.net> 2.3.0-3
+- capstone %post simplified (Greg): UI path only, [ -f ] || exit 0, chmod 644, no sed.
 * Mon Nov 02 2026 Michael Stauber <mstauber@solarspeed.net> 2.3.0-2
 - capstone %post: ADMINCONFIG under UI tree; missing file exits 0 (Anaconda-safe).
   Credit: Greg Kuhnert (ISO POSTIN /etc/phpMyAdmin chmod abort).

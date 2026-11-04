@@ -7,7 +7,7 @@ VENDORNAME='Project BlueOnyx'
 SERVICE=dns
 
 VERSION=2.3.3
-RELEASE=4
+RELEASE=5
 
 # add a buildarch if desired
 BUILDARCH=noarch

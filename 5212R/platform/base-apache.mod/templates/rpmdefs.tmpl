@@ -216,10 +216,17 @@ if [ -f /usr/bin/systemctl ]; then
 	# the new (hardened) units. try-restart = hard restart of everything
 	# that is running; deliberately dormant FPM versions stay dormant.
 	systemctl daemon-reload --no-block >/dev/null 2>&1 || :
-	if [ $1 -gt 1 ] ; then
-		for svc in php-fpm.service php-fpm-[0-9]*.service; do
-			[ -f /usr/lib/systemd/system/$svc ] || continue
-			systemctl try-restart $svc --no-block >/dev/null 2>&1 || logger -t base-apache "try-restart of $svc after unit update failed"
+	if [ "$1" -gt 1 ] ; then
+		# Quote paths. Glob must be on the full path under systemd/; a bare
+		# php-fpm-[0-9]*.service in the for-list often stays literal (cwd has
+		# no match), then unquoted $svc in [ -f .../$svc ] re-expands to many
+		# unit files → "[: too many arguments" (rpm %post line ~99).
+		for unit in /usr/lib/systemd/system/php-fpm.service \
+		            /usr/lib/systemd/system/php-fpm-[0-9]*.service; do
+			[ -f "$unit" ] || continue
+			svc=$(basename "$unit")
+			systemctl try-restart "$svc" --no-block >/dev/null 2>&1 \
+				|| logger -t base-apache "try-restart of $svc after unit update failed"
 		done
 
 		# Harden per-Vsite php/ ownership BEFORE any pool rewrite:
@@ -290,6 +297,10 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+* Fri Nov 06 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.9-12
+- %post: fix "[: too many arguments" on php-fpm-[0-9]* unit try-restart
+  (quote unit paths; glob under /usr/lib/systemd/system/).
+
 * Mon Nov 02 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.9-11
 - am_admserv.exp: HTTPS :81 probe (no telnet :444)
 

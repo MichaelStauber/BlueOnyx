@@ -169,6 +169,14 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+* Fri Nov 06 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.1-9
+- zz-force-https.conf: skip ErrorDocument/subreq; require HTTP_HOST (Greg).
+- alpine .env forceGlobalSecureRequests=false (paired).
+
+* Fri Nov 06 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.1-8
+- conf.d/zz-force-https.conf: HTTP→HTTPS keep Host+URI, no index.php (Greg).
+- Pair with alpine .env forceGlobalSecureRequests=false.
+
 * Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.1-7
 - Remove AdmServ Listen/VirtualHost on legacy HTTP port 444 (HTTPS :81 only)
 - Ship /var/www/html/index.html redirect to https://host:81/

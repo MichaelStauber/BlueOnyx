@@ -1,7 +1,7 @@
 Summary: Active Monitor support for base-dns-am
 Name: base-dns-am
 Version: 1.1
-Release: 0BX05%{?dist}
+Release: 0BX06%{?dist}
 Vendor: %{vendor}
 License: Sun modified BSD
 Group: System Environment/BlueOnyx
@@ -25,6 +25,15 @@ This package contains binaries and scripts used by the Active Monitor
 subsystem for base-dns-am.  
 
 %changelog
+
+* Thu Nov 05 2026 Greg Kuhnert <gkuhnert@compassnetworks.com.au> 1.1-0BX06
+- am_dns.sh: do not probe or restart BIND when there is no /etc/named.conf.
+  Enabling DNS is what generates that file, so a stock box has none, and the
+  check's restart attempt used to start named-chroot anyway - named exited 1 and
+  the unit was left failed, reporting the system as "degraded". Now NOINFO when
+  DNS is not switched on, RED when it is enabled and generation produced no file.
+  Neither path starts the unit.
+
 
 * Thu Jan 28 2016 Michael Stauber <mstauber@solarspeed.net> 1.1-0BX05
 - Better implementation of Unit-File fix on demand in am_dns.sh.

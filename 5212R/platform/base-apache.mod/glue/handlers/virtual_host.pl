@@ -1045,14 +1045,16 @@ if ($Nginx->{enabled} eq '1') {
 
 my $apache_forwarded_for = '';
 if ($Nginx->{enabled} eq '1') {
-    $apache_forwarded_for .= "RemoteIPHeader X-Forwarded-For\n";
+    # Trust X-Real-IP only from nginx hop (loopback and this vhost's addresses).
+    # Do not trust client-supplied X-Forwarded-For chains (fail2ban / IP spoof).
+    $apache_forwarded_for .= "RemoteIPHeader X-Real-IP\n";
+    $apache_forwarded_for .= "RemoteIPInternalProxy 127.0.0.1\n";
+    $apache_forwarded_for .= "RemoteIPInternalProxy ::1\n";
     if ($vhost->{ipaddr} ne "") {
         $apache_forwarded_for .= "RemoteIPInternalProxy $vhost->{ipaddr}\n";
-        $apache_forwarded_for .= "RemoteIPTrustedProxy $vhost->{ipaddr}\n";
     }
     if ($vhost->{ipaddrIPv6} ne "") {
         $apache_forwarded_for .= "RemoteIPInternalProxy $vhost->{ipaddrIPv6}\n";
-        $apache_forwarded_for .= "RemoteIPTrustedProxy $vhost->{ipaddrIPv6}\n";
     }
 }
 
@@ -1320,7 +1322,7 @@ server {
       proxy_set_header     Connection "";
       proxy_set_header     Host \$host;
       proxy_set_header     X-Real-IP \$remote_addr;
-      proxy_set_header     X-Forwarded-For \$proxy_add_x_forwarded_for;
+      proxy_set_header     X-Forwarded-For \$remote_addr;
       proxy_set_header     X-Forwarded-Proto \$scheme;
       proxy_pass           http://$vhost->{fqdn}:80/;
       proxy_read_timeout   360;

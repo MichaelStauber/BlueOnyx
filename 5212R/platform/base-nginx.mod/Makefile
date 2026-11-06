@@ -7,7 +7,7 @@ VENDORNAME='Project BlueOnyx'
 SERVICE=nginx
 
 VERSION=1.1.0
-RELEASE=4
+RELEASE=5
 
 # add a buildarch if desired
 BUILDARCH=noarch

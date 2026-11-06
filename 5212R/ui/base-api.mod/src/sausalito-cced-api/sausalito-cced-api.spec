@@ -1,6 +1,6 @@
 Name:           sausalito-cced-api
 Version:        1.1.0
-Release:        4%{?dist}
+Release:        7%{?dist}
 Summary:        CCEd-API proxy for BlueOnyx
 
 License:        SUN-modified-BSD
@@ -73,6 +73,19 @@ systemctl restart cced-api.service >/dev/null 2>&1 || :
 %systemd_postun_with_restart cced-api.service
 
 %changelog
+* Thu Nov 06 2026 Michael Stauber <mstauber@solarspeed.net> 1.1.0-7
+- isLocalClient: end-client loopback check (peer loopback + extractClientIP).
+  Fixes LOGIN via AdmServ proxy (peer always 127.0.0.1) while still blocking
+  public-listen AUTH bypass via spoofed X-Real-IP:127.0.0.1.
+
+* Thu Nov 06 2026 Michael Stauber <mstauber@solarspeed.net> 1.1.0-6
+- Fix go build: drop unused clientIP in handleMetrics/handleServices after
+  isLoopbackPeer (declared and not used).
+
+* Thu Nov 06 2026 Michael Stauber <mstauber@solarspeed.net> 1.1.0-5
+- extractClientIP: trust X-Real-IP only when TCP peer is loopback.
+- isLocal via isLoopbackPeer (never header spoof).
+
 * Wed Jun 23 2026 Michael Stauber <mstauber@solarspeed.net> - 1.1.0-4
 - Modified cced-api-pre.sh with check for /etc/admserv/certs/ca-certs
 

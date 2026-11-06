@@ -297,6 +297,14 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+* Thu Nov 06 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.9-13
+- security.conf: do not trust client X-Real-IP for access_log (Greg Kuhnert).
+- Use mod_remoteip + LogFormat %a; RemoteIPInternalProxy 127.0.0.1/::1.
+- Guard LoadModule remoteip_module if not already loaded by distro.
+- Removes SetEnvIf/dual CustomLog that broke fail2ban via spoofed IPs.
+- virtual_host.pl: RemoteIPHeader X-Real-IP; InternalProxy loopback + vhost IPs;
+- nginx proxy_set_header X-Forwarded-For $remote_addr.
+
 * Fri Nov 06 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.9-12
 - %post: fix "[: too many arguments" on php-fpm-[0-9]* unit try-restart
   (quote unit paths; glob under /usr/lib/systemd/system/).

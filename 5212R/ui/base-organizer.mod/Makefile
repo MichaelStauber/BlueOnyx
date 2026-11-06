@@ -7,8 +7,7 @@ VENDORNAME='Team BlueOnyx'
 SERVICE=organizer
 
 VERSION=1.1.0
-RELEASE=8
-
+RELEASE=9
 # add a buildarch if desired
 BUILDARCH=noarch
 

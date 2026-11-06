@@ -57,6 +57,7 @@ information for [VENDOR]-[SERVICE].
 %attr(0755,-,-) /usr/sausalito/bin/radicale_delete.pl
 %attr(0755,-,-) /usr/sausalito/sbin/radicale_backup_all.pl
 %attr(0755,-,-) /usr/sausalito/sbin/radicale_restore_all.pl
+%attr(0644,-,-) /etc/systemd/system/radicale.service.d/zz-pythonpath.conf
 
 <end glue>
 
@@ -83,6 +84,18 @@ information for [VENDOR]-[SERVICE].
 # Rehash CCEd: 
 if [ -d "/usr/sausalito/yumcce" ];then 
   touch /usr/sausalito/yumcce/rehash
+fi
+
+# radicale3 EL8/EL9: bundled deps under /usr/lib/radicale/.local/... ;
+# drop-in sets PYTHONPATH (glue/etc/systemd/.../zz-pythonpath.conf).
+# EL10+: system python3-vobject; drop-in harmless. Always fix storage owner
+# (UID drift: mongod/dovenull seen on older trees).
+if getent passwd radicale >/dev/null 2>&1 && [ -d /var/lib/radicale ]; then
+	chown -R radicale:radicale /var/lib/radicale >/dev/null 2>&1 || :
+fi
+systemctl daemon-reload >/dev/null 2>&1 || :
+if systemctl is-enabled radicale >/dev/null 2>&1; then
+	systemctl try-restart radicale >/dev/null 2>&1 || :
 fi
 
 <end glue>
@@ -131,6 +144,13 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+
+* Fri Nov 06 2026 Michael Stauber <mstauber@solarspeed.net> 1.1.0-9
+- radicale: systemd drop-in PYTHONPATH for radicale3 bundled
+  site-packages (vobject under /usr/lib/radicale/.local/...).
+  Harmless on EL10 with system python3-vobject.
+- %post: chown -R radicale:radicale /var/lib/radicale; daemon-reload;
+  try-restart radicale if enabled (UID drift on storage).
 
 * Thu Dec 18 2025 Michael Stauber <mstauber@blueonyx.it> 1.1.0-8
 - Modified ui/chorizo/web/Controllers/AddCollection.php calendar

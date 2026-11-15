@@ -297,6 +297,25 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+* Sun Nov 15 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.9-15
+- set_apache_hostname.pl: rehydrate vhost Includes from CODB only
+  (VirtualHost name must match an existing Vsite).
+- FS gates: vhost conf file and Vsite.basedir must exist.
+- DocumentRoot gate: prefer DocumentRoot path from the generated vhost
+  conf; fall back to CODB VirtualHost.documentRoot, then
+  basedir/wwwroot/web and basedir/web (CODB often still has stale
+  …/siteN/web while live trees use …/wwwroot/web).
+- SSL cert/key required only when CODB SSL is on AND the vhost conf
+  actually contains SSLEngine/SSLCertificate* (CODB SSL=1 alone must
+  not drop HTTP-only sites with no certs yet).
+- Always skip Include if SSLCACertificateFile in the vhost conf points
+  at a missing/empty file (orphan siteN must not break httpd -t).
+- Strip orphan and duplicate siteN/preview Include lines even when the
+  vhosts dir is missing; never Include on-disk siteN leftovers absent
+  from CODB. preview remains last when present.
+- Perl map fat-comma fix (map {; …}) for EL8-style httpd rehydrate
+  allowlist (shared constructor).
+
 * Thu Nov 12 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.9-14
 - set_apache_hostname.pl: stop rebuilding httpd.conf from replaceblock
   fragments (end marker "#" / nested </IfModule>). That left a stump conf

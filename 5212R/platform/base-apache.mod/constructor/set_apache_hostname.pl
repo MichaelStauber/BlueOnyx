@@ -20,7 +20,9 @@
 #   - Include conf.modules.d/*.conf
 #   - IncludeOptional conf.d/*.conf  (or Include conf.d/*.conf)
 #   - PerlConfigRequire /etc/httpd/conf.perl/00-default-vsite.pl
-# Vsite Include lines are rehydrated from /etc/httpd/conf/vhosts/site* + preview.
+# Vsite Include lines are rehydrated from CODB (VirtualHost ∩ Vsite) plus FS
+# gates (vhost file, basedir, documentRoot; SSL cert/key if SSL enabled).
+# Orphan on-disk siteN configs without CODB must NEVER gain an Include.
 
 my $confdir = '/etc/httpd/conf';
 my $aconfdir = '/etc/admserv/conf';
@@ -146,7 +148,7 @@ unless (_ensure_perl_config_require($httpd_conf, $PERL_CFG_REQUIRE)) {
   exit(1);
 }
 
-# Rehydrate Vsite + preview Include lines from on-disk vhost configs.
+# Rehydrate Vsite + preview Include lines from CODB-eligible sites only.
 unless (_rehydrate_vhost_includes()) {
   $cce->bye('FAIL', "Error while rehydrating vhost Include lines in $httpd_conf");
   exit(1);
@@ -404,10 +406,187 @@ sub _ensure_error_log
   return 0;
 }
 
-sub _vhost_includes_ok
+# CODB allowlist: VirtualHost.name must have a matching Vsite.name.
+# FS gates: vhost conf file, Vsite.basedir, VirtualHost.documentRoot;
+# if SSL enabled on the Vsite, certificate + key must exist;
+# any SSLCACertificateFile path in the vhost conf must exist non-empty
+# (even if SSL is off - stale directives still break httpd -t).
+sub _warn_rehydrate
+{
+  my ($msg) = @_;
+  print STDERR "set_apache_hostname.pl: $msg\n";
+  eval {
+    open(my $log, '|-', '/usr/bin/logger', '-t', 'set_apache_hostname', '-p', 'daemon.warning');
+    print $log $msg if $log;
+    close($log) if $log;
+  };
+}
+
+# Default vhosts dir even when Base::Httpd is odd / dir not yet created.
+sub _vhost_dir
 {
   my $dir = $Base::Httpd::vhost_dir;
-  return 1 unless ($dir && -d $dir);
+  $dir = '/etc/httpd/conf/vhosts' if (!defined $dir || $dir eq '');
+  return $dir;
+}
+
+sub _vhost_conf_ssl_paths_ok
+{
+  my ($name, $path) = @_;
+  open(my $vcf, '<', $path) or return 1;
+  while (<$vcf>) {
+    next unless (/^\s*SSLCACertificateFile\s+(\S+)/);
+    my $ca = $1;
+    $ca =~ s/^"//;
+    $ca =~ s/"$//;
+    unless (-f $ca && -s $ca) {
+      close($vcf);
+      _warn_rehydrate("skip Include for $name: SSLCACertificateFile missing or empty ($ca)");
+      return 0;
+    }
+  }
+  close($vcf);
+  return 1;
+}
+
+sub _codb_eligible_site_names
+{
+  my $dir = _vhost_dir();
+  my %vsite_by_name;
+  my %seen;
+  my @eligible;
+
+  for my $oid ($cce->find('Vsite')) {
+    my ($ok, $vs) = $cce->get($oid);
+    next unless ($ok && $vs && defined $vs->{name} && $vs->{name} =~ /^site\d+$/);
+    $vsite_by_name{ $vs->{name} } = { oid => $oid, obj => $vs };
+  }
+
+  for my $oid ($cce->find('VirtualHost')) {
+    my ($ok, $vh) = $cce->get($oid);
+    next unless ($ok && $vh && defined $vh->{name} && $vh->{name} =~ /^site\d+$/);
+    my $name = $vh->{name};
+    next if $seen{$name}++;
+
+    my $vs_info = $vsite_by_name{$name};
+    unless ($vs_info) {
+      _warn_rehydrate("skip Include for $name: VirtualHost without matching Vsite in CODB");
+      next;
+    }
+
+    my $vs = $vs_info->{obj};
+    my $basedir = $vs->{basedir} || '';
+    my $docroot = $vh->{documentRoot} || '';
+
+    unless (-d $dir && -f "$dir/$name") {
+      _warn_rehydrate("skip Include for $name: missing vhost conf $dir/$name");
+      next;
+    }
+    unless ($basedir ne '' && -d $basedir) {
+      _warn_rehydrate("skip Include for $name: missing Vsite.basedir ($basedir)");
+      next;
+    }
+
+    # DocumentRoot gate: CODB VirtualHost.documentRoot is often stale
+    # (…/siteN/web) while live trees use …/wwwroot/web. Accept any real
+    # BX web root, and prefer DocumentRoot from the generated vhost conf.
+    my $doc_ok = 0;
+    my $doc_checked = '';
+    if (open(my $vcf, '<', "$dir/$name")) {
+      while (<$vcf>) {
+        if (/^\s*DocumentRoot\s+(\S+)/) {
+          my $p = $1;
+          $p =~ s/^"//;
+          $p =~ s/"$//;
+          $doc_checked = $p;
+          if ($p ne '' && -d $p) {
+            $doc_ok = 1;
+          }
+          last;
+        }
+      }
+      close($vcf);
+    }
+    unless ($doc_ok) {
+      for my $cand ($docroot, "$basedir/wwwroot/web", "$basedir/web") {
+        next if (!defined $cand || $cand eq '');
+        $doc_checked = $cand if ($doc_checked eq '');
+        if (-d $cand) {
+          $doc_ok = 1;
+          $doc_checked = $cand;
+          last;
+        }
+      }
+    }
+    unless ($doc_ok) {
+      _warn_rehydrate("skip Include for $name: missing documentRoot (tried conf/CODB/wwwroot: $doc_checked)");
+      next;
+    }
+
+    my ($sok, $ssl) = $cce->get($vs_info->{oid}, 'SSL');
+    my $ssl_on = ($sok && $ssl && defined $ssl->{enabled} && $ssl->{enabled} eq '1') ? 1 : 0;
+
+    # Only enforce cert/key when the generated vhost conf actually has SSL
+    # (CODB SSL=1 alone is common while conf is HTTP-only / certs not yet issued).
+    my $conf_has_ssl = 0;
+    if (open(my $vcf2, '<', "$dir/$name")) {
+      while (<$vcf2>) {
+        if (/^\s*SSL(Engine|CertificateFile|CertificateKeyFile)\b/i || /^\s*SSLengine\b/i) {
+          $conf_has_ssl = 1;
+          last;
+        }
+      }
+      close($vcf2);
+    }
+    if ($ssl_on && $conf_has_ssl) {
+      my $cert = "$basedir/wwwroot/certs/certificate";
+      my $key  = "$basedir/wwwroot/certs/key";
+      unless (-f $cert && -s $cert && -f $key && -s $key) {
+        _warn_rehydrate("skip Include for $name: SSL conf present but cert/key missing under $basedir/wwwroot/certs");
+        next;
+      }
+    }
+
+    # Stale SSLCACertificateFile in the conf file breaks httpd regardless of SSL flag.
+    next unless _vhost_conf_ssl_paths_ok($name, "$dir/$name");
+
+    push @eligible, $name;
+  }
+
+  return sort { ($a =~ /(\d+)/)[0] <=> ($b =~ /(\d+)/)[0] || $a cmp $b } @eligible;
+}
+
+sub _rewrite_httpd_lines
+{
+  my ($lines_ref) = @_;
+  open(my $out, '>', "$httpd_conf~") or return 0;
+  print $out @$lines_ref or return 0;
+  close($out) or return 0;
+  chmod(0644, "$httpd_conf~");
+  move("$httpd_conf~", $httpd_conf) or return 0;
+  chmod(0644, $httpd_conf);
+  return 1;
+}
+
+sub _strip_and_read_httpd_site_includes
+{
+  # Returns (ok, lines_ref) after removing siteN + preview Includes.
+  my ($dir) = @_;
+  open(my $in, '<', $httpd_conf) or return (0, undef);
+  my @lines = <$in>;
+  close($in);
+  @lines = grep {
+    $_ !~ m{^\s*#?\s*Include\s+\Q$dir\E/site\d+\s*$}
+  } @lines;
+  @lines = grep {
+    $_ !~ m{^\s*#?\s*Include\s+\Q$dir\E/preview\s*$}
+  } @lines;
+  return (1, \@lines);
+}
+
+sub _vhost_includes_ok
+{
+  my $dir = _vhost_dir();
 
   open(my $fh, '<', $httpd_conf) or return 0;
   my @inc;
@@ -416,9 +595,20 @@ sub _vhost_includes_ok
   }
   close($fh);
 
-  opendir(my $dh, $dir) or return 0;
-  my @sites = sort grep { /^site\d+$/ && -f "$dir/$_" } readdir($dh);
-  closedir($dh);
+  # Even if vhosts dir is missing, no active siteN Include may remain.
+  for my $path (@inc) {
+    if ($path =~ m{^\Q$dir\E/site\d+$}) {
+      return 0 unless (-d $dir);
+    }
+  }
+
+  my @sites = (-d $dir) ? _codb_eligible_site_names() : ();
+  my %allow = map {; "$dir/$_" => 1 } @sites;
+
+  for my $path (@inc) {
+    next unless ($path =~ m{^\Q$dir\E/site\d+$});
+    return 0 unless $allow{$path};
+  }
 
   for my $s (@sites) {
     my $want = "$dir/$s";
@@ -426,59 +616,42 @@ sub _vhost_includes_ok
     return 0 unless (@hits == 1);
   }
 
-  if (-f "$dir/preview") {
+  if (-d $dir && -f "$dir/preview") {
     my $want = "$dir/preview";
     my @preview = grep { $_ eq $want } @inc;
     return 0 unless (@preview == 1 && $inc[-1] eq $want);
+  } else {
+    # No preview file: must not still Include preview.
+    my @preview = grep { $_ eq "$dir/preview" } @inc;
+    return 0 if @preview;
   }
   return 1;
 }
 
 sub _rehydrate_vhost_includes
 {
-  my $dir = $Base::Httpd::vhost_dir;
-  return 1 unless ($dir && -d $dir);
+  my $dir = _vhost_dir();
 
-  opendir(my $dh, $dir) or return 0;
-  my @sites = sort grep { /^site\d+$/ && -f "$dir/$_" } readdir($dh);
-  closedir($dh);
+  # Always strip siteN/preview Includes from httpd.conf first (orphan cleanup),
+  # even when the vhosts directory is missing - stale lines would still break httpd.
+  my ($ok, $lines_ref) = _strip_and_read_httpd_site_includes($dir);
+  return 0 unless $ok;
+  my @lines = @$lines_ref;
 
-  for my $s (@sites) {
-    my $want = "$dir/$s";
-    # Ensure exactly one Include line for this site (httpd_add_include is
-    # idempotent when present once; strip dupes then add).
-    open(my $in, '<', $httpd_conf) or return 0;
-    my @lines = <$in>;
-    close($in);
-    my $had = scalar grep { $_ =~ m|^Include\s+\Q$want\E\s*$| } @lines;
-    if ($had != 1) {
-      @lines = grep { $_ !~ m|^Include\s+\Q$want\E\s*$| } @lines;
-      open(my $out, '>', "$httpd_conf~") or return 0;
-      print $out @lines or return 0;
-      close($out) or return 0;
-      chmod(0644, "$httpd_conf~");
-      move("$httpd_conf~", $httpd_conf) or return 0;
-      chmod(0644, $httpd_conf);
-      return 0 unless httpd_add_include($want);
+  my @sites = ();
+  if (-d $dir) {
+    @sites = _codb_eligible_site_names();
+    for my $s (@sites) {
+      push @lines, "Include $dir/$s\n";
     }
+    if (-f "$dir/preview") {
+      push @lines, "Include $dir/preview\n";
+    }
+  } else {
+    _warn_rehydrate("vhosts dir missing ($dir): stripped site Includes, none re-added");
   }
 
-  # preview must be exactly once and last Include line
-  if (-f "$dir/preview") {
-    my $want = "$dir/preview";
-    # Strip any existing preview Include lines directly (idempotent, no dupes).
-    open(my $in, '<', $httpd_conf) or return 0;
-    my @lines = <$in>;
-    close($in);
-    @lines = grep { $_ !~ m|^Include\s+\Q$want\E\s*$| } @lines;
-    open(my $out, '>', "$httpd_conf~") or return 0;
-    print $out @lines or return 0;
-    print $out "Include $want\n" or return 0;
-    close($out) or return 0;
-    chmod(0644, "$httpd_conf~");
-    move("$httpd_conf~", $httpd_conf) or return 0;
-    chmod(0644, $httpd_conf);
-  }
+  return 0 unless _rewrite_httpd_lines(\@lines);
   return 1;
 }
 

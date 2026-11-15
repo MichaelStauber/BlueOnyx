@@ -13,7 +13,7 @@ endif
 
 # Deprecated SCRIPTS: almalinux-deploy.sh is_centos.pl
 
-SCRIPTS=pkg_install.pl pkg_prepare.pl grab_updates.pl pkg_uninstall.pl swupdate_tmp_clean.pl rpm-clean-duplicates.pl locale-analyze.pl
+SCRIPTS=pkg_install.pl pkg_prepare.pl grab_updates.pl pkg_uninstall.pl swupdate_tmp_clean.pl rpm-clean-duplicates.pl locale-analyze.pl pkg_update_all.pl
 PERLLIB=SWUpdate.pm
 AMSCRIPTS=am/am_updates.pl
 

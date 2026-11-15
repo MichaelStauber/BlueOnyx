@@ -147,6 +147,14 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+
+* Sun Nov 15 2026 Michael Stauber <mstauber@solarspeed.net> 1.8.9-5
+- glue/sbin/pkg_update_all.pl: CLI to install all NewLinQ updates for
+  already-installed package names (newest Available NVR per name).
+- Always calls pkg_install.pl with -R mid-batch; without -R on
+  pkg_update_all, reboot once at end if any package wanted reboot;
+  with -R only advise. Optional -r refresh, -n dry-run.
+
 * Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 1.8.9-4
 - yum-update.sh: atomic Sauce::Service queue publish (Greg Kuhnert PR #4)
 - Keep Ken Marcus fix: no chmod 777 on /var/lib/php/session

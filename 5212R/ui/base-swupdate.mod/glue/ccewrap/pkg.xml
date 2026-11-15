@@ -11,6 +11,9 @@
 <program name="/usr/sausalito/sbin/pkg_install.pl">
   <capability requires="modifyPackage" user="root"/>
 </program>
+<program name="/usr/sausalito/sbin/pkg_update_all.pl">
+  <capability requires="modifyPackage" user="root"/>
+</program>
 <program name="/usr/sausalito/sbin/pkg_uninstall.pl">
   <capability requires="modifyPackage" user="root"/>
 </program>

@@ -113,6 +113,9 @@ fi
 
 <begin $CHANGELOG>
 
+* Thu Nov 06 2026 Michael Stauber <mstauber@solarspeed.net> 1.1.0-5
+- nginx_defaults: X-Forwarded-For $remote_addr (not $proxy_add_x_forwarded_for).
+
 * Wed Oct 07 2026 Michael Stauber <mstauber@solarspeed.net> 1.1.0-4
 - Write /etc/httpd/conf.d/zz-h2upgrade-off.conf (H2Upgrade Off) only
   while Nginx is the SSL proxy, and remove it when the proxy is

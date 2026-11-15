@@ -7,7 +7,7 @@ VENDORNAME='Team BlueOnyx'
 SERVICE=api
 
 VERSION=2.0.1
-RELEASE=3
+RELEASE=6
 
 # add a buildarch if desired
 BUILDARCH=noarch

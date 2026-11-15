@@ -402,8 +402,7 @@ ReadLoop:
 }
 
 func handleMetrics(w http.ResponseWriter, r *http.Request) {
-    clientIP := extractClientIP(r)
-    isLocal := clientIP == "127.0.0.1" || clientIP == "::1"
+    isLocal := isLocalClient(r)
 
     if !isLocal && !validateRequestAuth(r) {
         http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -680,7 +679,7 @@ func handleCCE(w http.ResponseWriter, r *http.Request) {
     }
 
     clientSecret := r.Header.Get("X-Client-Secret")
-    isLocal := clientIP == "127.0.0.1" || clientIP == "::1"
+    isLocal := isLocalClient(r)
 
     // Enforce secret only for LOGIN (from remote IPs)
     if strings.ToUpper(req.Cmd) == "LOGIN" {
@@ -698,13 +697,6 @@ func handleCCE(w http.ResponseWriter, r *http.Request) {
     if (strings.ToUpper(req.Cmd) == "AUTH" || strings.ToUpper(req.Cmd) == "AUTHKEY") && !isLocal {
         http.Error(w, "AUTH and AUTHKEY only allowed from localhost", http.StatusForbidden)
         return
-    }
-
-    if ip := r.Header.Get("X-Real-IP"); ip != "" {
-        clientIP = ip
-    }
-    if strings.Contains(clientIP, ":") {
-        clientIP, _, _ = net.SplitHostPort(clientIP)
     }
 
     if cmdUpper == "LOGIN" {
@@ -1493,9 +1485,6 @@ func logRequest(r *http.Request, req CCERequest, status int, message string, err
     }
 
     clientIP := extractClientIP(r)
-    if ip := r.Header.Get("X-Real-IP"); ip != "" {
-        clientIP = ip
-    }
 
     username := "-"
     if req.User != "" {
@@ -1875,17 +1864,64 @@ func isWithinTransaction(sessionId string) bool {
     return ok
 }
 
-func extractClientIP(r *http.Request) string {
-    ip := r.Header.Get("X-Real-IP")
-    if ip == "" {
-        host, _, err := net.SplitHostPort(r.RemoteAddr)
-        if err != nil {
-            return r.RemoteAddr // fallback
-        }
-        ip = host
-    }
-    return ip
+func peerHost(r *http.Request) string {
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
+	}
+	return host
 }
+
+func isLoopbackIPString(h string) bool {
+	ip := net.ParseIP(h)
+	if ip != nil && ip.IsLoopback() {
+		return true
+	}
+	return h == "127.0.0.1" || h == "::1" || h == "localhost"
+}
+
+// isLoopbackPeer is true only for the TCP peer (never from headers).
+func isLoopbackPeer(r *http.Request) bool {
+	return isLoopbackIPString(peerHost(r))
+}
+
+// extractClientIP returns the end-client IP for allowlists/logging.
+// X-Real-IP is trusted ONLY when the TCP peer is loopback (AdmServ api_proxy).
+// Direct non-loopback callers cannot spoof identity via headers.
+func extractClientIP(r *http.Request) string {
+	peer := peerHost(r)
+	if !isLoopbackPeer(r) {
+		return peer
+	}
+	ip := strings.TrimSpace(r.Header.Get("X-Real-IP"))
+	if ip == "" {
+		return peer
+	}
+	if i := strings.IndexByte(ip, ','); i >= 0 {
+		ip = strings.TrimSpace(ip[:i])
+	}
+	if host, _, err := net.SplitHostPort(ip); err == nil {
+		ip = host
+	}
+	if net.ParseIP(ip) == nil {
+		return peer
+	}
+	return ip
+}
+
+// isLocalClient is true when the *end client* is loopback.
+// Used for LOGIN/AUTH gates:
+//   - pure local call (peer loopback, no X-Real-IP) → local
+//   - via AdmServ with X-Real-IP=client → local only if client is loopback
+//   - public listen + spoofed X-Real-IP:127.0.0.1 → peer not loopback → not local
+func isLocalClient(r *http.Request) bool {
+	if !isLoopbackPeer(r) {
+		return false
+	}
+	return isLoopbackIPString(extractClientIP(r))
+}
+
+
 
 func generateRandomToken(n int) string {
     const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -2063,10 +2099,8 @@ func logWithContext(ip, user, msg string, args ...interface{}) {
 }
 
 func handleServices(w http.ResponseWriter, r *http.Request) {
-    clientIP := extractClientIP(r)
-
-    // Localhost access requires no auth
-    isLocal := clientIP == "127.0.0.1" || clientIP == "::1"
+    // Localhost access requires no auth (TCP peer only - never X-Real-IP)
+    isLocal := isLocalClient(r)
 
     var user, session string
 

@@ -121,6 +121,27 @@ fi
 
 <begin $CHANGELOG>
 
+* Thu Nov 05 2026 Greg Kuhnert <gkuhnert@compassnetworks.com.au> 2.3.3-5
+- Modified src/base-dns-am/am_dns.sh to stop probing and restarting BIND when
+  there is no /etc/named.conf. Enabling DNS is what generates that file, so on a
+  stock box (DNS disabled) it does not exist, and the check's "merciful
+  restart" started named-chroot anyway: named exited 1 with "loading
+  configuration: file not found", the unit was left failed and the whole system
+  reported "degraded" from the first swatch pass after boot.
+  With no config the check no longer touches the unit at all: NOINFO when DNS is
+  not in use, RED when DNS is enabled and its configuration is missing - that is
+  a real fault (dns_generate.pl produced no file) and stays visible without
+  leaving a failed unit behind. The guard for this existed but was commented out.
+  (Greg Kuhnert PR #8; applied all support trees.)
+- glue/handlers/dns_restart.pl: drop service_toggle_init and fragile
+  pid-file checks; enable+start/restart or disable+stop via systemctl
+  is-active; nobg so CLEANUP finishes before UI returns; soft warn on
+  failed start (named-did-not-start).
+- constructor/fixDNS.pl: fix typo rm; align enable state only; start
+  named-chroot only when DNS enabled AND /etc/named.conf exists; stop
+  when disabled; never start without conf (first-boot degraded).
+
+
 * Mon May 18 2026 Michael Stauber <mstauber@solarspeed.net> 2.3.3-4
 - Modified ui/chorizo/web/Controllers/Primarydns.php to add consistency
   check on object processing.

@@ -107,6 +107,15 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+* Thu Nov 06 2026 Michael Stauber <mstauber@solarspeed.net> 2.0.1-6
+- sausalito-cced-api 1.1.0-7: isLocalClient for LOGIN/AUTH (AdmServ-safe).
+
+* Thu Nov 06 2026 Michael Stauber <mstauber@solarspeed.net> 2.0.1-5
+- sausalito-cced-api 1.1.0-6: fix unused clientIP so nested RPM builds on EL10.
+
+
+* Thu Nov 06 2026 Michael Stauber <mstauber@solarspeed.net> 2.0.1-4
+- cced-api: X-Real-IP trusted only from loopback peer (AdmServ); isLocal from TCP only.
 
 * Sat May 09 2026 Michael Stauber <mstauber@solarspeed.net> 2.0.1-3
 - Added rate limiting (check_invalid_login/add_invalid_login) to Apilogin.php

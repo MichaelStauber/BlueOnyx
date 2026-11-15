@@ -5,11 +5,34 @@
 # Load return codes
 . /usr/sausalito/swatch/statecodes
 
+# If there is no configuration to serve, do not probe and do not restart. The
+# "merciful restart" below would start named-chroot on a box that has no
+# named.conf; named exits 1 with "loading configuration: file not found", the
+# unit is left failed and the whole system reports "degraded" from the first
+# swatch pass after boot. /etc/named.conf is a symlink into the chroot, so -f
+# also covers a dangling one.
+#
+# Enabling DNS in CCE is what produces named.conf (measured: SET DNS.enabled=1
+# writes it, and enables this unit, even with no zones defined), so an absent
+# file means DNS has never been switched on - which is the stock state and is
+# NOINFO, as the original (commented out) chkconfig guard intended. If DNS is
+# enabled and the file is still missing then generation failed: that is a real
+# fault and stays RED, it just does not touch the unit.
+if [ ! -f /etc/named.conf ]; then
+	case "$(systemctl is-enabled named-chroot 2>/dev/null)" in
+		enabled|enabled-runtime)
+			echo -n "$redMsg"
+			exit $AM_STATE_RED ;;
+	esac
+	exit $AM_STATE_NOINFO
+fi
+
 # Test whether we're intentionally disabled
-# /sbin/chkconfig --list named | grep '3:on' > /dev/null
-# if [ $? -gt 0 ]; then
-# 	exit $AM_STATE_NOINFO
-# fi
+if [ -f /usr/bin/systemctl ]; then
+	systemctl is-enabled named-chroot > /dev/null 2>&1 || exit $AM_STATE_NOINFO
+else
+	/sbin/chkconfig --list named 2>/dev/null | grep '3:on' > /dev/null || exit $AM_STATE_NOINFO
+fi
 
 # Check if the 'named-chroot' Systemd Unit-File is present:
 if [ -f "/usr/lib/systemd/system/named-chroot.service" ];then

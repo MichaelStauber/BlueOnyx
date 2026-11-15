@@ -103,6 +103,14 @@ information for [VENDOR]-[SERVICE].
 
 <begin $CHANGELOG>
 
+* Sun Nov 15 2026 Greg Kuhnert <gkuhnert@compassnetworks.com.au> 3.0.1-12
+- glue/handlers/serverNameGui.pl: queue AdmServ reload at end of handler
+  via Sauce::Service::service_run_init instead of systemctl reload inline
+  halfway through (before index.html / shellinabox.conf writes). Collapses
+  with reload_admserv.pl SSL createCert/expires events so AdmServ reloads
+  once after all config writes. (GitHub branch fix/wizard-admserv-double-reload)
+
+
 * Sun Oct 18 2026 Michael Stauber <mstauber@solarspeed.net> 3.0.1-11
 - Gated login success: after the default factory login (admin/blueonyx)
   WizardElmerProper now sets AUTH_STAGE to SUCCESS.

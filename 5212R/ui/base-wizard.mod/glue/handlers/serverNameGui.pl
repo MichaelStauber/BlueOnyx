@@ -74,8 +74,8 @@ close $fh;
 # Fix perms:
 chmod(0644, $admserv_port_cfg);
 
-# Reload AdmServ directly with no roundtrip through Sauce::Service:
-system("/usr/bin/systemctl reload admserv");
+# AdmServ is reloaded once, at the end of this handler, through the service
+# queue. See the service_run_init() call below.
 
 if (-f $index_html) {
     &debug_msg("Editing $index_html to set GUI port to $GUI_PORT\n");
@@ -163,6 +163,12 @@ else {
         &debug_msg("Firewalld config updated.\n");
     }
 }
+
+# Queue the AdmServ reload. All configuration writes above are complete by now,
+# so the reload picks up the new port, index.html and shellinabox config in one
+# go. The queue also collapses the reload requests that reload_admserv.pl files
+# for the SSL createCert and expires events, so AdmServ is reloaded exactly once.
+Sauce::Service::service_run_init('admserv', 'reload');
 
 &debug_msg("End of serverNameGui.pl reached.\n");
 

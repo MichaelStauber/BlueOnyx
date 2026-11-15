@@ -31,26 +31,61 @@ use Sort::Versions;
 use Getopt::Std;
 use POSIX qw(strftime);
 
+# Getopt::Std intercepts --help/--version before getopts and prints its own
+# paranoid blurb unless HELP_MESSAGE / VERSION_MESSAGE are defined.
+$Getopt::Std::STANDARD_HELP_VERSION = 1;
+
+sub _print_help {
+    print <<'EOF';
+Usage: pkg_update_all.pl [-n] [-r] [-R] [-v] [-h]
+       pkg_update_all.pl --help
+
+  Install newer Available NewLinQ packages for names already Installed
+  (same Package.name, newer version). Only the newest Available NVR per
+  name is installed. Packages never installed before are skipped.
+
+  -n   Dry-run: list candidates only, do not install
+  -r   Run /usr/sausalito/sbin/grab_updates.pl first (refresh catalogue)
+  -R   Never reboot. If a package wanted reboot, print advice only.
+       Without -R: after all installs succeed, reboot once if any
+       package in the plan had options containing "reboot".
+  -v   Verbose
+  -h   This help
+  --help
+       Same as -h (handled before Getopt::Std default blurb)
+
+  Each package is installed with:
+      /usr/sausalito/sbin/pkg_install.pl <oid> -R
+  so a single package cannot reboot mid-batch. System.SWUpdate.installLock
+  is respected (waits for a live lock PID; clears stale locks).
+
+Examples:
+  pkg_update_all.pl -n -v       # show what would be updated
+  pkg_update_all.pl -r -R       # refresh, install all updates, never reboot
+  pkg_update_all.pl             # install; reboot at end only if a pkg wanted it
+EOF
+}
+
+sub HELP_MESSAGE {
+    _print_help();
+    exit 0;
+}
+
+sub VERSION_MESSAGE {
+    # Suppress Getopt::Std version noise for --version; we have no separate version string.
+}
+
+# Also catch long options before getopts (some callers pass only --help).
+if (grep { $_ eq '--help' || $_ eq '-help' } @ARGV) {
+    _print_help();
+    exit 0;
+}
+
 use vars qw($opt_n $opt_r $opt_R $opt_v $opt_h);
 getopts('nrRvh');
 
 if ($opt_h) {
-    print <<'EOF';
-Usage: pkg_update_all.pl [-n] [-r] [-R] [-v] [-h]
-
-  Install newer Available NewLinQ packages for names already Installed.
-
-  -n   Dry-run: list candidates only, do not install
-  -r   Run /usr/sausalito/sbin/grab_updates.pl first
-  -R   Never reboot. If a package wanted reboot, print advice only.
-       Without -R: after all installs succeed path, reboot once if any
-       package in the plan had options containing "reboot".
-  -v   Verbose
-  -h   This help
-
-  Each package is installed with pkg_install.pl <oid> -R so mid-batch
-  reboots cannot occur. System.SWUpdate.installLock is respected.
-EOF
+    _print_help();
     exit 0;
 }
 

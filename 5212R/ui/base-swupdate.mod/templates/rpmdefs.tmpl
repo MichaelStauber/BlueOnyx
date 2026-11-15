@@ -147,6 +147,17 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+* Sun Nov 15 2026 Greg Kuhnert <gkuhnert@compassnetworks.com.au> 1.8.9-5
+- ui/chorizo/web/Controllers/Swupdate.php: the "There are updates available for
+  packages that you already have installed" banner no longer fires for a PKG that
+  has only just appeared on the NewLinQ feed. The 'new' flag marks feed recency, so
+  it is also set for a package that was never installed here. The banner now
+  requires an Installed PKG of the same name at a different version - the same test
+  grab_updates.pl applies when it decides a feed PKG is an update. Newly published
+  packages keep their 'new' badge in the package list; only the alert drops them.
+  (GitHub branch fix/swupdate-banner-only-installed-updates)
+
+
 * Sun Nov 01 2026 Michael Stauber <mstauber@solarspeed.net> 1.8.9-4
 - yum-update.sh: atomic Sauce::Service queue publish (Greg Kuhnert PR #4)
 - Keep Ken Marcus fix: no chmod 777 on /var/lib/php/session

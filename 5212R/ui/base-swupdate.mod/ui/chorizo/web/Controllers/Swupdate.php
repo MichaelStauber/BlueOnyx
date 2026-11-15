@@ -54,9 +54,40 @@ class Swupdate extends BaseController {
 
         // Don't poll via get_updates.pl. Instead use CODB's last result:
         // Do we have any PKGs listed in CODB that are visible and have the 'new' flag set?
+        //
+        // The 'new' flag by itself does not mean "an update to something you have installed".
+        // grab_updates.pl also sets it for a PKG that has only just appeared on the NewLinQ feed,
+        // including a PKG that was never installed on this server. So test what the message below
+        // actually claims: a PKG of the same name has to be installed, and it has to be at a
+        // different version. That is the same test grab_updates.pl applies when it decides that a
+        // PKG off the feed is an update (the $CODB_Installed_PKGs_flat block), so no genuine
+        // update is lost - only newly published packages that nothing has installed drop out.
         $search = array('new' => '1', 'isVisible' => '1', 'installState' => 'Available');
         $oids = $CI->cceClient->findNSorted("Package", 'version', $search);
+        $update_oids = array();
         if (count($oids) > "0") {
+            // Find all installed PKGs and their versions:
+            $i_search = array('installState' => 'Installed');
+            $i_oids = $CI->cceClient->findNSorted("Package", 'name', $i_search);
+            $installed_package = array();
+            foreach ($i_oids as $i_pkg_oid) {
+                $inst_pkg = $CI->cceClient->get($i_pkg_oid);
+                if ((isset($inst_pkg['name'])) && (isset($inst_pkg['version']))) {
+                    // Keyed on the name only, exactly as grab_updates.pl does ($id_flat):
+                    $installed_package[$inst_pkg['name']] = $inst_pkg['version'];
+                }
+            }
+            foreach ($oids as $oid) {
+                $avail_pkg = $CI->cceClient->get($oid);
+                if ((!isset($avail_pkg['name'])) || (!isset($avail_pkg['version']))) {
+                    continue;
+                }
+                if ((isset($installed_package[$avail_pkg['name']])) && ($installed_package[$avail_pkg['name']] != $avail_pkg['version'])) {
+                    $update_oids[] = $oid;
+                }
+            }
+        }
+        if (count($update_oids) > "0") {
             $errors[] = ErrorMessage($i18n->get('[[base-swupdate.UpdatesAvailablePackagesBody]]'), 'alert_red', 'alarm_bell', TRUE);
         }
 

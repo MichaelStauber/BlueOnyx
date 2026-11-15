@@ -162,6 +162,16 @@ fi
 <begin $CHANGELOG>
 
 
+* Sun Nov 15 2026 Greg Kuhnert <gkuhnert@compassnetworks.com.au> 4.10-4
+- ui/chorizo/web/Controllers/VsiteList.php: the Subdomain feature icon is
+  now gated on Vsite.subdomains.vsite_enabled, the per-site switch the
+  subdomain UI writes and the subdomain page reads. It was reading
+  'enabled' in the same namespace, which is the feature-availability flag
+  with a default of 1 and is never written per Vsite, so every Vsite showed
+  the icon whether or not it had subdomains switched on. The fallback for a
+  Vsite without the namespace is now the string '0' instead of an array, so
+  an absent namespace no longer compares as true either.
+
 * Fri Oct 30 2026 Michael Stauber <mstauber@solarspeed.net> 4.10-3
 - Hardened glue/sbin/phpsendmail: call logger and sendmail via list-form
   system() (no shell). Prevents shell metacharacters in _HTTP_HOST,

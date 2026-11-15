@@ -214,11 +214,14 @@ class VsiteList extends BaseController {
             }
 
             // subdomains:
-            if (isset($vsites[$oid_vsite]['subdomains']['enabled'])) {
-                $vsiteSettings['FEATURE']['subdomains'] = $vsites[$oid_vsite]['subdomains']['enabled'];
+            // Gate the feature icon on 'vsite_enabled', which is the per-Vsite switch the
+            // subdomain UI writes. 'enabled' in this namespace is the feature-availability
+            // flag and defaults to 1, so reading it made the icon unconditional.
+            if (isset($vsites[$oid_vsite]['subdomains']['vsite_enabled'])) {
+                $vsiteSettings['FEATURE']['subdomains'] = $vsites[$oid_vsite]['subdomains']['vsite_enabled'];
             }
             else {
-                $vsiteSettings['FEATURE']['subdomains'] = array('enabled' => '0');
+                $vsiteSettings['FEATURE']['subdomains'] = '0';
             }
 
             // REDIRECT:

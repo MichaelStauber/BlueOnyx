@@ -148,6 +148,12 @@ fi
 
 <begin $CHANGELOG>
 
+* Sun Nov 15 2026 Michael Stauber <mstauber@solarspeed.net> 1.8.9-7
+- pkg_update_all.pl -a: merge all Installed Package.name values into
+  System.SWUpdate.AutoUpdateList (AM auto-update whitelist). Union only;
+  -n dry-run does not write CODB. Works alone or with install path.
+
+
 * Sun Nov 15 2026 Michael Stauber <mstauber@solarspeed.net> 1.8.9-6
 - pkg_update_all.pl: proper --help/-h text (Getopt::Std HELP_MESSAGE);
   do not fall through to the default paranoid Getopt blurb.

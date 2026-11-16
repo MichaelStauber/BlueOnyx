@@ -15,10 +15,12 @@
 #   - with -R: never reboot; print a clear advisory if reboot was wanted
 #
 # Usage:
-#   pkg_update_all.pl [-n] [-r] [-R] [-v]
+#   pkg_update_all.pl [-n] [-r] [-R] [-a] [-v]
 #     -n   dry-run (list only)
 #     -r   refresh catalogue first (grab_updates.pl)
 #     -R   never reboot; only advise if a package wanted reboot
+#     -a   enable auto-update for all installed PKG names
+#          (merge into System.SWUpdate.AutoUpdateList)
 #     -v   verbose
 #
 
@@ -37,18 +39,22 @@ $Getopt::Std::STANDARD_HELP_VERSION = 1;
 
 sub _print_help {
     print <<'EOF';
-Usage: pkg_update_all.pl [-n] [-r] [-R] [-v] [-h]
+Usage: pkg_update_all.pl [-n] [-r] [-R] [-a] [-v] [-h]
        pkg_update_all.pl --help
 
   Install newer Available NewLinQ packages for names already Installed
   (same Package.name, newer version). Only the newest Available NVR per
   name is installed. Packages never installed before are skipped.
 
-  -n   Dry-run: list candidates only, do not install
+  -n   Dry-run: list candidates only, do not install / do not write CODB
   -r   Run /usr/sausalito/sbin/grab_updates.pl first (refresh catalogue)
   -R   Never reboot. If a package wanted reboot, print advice only.
        Without -R: after all installs succeed, reboot once if any
        package in the plan had options containing "reboot".
+  -a   Activate auto-update for ALL installed package names: merge every
+       Installed Package.name into System.SWUpdate.AutoUpdateList
+       (same whitelist Active Monitor am_updates.pl uses). Does not
+       remove names already on the list. With -n, only show the plan.
   -v   Verbose
   -h   This help
   --help
@@ -61,6 +67,9 @@ Usage: pkg_update_all.pl [-n] [-r] [-R] [-v] [-h]
 
 Examples:
   pkg_update_all.pl -n -v       # show what would be updated
+  pkg_update_all.pl -a -n       # show AutoUpdateList changes only
+  pkg_update_all.pl -a          # enable auto-update for all installed PKGs
+  pkg_update_all.pl -a -r -R    # enable auto-update, refresh, install, no reboot
   pkg_update_all.pl -r -R       # refresh, install all updates, never reboot
   pkg_update_all.pl             # install; reboot at end only if a pkg wanted it
 EOF
@@ -81,8 +90,8 @@ if (grep { $_ eq '--help' || $_ eq '-help' } @ARGV) {
     exit 0;
 }
 
-use vars qw($opt_n $opt_r $opt_R $opt_v $opt_h);
-getopts('nrRvh');
+use vars qw($opt_n $opt_r $opt_R $opt_a $opt_v $opt_h);
+getopts('nrRavh');
 
 if ($opt_h) {
     _print_help();
@@ -147,6 +156,52 @@ for my $oid ($cce->find('Package', { installState => 'Installed' })) {
         version => $p->{version} // '',
         vendor  => $p->{vendor}  // '',
     };
+}
+
+# -a: merge every installed package name into System.SWUpdate.AutoUpdateList
+# (whitelist used by Active Monitor am_updates.pl). Union only; never removes.
+if ($opt_a) {
+    my ($ok_sw, $sw) = $cce->get($sysOID, 'SWUpdate');
+    die "Cannot read System.SWUpdate\n" unless $ok_sw && $sw;
+
+    my @current = $cce->scalar_to_array($sw->{AutoUpdateList} // '');
+    my %have;
+    for my $n (@current) {
+        next if !defined $n || $n eq '';
+        $have{$n} = 1;
+    }
+
+    my @added;
+    for my $name (sort keys %installed) {
+        next if $have{$name};
+        $have{$name} = 1;
+        push @added, $name;
+    }
+
+    my @final = sort keys %have;
+    info("AutoUpdateList: " . scalar(@current) . " name(s) before, "
+        . scalar(@final) . " after"
+        . (@added ? ("; adding " . scalar(@added) . ": " . join(', ', @added)) : "; nothing new"));
+
+    if ($opt_n) {
+        info("Dry-run: AutoUpdateList not written.");
+    }
+    elsif (@added || scalar(@final) != scalar(@current)) {
+        # Always rewrite sorted union so CODB matches the full installed set
+        # when -a is used (even if only order differed).
+        my $scalar = $cce->array_to_scalar(@final);
+        my ($sok) = $cce->set($sysOID, 'SWUpdate', { AutoUpdateList => $scalar });
+        if (!$sok) {
+            warn "Failed to set System.SWUpdate.AutoUpdateList\n";
+        }
+        else {
+            info("AutoUpdateList updated (" . scalar(@final) . " package name(s)).");
+            vlog("AutoUpdateList=$scalar");
+        }
+    }
+    else {
+        info("AutoUpdateList already contains every installed package name.");
+    }
 }
 
 # Available: pick newest per name that is an update of something installed

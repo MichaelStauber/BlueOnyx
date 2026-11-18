@@ -304,6 +304,14 @@ fi
 
 <begin $CHANGELOG>
 
+* Tue Nov 18 2026 Michael Stauber <mstauber@solarspeed.net> 8.20261118-18
+- enableQuota.sh: exclusive flock so ISO %post, initServices, runonce and
+  DNF installs cannot rewrite /etc/fstab concurrently. Idempotent: skip
+  rewrite when quota options already present; cmp before commit; mktemp +
+  restore fstab.bak if replace would leave an empty fstab. No umount -l /
+  mount -a (unsafe in Anaconda %post). Live quotaon only when systemd is
+  actually running; containers/Incus: fstab text only.
+
 * Mon Nov 03 2026 Michael Stauber <mstauber@solarspeed.net>
 - initServices.sh: enable monitorix and goaccess with other needed services
   (first-boot AM green; glue %post alone runs before monitorix RPM). Credit: Greg Kuhnert.

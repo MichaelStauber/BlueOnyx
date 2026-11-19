@@ -42,7 +42,7 @@ sausalito-cce has both the server and client parts of cce.
 %package server
 Group: System Environment/BlueOnyx
 Summary: The CCE server daemon
-Requires: glib, glib-ghash, pam, policycoreutils
+Requires: glib, glib-ghash, pam, policycoreutils, libpwquality
 %if "%centos" == "5" 
 Requires: audit-libs
 %endif 
@@ -247,6 +247,12 @@ if [ "$1" -ge "1" ]; then
 fi
 
 %changelog
+* Wed Nov 18 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-18
+- system-auth-cce.pam*: drop pam_cracklib; use pam_pwquality (EL10 has no
+  pam_cracklib.so). Aligns live /etc/pam.d/system-auth-cce from cce-server.
+  5210R unchanged.
+- server Requires: libpwquality (provides pam_pwquality.so).
+
 * Mon Nov 02 2026 Michael Stauber <mstauber@solarspeed.net> 0.99.6-17
 - cced_unstuck.sh: flock, 90s cooldown, skip during cce_construct, probe CCE
   before kill storm; avoid parallel cced-api restarts from FPM workers.

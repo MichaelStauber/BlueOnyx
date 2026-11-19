@@ -7,7 +7,7 @@ auth        required      pam_deny.so
 
 account     required      pam_unix.so
 
-password    required      pam_cracklib.so try_first_pass retry=3
+password    requisite     pam_pwquality.so try_first_pass local_users_only
 password    sufficient    pam_unix.so try_first_pass use_authtok nullok md5
 auth        optional      pam_abl.so config=/etc/security/pam_abl.conf record_attempt
 password    required      pam_deny.so

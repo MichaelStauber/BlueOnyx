@@ -26,7 +26,7 @@ Install on a host only with `rpm -Uvh …` when you intend to.
 | Variable | Default |
 |----------|---------|
 | PHP_MAJOR | 8.4 |
-| PHP_VERSION | **latest 8.4.x from php.net** (override: `PHP_VERSION=8.4.27`) |
+| PHP_VERSION | **latest 8.4.x from php.net** (offline fallback / pin: `8.4.28`) |
 | RELEASE | 1 |
 | PREFIX | /home/solarspeed/admserv-php |
 | ZEND_API | 20240924 (PHP 8.4) |
@@ -40,7 +40,7 @@ cd .../tmp/5212R-Alpine-CI-update/admserv-php
 make help
 make resolve-version        # show newest 8.4.x
 make rpm                    # resolve + download + configure + build + install + rpmbuild
-make rpm PHP_VERSION=8.4.27 # pin
+make rpm PHP_VERSION=8.4.28 # pin
 make clean                  # wipe build/ entirely (tarball + sources gone)
 ```
 

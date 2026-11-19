@@ -1,9 +1,9 @@
 #!/bin/bash
 # Resolve newest PHP X.Y.Z for a major.minor line from php.net releases JSON.
 # Usage:
-#   resolve-php-version.sh 8.4              -> prints e.g. 8.4.27
+#   resolve-php-version.sh 8.4              -> prints e.g. 8.4.28
 #   resolve-php-version.sh --sha256 8.4     -> sha256 of tar.gz for latest 8.4
-#   resolve-php-version.sh --sha256 8.4 8.4.27  -> sha256 for that exact version
+#   resolve-php-version.sh --sha256 8.4 8.4.28  -> sha256 for that exact version
 set -euo pipefail
 
 MODE=version
@@ -45,7 +45,7 @@ data = json.loads(os.environ["JSON"])
 
 # API shapes:
 # max=1 without list: sometimes a single release object with source[]
-# max=N: dict keyed by version string "8.4.27" -> {source:[{filename,sha256},...]}
+# max=N: dict keyed by version string "8.4.28" -> {source:[{filename,sha256},...]}
 
 def versions_from(data):
     if isinstance(data, dict) and any(re.match(r"^\d+\.\d+\.\d+$", k) for k in data.keys()):

@@ -18,14 +18,15 @@
 #
 # PHP version:
 #   Default: newest $(PHP_MAJOR).x from php.net JSON API
-#   Pin:     make rpm PHP_VERSION=8.4.27
+#   Pin:     make rpm PHP_VERSION=8.4.28
+#   Offline fallback below must match the current security pin.
 #
 # SVN never stores PHP upstream tarballs or unpacked sources (build/ is ignored).
 # Upstream php-*.tar.gz lives in TARBALL_CACHE (/tmp) and survives make clean.
 
 NAME            = admserv-php
 PHP_MAJOR       = 8.4
-RELEASE         = 4
+RELEASE         = 1
 
 # Final install path on BlueOnyx hosts (baked into binaries via ./configure --prefix)
 PREFIX          = /home/solarspeed/admserv-php
@@ -45,7 +46,7 @@ else
   PHP_VERSION_EFFECTIVE := $(shell $(RESOLVE_SCRIPT) $(PHP_MAJOR) 2>/dev/null)
 endif
 ifeq ($(strip $(PHP_VERSION_EFFECTIVE)),)
-  PHP_VERSION_EFFECTIVE := 8.4.27
+  PHP_VERSION_EFFECTIVE := 8.4.28
 endif
 PHP_VERSION     := $(PHP_VERSION_EFFECTIVE)
 
@@ -222,9 +223,9 @@ package: check-host guard-live
 		-e 's@XXX_RELEASE_XXX@$(RELEASE)@g' \
 		-e 's@XXX_ZEND_API_XXX@$(ZEND_API)@g' \
 		$(SPEC_IN) > $(SPEC_OUT)
-	printf '\n* %s Michael Stauber <mstauber@solarspeed.net>\n- %s-%s-%s: New build of %s-%s (SVN admserv-php Makefile, DESTDIR staging)\n' \
+	printf '\n* %s Michael Stauber <mstauber@solarspeed.net>\n- %s-%s-%s: PHP %s security release (php.net 19 Nov 2026; CVE-2026-115560 and peers)\n' \
 		"$$(date +'%a %b %d %Y')" \
-		"$(NAME)" "$(PHP_VERSION)" "$(RELEASE)" "$(NAME)" "$(PHP_VERSION)" \
+		"$(NAME)" "$(PHP_VERSION)" "$(RELEASE)" "$(PHP_VERSION)" \
 		>> $(SPEC_OUT)
 	cp -a $(SPEC_OUT) $(RPM_SPECS)/$(NAME)-$(PHP_VERSION)-$(RELEASE).spec
 	rm -rf $(RPM_SOURCES)/$(NAME)-$(PHP_VERSION)-$(RELEASE)

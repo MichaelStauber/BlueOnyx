@@ -404,8 +404,44 @@ if grep -q "$MAIN_SECTION" "$NMCONF_FILE"; then
         # It's not present; we need to add it
         # Create a backup before modifying
         cp "$NMCONF_FILE" "$NMCONF_FILE.bak"
-        # Use awk to add hostname-mode=preserve right after [main] section
-        awk -v line="$HOSTNAME_MODE" '/^\[main\]/ { print; print line; next }1' "$NMCONF_FILE" > temp_file && mv temp_file "$NMCONF_FILE"
+        # Verified candidate in the same directory - never relative temp_file
+        # in cwd (that path zeroed NetworkManager.conf on ISO first boot when
+        # awk wrote an empty relative file and mv installed it).
+        _nm_cand=$(mktemp "${NMCONF_FILE}.cand.XXXXXX") || true
+        if [ -n "$_nm_cand" ]; then
+            awk -v line="$HOSTNAME_MODE" '/^\[main\]/ { print; print line; next }1' "$NMCONF_FILE" > "$_nm_cand"
+            if [ -s "$_nm_cand" ] && grep -q "$MAIN_SECTION" "$_nm_cand" \
+                && grep -q "$HOSTNAME_MODE" "$_nm_cand"; then
+                # Atomic rename of verified candidate (never cat > live).
+                # Candidate must contain [main] AND hostname-mode=preserve.
+                _nm_stage=$(mktemp "${NMCONF_FILE}.stage.XXXXXX") || true
+                if [ -n "$_nm_stage" ] && cp "$_nm_cand" "$_nm_stage" && [ -s "$_nm_stage" ] \
+                    && grep -q "$HOSTNAME_MODE" "$_nm_stage"; then
+                    chmod 0644 "$_nm_stage" 2>/dev/null || true
+                    sync "$_nm_stage" 2>/dev/null || sync 2>/dev/null || true
+                    if ! mv -f "$_nm_stage" "$NMCONF_FILE"; then
+                        rm -f "$_nm_stage"
+                        echo "hotfixes: NM atomic install failed; leaving live file" >&2
+                    fi
+                else
+                    echo "hotfixes: NM stage failed; leaving $NMCONF_FILE untouched" >&2
+                    rm -f "$_nm_stage"
+                fi
+                unset _nm_stage
+            else
+                echo "hotfixes: NM conf candidate bad (missing [main] or $HOSTNAME_MODE); leaving $NMCONF_FILE untouched" >&2
+                if [ ! -s "$NMCONF_FILE" ] && [ -s "$NMCONF_FILE.bak" ]; then
+                    _nm_stage=$(mktemp "${NMCONF_FILE}.stage.XXXXXX") || true
+                    if [ -n "$_nm_stage" ] && cp "$NMCONF_FILE.bak" "$_nm_stage" && [ -s "$_nm_stage" ]; then
+                        chmod 0644 "$_nm_stage" 2>/dev/null || true
+                        mv -f "$_nm_stage" "$NMCONF_FILE" || rm -f "$_nm_stage"
+                    fi
+                    unset _nm_stage
+                fi
+            fi
+            rm -f "$_nm_cand"
+        fi
+        unset _nm_cand
         /usr/bin/systemctl reload NetworkManager &>/dev/null || :
     fi
 fi

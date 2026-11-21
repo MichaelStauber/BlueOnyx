@@ -108,6 +108,11 @@ if [ -f /usr/bin/systemctl ]; then
 fi
 
 %changelog
+* Sat Nov 21 2026 Michael Stauber <mstauber@solarspeed.net> 4.1.4
+- hotfixes.sh: NetworkManager.conf edit uses verified mktemp candidate in
+  the same directory and content install; never relative temp_file+mv
+  (zeroed NM conf on ISO first boot when cwd write failed).
+
 * Mon Nov 02 2026 Michael Stauber <mstauber@solarspeed.net> 4.1.3
 - swatch.service.d/zz-blueonyx-order.conf: After=monitorix goaccess (Greg).
   No Wants= so admin-disabled units are not re-enabled.

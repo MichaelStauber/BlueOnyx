@@ -2,27 +2,34 @@
 #
 # enableQuota.sh - enable user/group quota on /home (or /) via /etc/fstab
 #
-# Install paths that all call this (sometimes more than once, sometimes
-# overlapping): ISO kickstart %post, initServices.sh, bx_runonce, glue %post
-# side effects, manual DNF install on Alma, Incus/distrobuilder images.
+# STRATEGY (mandatory after ISO first-boot failures):
+#   Do NOT install a new fstab inode via mktemp+mv of the whole table.
+#   Build a candidate next to fstab, verify it hard, then copy *contents*
+#   into the existing fstab (or cp if missing). If anything looks wrong,
+#   leave the live file alone and/or restore fstab.bak.
+#
+#   Observed failure mode on 5212R Complete ISO 20261121 / isotester:
+#     /etc/fstab -> 0 bytes, mode 0600 (mktemp fingerprint)
+#     /etc/fstab.bak -> 992 bytes good Anaconda table (no quota yet)
+#   Full-table replace is treated as fatal design; line-oriented edit only.
+#
+# Callers (may overlap): kickstart %post, initServices.sh, bx_runonce,
+# glue %post, DNF, image builds.
 #
 # Contract:
-#   - Safe to run any number of times (idempotent fstab rewrite).
-#   - Concurrent invocations serialize on an exclusive flock; a second
-#     waiter runs after the first and no-ops if already done.
-#   - Never replace /etc/fstab with an empty/missing temp file.
-#   - If fstab would be left empty after a failed replace, restore .bak.
-#   - Do not umount -l or mount -a (unsafe in Anaconda %post / half-booted
-#     systems and was a candidate for collateral damage). Live activation
-#     is a best-effort remount + quotaon only when the system is "live".
-#   - Containers (OpenVZ beancounters, Incus sock): fstab text only if
-#     present; skip mount/quotaon (no real block quota there).
+#   - flock exclusive; fail closed without flock
+#   - empty live + good bak => restore bak contents first
+#   - edit only the target mount line options (XFS uquota,gquota else
+#     usrquota,grpquota); other lines copied unchanged
+#   - never commit a candidate that is empty, shorter, or missing the
+#     target mount line
+#   - no umount -l / mount -a; live quotaon only when multi-user
+#   - containers: text only
 #
 
 fstab='/etc/fstab'
 bak='/etc/fstab.bak'
 lockfile='/var/lock/blueonyx-enableQuota.lock'
-# Prefer /run/lock when it exists and is writable (tmpfs, boots early).
 if [ -d /run/lock ] && [ -w /run/lock ]; then
     lockfile='/run/lock/blueonyx-enableQuota.lock'
 elif [ -d /var/lock ] && [ -w /var/lock ]; then
@@ -31,14 +38,11 @@ else
     lockfile='/etc/.blueonyx-enableQuota.lock'
 fi
 
-# --- exclusive lock (util-linux flock on fd 9; no env re-exec bypass) ---
 lockdir=$(dirname "$lockfile")
 if [ ! -d "$lockdir" ]; then
     mkdir -p "$lockdir" 2>/dev/null || true
 fi
 if command -v flock >/dev/null 2>&1; then
-    # Hold fd 9 for the whole process lifetime. Waiters block up to 120s
-    # so kickstart %post and runonce serialize instead of interleaving.
     exec 9>"$lockfile" || {
         echo "enableQuota.sh: cannot open $lockfile" >&2
         exit 1
@@ -48,8 +52,7 @@ if command -v flock >/dev/null 2>&1; then
         exit 1
     fi
 else
-    # Fail closed: without serialization the brief is not met.
-    echo "enableQuota.sh: flock not found; refusing to rewrite fstab unlocked" >&2
+    echo "enableQuota.sh: flock not found; refusing to edit fstab unlocked" >&2
     exit 1
 fi
 
@@ -57,7 +60,79 @@ log() {
     echo "enableQuota.sh: $*" >&2
 }
 
-# --- environment guards ------------------------------------------------
+# Install a *verified non-empty* source as the new fstab using same-FS
+# atomic rename. Never use `cat > fstab` (truncates live file before the
+# write finishes - crash/power-loss can leave 0 bytes). Never install an
+# unverified mktemp. The ban is on destroying fstab with an empty/bad
+# payload, not on atomic rename of a checked candidate.
+install_fstab_contents() {
+    src=$1
+    if [ ! -s "$src" ]; then
+        log "install_fstab_contents: refusing empty source"
+        return 1
+    fi
+    src_bytes=$(wc -c < "$src" | tr -d ' ')
+    if [ -z "$src_bytes" ] || [ "$src_bytes" -lt 1 ]; then
+        log "install_fstab_contents: refusing zero-byte source"
+        return 1
+    fi
+
+    # Stage beside fstab so rename is atomic and does not cross filesystems.
+    stage=$(mktemp "${fstab}.stage.XXXXXX") || {
+        log "install_fstab_contents: mktemp stage failed"
+        return 1
+    }
+    if ! cp -p "$src" "$stage" 2>/dev/null; then
+        if ! cp "$src" "$stage"; then
+            log "install_fstab_contents: stage copy failed"
+            rm -f "$stage"
+            return 1
+        fi
+    fi
+    if [ ! -s "$stage" ]; then
+        log "install_fstab_contents: stage empty after copy"
+        rm -f "$stage"
+        return 1
+    fi
+    stage_bytes=$(wc -c < "$stage" | tr -d ' ')
+    if [ "$stage_bytes" -ne "$src_bytes" ]; then
+        log "install_fstab_contents: stage size mismatch ($stage_bytes != $src_bytes)"
+        rm -f "$stage"
+        return 1
+    fi
+    chmod 0644 "$stage" 2>/dev/null || true
+    # Best-effort durability before rename.
+    if command -v sync >/dev/null 2>&1; then
+        sync "$stage" 2>/dev/null || sync 2>/dev/null || true
+    fi
+    if ! mv -f "$stage" "$fstab"; then
+        log "install_fstab_contents: atomic mv stage -> $fstab failed"
+        rm -f "$stage"
+        return 1
+    fi
+    if [ ! -s "$fstab" ]; then
+        log "install_fstab_contents: $fstab empty after rename"
+        return 1
+    fi
+    return 0
+}
+
+restore_fstab_from_bak_if_needed() {
+    if [ -s "$fstab" ]; then
+        return 0
+    fi
+    if [ ! -s "$bak" ]; then
+        log "$fstab missing or empty and no usable $bak, skipping."
+        return 1
+    fi
+    log "$fstab missing or empty; restoring from $bak (emergency)"
+    if install_fstab_contents "$bak"; then
+        log "restored $fstab from $bak ($(wc -c < "$fstab" | tr -d ' ') bytes)"
+        return 0
+    fi
+    return 1
+}
+
 is_container() {
     [ -e /proc/user_beancounters ] && return 0
     [ -e /dev/incus/sock ] && return 0
@@ -68,12 +143,9 @@ is_container() {
     return 1
 }
 
-# Anaconda installer, image build, or system not really multi-user yet:
-# rewriting fstab is OK; mount surgery is not.
 is_install_or_offline() {
     [ -d /run/install ] && return 0
     [ -f /.buildstamp ] && [ ! -d /run/systemd/system ] && return 0
-    # chroot without a real systemd (DNF %post on a target root often has this)
     if [ -x /usr/bin/systemctl ]; then
         state=$(systemctl is-system-running 2>/dev/null || echo offline)
         case "$state" in
@@ -84,24 +156,14 @@ is_install_or_offline() {
     return 0
 }
 
-if [ ! -s "$fstab" ]; then
-    if [ -s "$bak" ]; then
-        log "$fstab missing or empty; restoring from $bak"
-        if ! cp -p "$bak" "$fstab"; then
-            log "restore from $bak failed"
-            exit 1
-        fi
-        if [ ! -s "$fstab" ]; then
-            log "restore left $fstab empty; abort"
-            exit 1
-        fi
-    else
-        log "$fstab missing or empty and no usable $bak, skipping."
-        exit 0
-    fi
+if ! restore_fstab_from_bak_if_needed; then
+    exit 0
 fi
 
-# Target mount: prefer /home when it is a real fstab mount point (field 2).
+if [ -s "$fstab" ] && [ ! -s "$bak" ]; then
+    cp -p "$fstab" "$bak" 2>/dev/null || true
+fi
+
 dir='/'
 while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in
@@ -114,7 +176,6 @@ while IFS= read -r line || [ -n "$line" ]; do
     fi
 done < "$fstab"
 
-# Filesystem family from fstab (xfs vs ext*).
 fs_is_xfs=0
 if grep -E -q '[[:space:]]xfs[[:space:]]' "$fstab"; then
     fs_is_xfs=1
@@ -130,118 +191,182 @@ else
     fs_label=EXT
 fi
 
-# --- idempotent: already has both quota options on $dir? ---------------
-need_rewrite=1
-while IFS= read -r line || [ -n "$line" ]; do
-    case "$line" in
-        ''|\#*) continue ;;
-    esac
-    mntpnt=$(echo "$line" | awk '{ print $2 }')
-    if [ "$mntpnt" = "$dir" ]; then
-        if echo "$line" | grep -q "$q1" && echo "$line" | grep -q "$q2"; then
-            need_rewrite=0
-        fi
-        break
-    fi
-done < "$fstab"
+# Stamp is advisory only. Source of truth is always the live fstab line.
+# Callers stack: kickstart %post -> initServices (calls us) -> bare
+# enableQuota.sh in %post -> runonce symlink. If the fix is already in
+# fstab, do absolutely nothing on re-entry (no bak refresh, no candidate,
+# no mount surgery).
+stamp_dir='/var/lib/blueonyx'
+stamp="$stamp_dir/enableQuota.done"
 
-rewrite_fstab() {
-    # Unique temp in /etc so rename is same-filesystem atomic.
-    tmpfile=$(mktemp "$fstab.tmp.XXXXXX") || {
-        log "mktemp failed, aborting rewrite"
+mark_done() {
+    mkdir -p "$stamp_dir" 2>/dev/null || true
+    {
+        echo "dir=$dir"
+        echo "q1=$q1"
+        echo "q2=$q2"
+        echo "fs=$fs_label"
+        date -u +'utc=%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || true
+    } > "$stamp" 2>/dev/null || true
+}
+
+fstab_quota_already_ok() {
+    # True iff the target mount line already carries both quota tokens.
+    while IFS= read -r line || [ -n "$line" ]; do
+        case "$line" in
+            ''|\#*) continue ;;
+        esac
+        mntpnt=$(echo "$line" | awk '{ print $2 }')
+        if [ "$mntpnt" = "$dir" ]; then
+            echo "$line" | grep -q "$q1" || return 1
+            echo "$line" | grep -q "$q2" || return 1
+            return 0
+        fi
+    done < "$fstab"
+    return 1
+}
+
+if fstab_quota_already_ok; then
+    log "already done: $dir has $q1+$q2 in $fstab - no-op (safe re-entry)"
+    mark_done
+    exit 0
+fi
+
+# Optional fast path: stamp claims done AND fstab still matches (above
+# already covers the real check). If stamp exists but fstab lost tokens,
+# fall through and repair.
+
+# Build candidate by streaming line-by-line; only the target mount line
+# gets option tokens. Candidate must never be installed unless verified.
+edit_fstab_line() {
+    before_bytes=$(wc -c < "$fstab" | tr -d ' ')
+    before_lines=$(wc -l < "$fstab" | tr -d ' ')
+    if [ -z "$before_bytes" ] || [ "$before_bytes" -lt 1 ]; then
+        log "refusing to edit empty $fstab"
+        return 1
+    fi
+
+    # Pre-edit bak (best effort).
+    cp -p "$fstab" "$bak" 2>/dev/null || true
+
+    # Candidate lives beside fstab (same fs); never becomes the live inode.
+    cand=$(mktemp "${fstab}.candidate.XXXXXX") || {
+        log "mktemp candidate failed"
         return 1
     }
     # shellcheck disable=SC2064
-    trap 'rm -f "$tmpfile"' 0
+    trap 'rm -f "$cand"' 0
 
-    while IFS= read -r line || [ -n "$line" ]; do
-        mntpnt=$(echo "$line" | awk '{ print $2 }')
-        if [ "$mntpnt" = "$dir" ]; then
-            for qtype in $q1 $q2; do
-                if ! echo "$line" | grep -q -e "$qtype"; then
-                    # Only inject into a defaults options field when present.
-                    if echo "$line" | grep -q '[[:space:]]defaults'; then
-                        # Capture the whitespace; do NOT put [[:space:]] in the
-                        # replacement (sed would insert that text literally).
-                        line=$(echo "$line" | sed -e "s|\([[:space:]]\)defaults|\1defaults,$qtype|")
-                    elif echo "$line" | awk '{ print $4 }' | grep -q .; then
-                        # defaults missing: append to options field (col 4).
-                        # Keep original FS (do not force OFS=tab).
-                        line=$(echo "$line" | awk -v q="$qtype" '{
-                            if (NF >= 4) $4 = $4 "," q
-                            print
-                        }')
-                    fi
-                fi
-            done
-        fi
-        if ! printf '%s\n' "$line" >> "$tmpfile"; then
-            log "failed writing $tmpfile (disk full?); leaving $fstab in place"
-            rm -f "$tmpfile"
-            trap - 0
-            return 1
-        fi
-    done < "$fstab"
-
-    if [ ! -s "$tmpfile" ]; then
-        log "rewrite produced empty temp, leaving $fstab in place"
-        rm -f "$tmpfile"
+    TARGET_DIR="$dir" Q1="$q1" Q2="$q2" CAND="$cand" FSTAB_PATH="$fstab" /usr/bin/perl -e '
+        my $dir = $ENV{TARGET_DIR};
+        my $q1  = $ENV{Q1};
+        my $q2  = $ENV{Q2};
+        my $out = $ENV{CAND};
+        my $inpath = $ENV{FSTAB_PATH} || "/etc/fstab";
+        open my $in, "<", $inpath or die "open fstab: $!";
+        open my $oh, ">", $out or die "open cand: $!";
+        my $touched = 0;
+        while (my $line = <$in>) {
+            my $nl = ($line =~ s/\n\z//) ? "\n" : "";
+            if ($line =~ /^\s*#/ || $line =~ /^\s*$/) {
+                print $oh $line, $nl;
+                next;
+            }
+            my @f = split /\s+/, $line;
+            if (@f >= 4 && defined $f[1] && $f[1] eq $dir) {
+                my $opts = $f[3];
+                for my $q ($q1, $q2) {
+                    next if $opts =~ /(^|,)\Q$q\E(,|$)/;
+                    # Always append tokens. Do not re-match "defaults" after the
+                    # first insert (that produced defaults,gquota,uquota order
+                    # and double-touched the defaults field).
+                    $opts .= ",$q";
+                }
+                $f[3] = $opts;
+                $line = join(" ", @f);
+                $touched = 1;
+            }
+            print $oh $line, $nl;
+        }
+        close $in;
+        close $oh or die "close cand: $!";
+        exit($touched ? 0 : 2);
+    '
+    perl_rc=$?
+    if [ "$perl_rc" -eq 2 ]; then
+        log "target mount $dir not found in fstab; leaving live file untouched"
+        rm -f "$cand"
+        trap - 0
+        return 0
+    fi
+    if [ "$perl_rc" -ne 0 ]; then
+        log "candidate build failed (rc=$perl_rc); leaving $fstab untouched"
+        rm -f "$cand"
         trap - 0
         return 1
     fi
 
-    # Same number of lines as source (truncated write / short read guard).
-    src_lines=$(wc -l < "$fstab" | tr -d ' ')
-    tmp_lines=$(wc -l < "$tmpfile" | tr -d ' ')
-    # Allow +0 only: we always printf one line per input line including final
-    # non-newline-terminated line (read -r || [ -n ]).
-    if [ "$src_lines" -gt 0 ] && [ "$tmp_lines" -lt "$src_lines" ]; then
-        log "temp has fewer lines than $fstab ($tmp_lines < $src_lines); abort"
-        rm -f "$tmpfile"
+    cand_bytes=$(wc -c < "$cand" | tr -d ' ')
+    cand_lines=$(wc -l < "$cand" | tr -d ' ')
+
+    if [ ! -s "$cand" ]; then
+        log "candidate empty; leaving $fstab untouched"
+        rm -f "$cand"
         trap - 0
         return 1
     fi
-
-    # Byte-identical to current fstab: nothing to commit.
-    if cmp -s "$fstab" "$tmpfile" 2>/dev/null; then
+    if [ "$before_lines" -gt 0 ] && [ "$cand_lines" -lt "$before_lines" ]; then
+        log "candidate fewer lines ($cand_lines < $before_lines); leave live"
+        rm -f "$cand"
+        trap - 0
+        return 1
+    fi
+    if [ "$cand_bytes" -lt $((before_bytes / 2)) ]; then
+        log "candidate shrank too much ($cand_bytes < half of $before_bytes); leave live"
+        rm -f "$cand"
+        trap - 0
+        return 1
+    fi
+    # Target line must exist and carry both tokens.
+    tgt=$(awk -v d="$dir" '($1 !~ /^#/ && NF >= 4 && $2 == d) { print; exit }' "$cand")
+    if [ -z "$tgt" ] || ! echo "$tgt" | grep -q "$q1" || ! echo "$tgt" | grep -q "$q2"; then
+        log "candidate missing quota tokens on $dir; leave live"
+        rm -f "$cand"
+        trap - 0
+        return 1
+    fi
+    # No-op if identical.
+    if cmp -s "$fstab" "$cand" 2>/dev/null; then
         log "fstab already up to date for $dir ($q1,$q2)"
-        rm -f "$tmpfile"
+        rm -f "$cand"
         trap - 0
         return 0
     fi
 
-    # Backup only when we have a usable replacement.
-    cp -p "$fstab" "$bak" || {
-        log "failed to write $bak"
-        rm -f "$tmpfile"
-        trap - 0
-        return 1
-    }
-
-    if ! mv -f "$tmpfile" "$fstab"; then
-        log "mv temp -> $fstab failed; restoring from $bak if needed"
-        rm -f "$tmpfile"
-        if [ ! -s "$fstab" ] && [ -s "$bak" ]; then
-            cp -p "$bak" "$fstab" || true
+    if ! install_fstab_contents "$cand"; then
+        log "install failed; attempting bak restore"
+        if [ -s "$bak" ]; then
+            install_fstab_contents "$bak" || true
         fi
+        rm -f "$cand"
         trap - 0
         return 1
     fi
+    rm -f "$cand"
     trap - 0
 
-    # Post-condition: never leave an empty fstab behind.
+    # Post-condition.
     if [ ! -s "$fstab" ]; then
-        log "CRITICAL: $fstab empty after replace; restoring $bak"
-        if [ -s "$bak" ]; then
-            cp -p "$bak" "$fstab" || true
-        fi
+        log "CRITICAL: $fstab empty after install; restoring bak"
+        [ -s "$bak" ] && install_fstab_contents "$bak" || true
         return 1
     fi
+    cp -p "$fstab" "$bak" 2>/dev/null || true
+    log "line edit committed for $dir ($q1,$q2); $(wc -c < "$fstab" | tr -d ' ') bytes"
     return 0
 }
 
 activate_quota() {
-    # Text-only during install, image build, or containers.
     if is_container; then
         log "container detected: skipping mount/quotaon"
         return 0
@@ -250,8 +375,6 @@ activate_quota() {
         log "install/offline environment: fstab updated, skipping mount/quotaon"
         return 0
     fi
-
-    # Best-effort live path only. No umount -l, no mount -a.
     /bin/mount -o "remount,$q1,$q2" "$dir" >/dev/null 2>&1 \
         || /bin/mount -o remount "$dir" >/dev/null 2>&1 \
         || true
@@ -262,12 +385,9 @@ activate_quota() {
     return 0
 }
 
-if [ "$need_rewrite" -eq 1 ]; then
-    rewrite_fstab || exit 1
-else
-    log "quota options already present on $dir, rewrite skipped"
-fi
-
+# Reached only when fstab still lacks quota tokens on $dir.
+edit_fstab_line || exit 1
+mark_done
 activate_quota
 log "done ($fs_label, dir=$dir)."
 exit 0

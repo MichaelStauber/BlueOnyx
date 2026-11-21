@@ -304,6 +304,17 @@ fi
 
 <begin $CHANGELOG>
 
+* Sat Nov 21 2026 Michael Stauber <mstauber@solarspeed.net> 8.20261121-19
+- enableQuota.sh: never full-replace /etc/fstab (mktemp+mv left 0-byte
+  mode-0600 fstab on 5212R ISO 20261121 / isotester while fstab.bak was
+  intact). Line-oriented candidate + verified atomic install only;
+  emergency bak restore; flock kept. Re-entry no-op when target mount
+  already has quota tokens (%post + initServices + runonce stack);
+  stamp /var/lib/blueonyx/enableQuota.done is advisory only.
+- initServices.sh: restore empty fstab from bak before /tmp edit; /tmp
+  noexec skipped when already set; grub: drop cat|grep >/tmp/grub.clean
+  + mv; verified candidate for GRUB_CMDLINE_LINUX only.
+
 * Tue Nov 18 2026 Michael Stauber <mstauber@solarspeed.net> 8.20261118-18
 - enableQuota.sh: exclusive flock so ISO %post, initServices, runonce and
   DNF installs cannot rewrite /etc/fstab concurrently. Idempotent: skip

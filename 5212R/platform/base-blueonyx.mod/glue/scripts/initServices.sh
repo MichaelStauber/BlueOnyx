@@ -8,10 +8,70 @@ for service in $services; do
 done
 
 # Remount /tmp to be non-executable!
-if [ -f /etc/fstab ];then
+# Safety first: never proceed with an empty live fstab if bak is good.
+# (ISO first-boot class: live 0 bytes / bak intact - do not edit a void.)
+# Atomic install helper: never `cat > live` (truncates before write).
+_bx_atomic_install() {
+  # $1=verified source, $2=live path
+  _src=$1; _dst=$2
+  [ -s "$_src" ] || return 1
+  _stage=$(mktemp "${_dst}.stage.XXXXXX") || return 1
+  if ! cp "$_src" "$_stage" || [ ! -s "$_stage" ]; then
+    rm -f "$_stage"; return 1
+  fi
+  chmod 0644 "$_stage" 2>/dev/null || true
+  sync "$_stage" 2>/dev/null || sync 2>/dev/null || true
+  if ! mv -f "$_stage" "$_dst"; then
+    rm -f "$_stage"; return 1
+  fi
+  [ -s "$_dst" ] || return 1
+  return 0
+}
+if [ ! -s /etc/fstab ] && [ -s /etc/fstab.bak ]; then
+  /bin/echo "Restoring empty /etc/fstab from /etc/fstab.bak"
+  _bx_atomic_install /etc/fstab.bak /etc/fstab || true
+fi
+if [ -s /etc/fstab ]; then
+  # Skip /tmp rewrite when the mount line already has noexec (re-entry from
+  # %post + runonce must not touch fstab again).
+  _tmp_line=$(awk '($1 !~ /^#/ && $2 == "/tmp") { print; exit }' /etc/fstab)
+  if [ -n "$_tmp_line" ] && echo "$_tmp_line" | grep -q 'noexec'; then
+    /bin/echo "Remount /tmp: noexec already set - no-op"
+  else
   /bin/echo "Remount /tmp to be non-executable"
-  /usr/bin/perl -pi -e "if (/\/tmp/) { s/defaults/noexec,nosuid,rw/ }" /etc/fstab
-  /bin/mount -o remount /tmp >/dev/null 2>&1
+  # Line-oriented /tmp option inject. Candidate + atomic rename only.
+  cp -p /etc/fstab /etc/fstab.bak 2>/dev/null || true
+  _fstab_before=$(wc -c < /etc/fstab | tr -d ' ')
+  _cand=/etc/fstab.candidate.$$
+  /usr/bin/perl -e '
+    open my $in, "<", "/etc/fstab" or exit 1;
+    my $out = "";
+    while (my $l = <$in>) {
+      if ($l !~ /^\s*#/ && $l =~ /\s\/tmp\s/ && $l =~ /\sdefaults/ && $l !~ /noexec/) {
+        $l =~ s/\sdefaults/\tdefaults,noexec,nosuid,rw/;
+      }
+      $out .= $l;
+    }
+    close $in;
+    exit 1 if length($out) < 1;
+    open my $oh, ">", $ARGV[0] or exit 1;
+    print $oh $out;
+    close $oh or exit 1;
+  ' "$_cand" && [ -s "$_cand" ] \
+    && [ "$(wc -c < "$_cand" | tr -d ' ')" -ge $((_fstab_before / 2)) ] \
+    && _bx_atomic_install "$_cand" /etc/fstab \
+    && rm -f "$_cand" \
+    || {
+      /bin/echo "fstab /tmp edit failed; restoring bak if needed"
+      rm -f "$_cand"
+      if [ ! -s /etc/fstab ] && [ -s /etc/fstab.bak ]; then
+        _bx_atomic_install /etc/fstab.bak /etc/fstab || true
+      fi
+    }
+  unset _fstab_before _cand
+  fi
+  /bin/mount -o remount /tmp >/dev/null 2>&1 || true
+  unset _tmp_line
 fi
 
 # Add "httpd" to /etc/passwd & /etc/shadow & /etc/group for backwards compatibility
@@ -286,12 +346,38 @@ if [ ! -e /proc/user_beancounters ] && [ ! -e /dev/incus/sock ]; then
             /bin/echo "Grub options 'biosdevname=0', 'net.ifnames=0' and 'selinux=0' have been set."
           fi
           if [ $NEEDFIX -eq 0 ]; then
-                  # Copy cleaned file:
-                  cat /etc/default/grub | grep -v ^GRUB_CMDLINE_LINUX > /tmp/grub.clean
-                  # Append fixed option:
-                  echo "GRUB_CMDLINE_LINUX=\"$NEWARGS\"" >> /tmp/grub.clean
-                  # Move:
-                  mv /tmp/grub.clean /etc/default/grub
+                  # Line-level replace only. Never cat|grep >/tmp + mv over grub
+                  # (that pattern zeroed /etc/default/grub on ISO first boot when
+                  # the temp landed empty). Edit GRUB_CMDLINE_LINUX in place via
+                  # a verified candidate, then copy contents back.
+                  _grub=/etc/default/grub
+                  _grub_cand=$(mktemp /etc/default/grub.cand.XXXXXX) || true
+                  if [ -n "$_grub_cand" ] && [ -s "$_grub" ]; then
+                    cp -p "$_grub" "${_grub}.bak" 2>/dev/null || true
+                    if grep -q '^GRUB_CMDLINE_LINUX=' "$_grub"; then
+                      sed -e "s|^GRUB_CMDLINE_LINUX=.*|GRUB_CMDLINE_LINUX=\"$NEWARGS\"|" "$_grub" > "$_grub_cand"
+                    else
+                      cat "$_grub" > "$_grub_cand"
+                      echo "GRUB_CMDLINE_LINUX=\"$NEWARGS\"" >> "$_grub_cand"
+                    fi
+                    if [ -s "$_grub_cand" ] && grep -q '^GRUB_CMDLINE_LINUX=' "$_grub_cand"; then
+                      # Atomic rename of verified candidate (never cat > live).
+                      _grub_stage=$(mktemp "${_grub}.stage.XXXXXX") || true
+                      if [ -n "$_grub_stage" ] && cp "$_grub_cand" "$_grub_stage" && [ -s "$_grub_stage" ]; then
+                        chmod 0644 "$_grub_stage" 2>/dev/null || true
+                        sync "$_grub_stage" 2>/dev/null || sync 2>/dev/null || true
+                        mv -f "$_grub_stage" "$_grub" || rm -f "$_grub_stage"
+                      else
+                        /bin/echo "grub stage failed; leaving $_grub untouched"
+                        rm -f "$_grub_stage"
+                      fi
+                      unset _grub_stage
+                    else
+                      /bin/echo "grub candidate bad; leaving $_grub untouched"
+                    fi
+                    rm -f "$_grub_cand"
+                  fi
+                  unset _grub _grub_cand
           fi
   else
           if [ "$HAVEXFS" -gt "0" ];then
@@ -301,8 +387,13 @@ if [ ! -e /proc/user_beancounters ] && [ ! -e /dev/incus/sock ]; then
             NEWARGS="$CURRARGS net.ifnames=0 biosdevname=0 selinux=0"
             /bin/echo "Grub options 'biosdevname=0', 'selinux=0' and 'net.ifnames=0' have been set."
           fi
-          touch /etc/default/grub
-          echo "GRUB_CMDLINE_LINUX=\"$NEWARGS\"" >> /etc/default/grub
+          # Missing grub file: create with a single write, not append-to-void races.
+          if [ ! -s /etc/default/grub ]; then
+            echo "GRUB_CMDLINE_LINUX=\"$NEWARGS\"" > /etc/default/grub
+            chmod 0644 /etc/default/grub 2>/dev/null || true
+          else
+            echo "GRUB_CMDLINE_LINUX=\"$NEWARGS\"" >> /etc/default/grub
+          fi
   fi
 
   # Deploy Grub:

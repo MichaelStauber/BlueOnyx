@@ -153,6 +153,11 @@ fi
 
 <begin $CHANGELOG>
 
+* Sun Nov 22 2026 Michael Stauber <mstauber@solarspeed.net> 2.3.2-3
+- glue/handlers/update_pam_abl_settings.pl: use absolute /usr/bin/logger
+  in pam_abl host/user block and clear cmds (Dovecot auth has no PATH;
+  bare logger can SIGABRT auth). Report: Ken Marcus / Precision Web Hosting.
+
 * Wed Nov 18 2026 Michael Stauber <mstauber@solarspeed.net> 2.3.2-2
 - glue/pam.d/* (incl. el10 system-auth-cce): replace pam_cracklib with
   pam_pwquality. 5210R unchanged.

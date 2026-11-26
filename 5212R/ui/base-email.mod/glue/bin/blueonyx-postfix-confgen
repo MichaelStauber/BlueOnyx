@@ -324,8 +324,70 @@ if [ -d /etc/postfix ]; then
         /usr/sausalito/sbin/email-auth-helper.pl >/dev/null 2>&1 || :
     fi
 
-    # Parse /etc/mail/virtusertable to create /etc/postfix/virtual:
-    grep -v 'error:nouser No such user here' /etc/mail/virtusertable | grep -v ^# | sed 's/%1//g' > /etc/postfix/virtual
+    # Parse /etc/mail/virtusertable to create /etc/postfix/virtual.
+    #
+    # Mail server aliases appear in virtusertable as "@alias %1@www.primary".
+    # A plain copy turns them into the Postfix wildcard "@alias @www.primary",
+    # which matches every address of the alias. Postfix then accepts mail for
+    # made-up users, cannot deliver it and bounces it to the (often forged)
+    # sender: backscatter. See virtual(5), section "@domain address".
+    #
+    # Instead, write one entry per real address of the primary domain:
+    # "user@alias user@www.primary". Unknown users at an alias are then
+    # rejected during SMTP (smtpd_reject_unlisted_recipient). The wildcard
+    # is kept if the primary domain has a real catch-all, and an exact
+    # entry that already exists for the alias always wins. If the primary
+    # has no exact addresses at all, the wildcard is kept (legacy behaviour).
+    VIRTRAW=$(mktemp /etc/postfix/.virtual.XXXXXX) || VIRTRAW=""
+    VIRTOUT=$(mktemp /etc/postfix/.virtual.XXXXXX) || VIRTOUT=""
+    # shellcheck disable=SC2064
+    trap 'rm -f "$VIRTRAW" "$VIRTOUT"' EXIT
+    if [ -n "$VIRTRAW" ] && [ -n "$VIRTOUT" ]; then
+        grep -v 'error:nouser No such user here' /etc/mail/virtusertable | grep -v ^# | sed 's/%1//g' > "$VIRTRAW"
+        if awk '
+            NR == FNR {
+                if (NF == 0) next
+                k = tolower($1)
+                if (k ~ /^@/) {
+                    if (NF == 2 && $2 ~ /^@[^@,]+$/) wild[substr(k, 2)] = tolower(substr($2, 2))
+                    else catchall[substr(k, 2)] = 1
+                } else if (k ~ /@/) {
+                    have[k] = 1
+                    d = k;  sub(/^.*@/, "", d)
+                    lp = k; sub(/@[^@]*$/, "", lp)
+                    if (!((d, lp) in seen)) { seen[d, lp] = 1; n[d]++; user[d, n[d]] = lp }
+                }
+                next
+            }
+            {
+                k = tolower($1)
+                if (k ~ /^@/ && (substr(k, 2) in wild)) {
+                    a = substr(k, 2); p = wild[a]
+                    if (!(p in catchall) && n[p] > 0 && a != p) {
+                        print "# mail server alias @" a ": 1:1 entries of @" p
+                        for (i = 1; i <= n[p]; i++) {
+                            key = user[p, i] "@" a
+                            if (!(key in have)) { have[key] = 1; print key "\t" user[p, i] "@" p }
+                        }
+                        next
+                    }
+                }
+                print
+            }' "$VIRTRAW" "$VIRTRAW" > "$VIRTOUT"
+        then
+            # Replace only after successful generation (avoid truncated live map).
+            mv -f "$VIRTOUT" /etc/postfix/virtual
+            VIRTOUT=""
+        else
+            echo "WARNING: blueonyx-postfix-confgen: virtual alias expansion failed; using unexpanded map" >&2
+            grep -v 'error:nouser No such user here' /etc/mail/virtusertable | grep -v ^# | sed 's/%1//g' > /etc/postfix/virtual
+        fi
+    else
+        echo "WARNING: blueonyx-postfix-confgen: mktemp failed; using unexpanded virtual map" >&2
+        grep -v 'error:nouser No such user here' /etc/mail/virtusertable | grep -v ^# | sed 's/%1//g' > /etc/postfix/virtual
+    fi
+    rm -f "$VIRTRAW" "$VIRTOUT"
+    trap - EXIT
 
     #
     ### Basic addressing / virtual domains

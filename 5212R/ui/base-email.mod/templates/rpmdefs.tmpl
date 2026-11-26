@@ -206,6 +206,15 @@ fi
 
 <begin $CHANGELOG>
 
+* Wed Nov 25 2026 Michael Stauber <mstauber@solarspeed.net> 2.2.8-11
+- Postfix virtual map: expand mail server alias wildcards
+  (@alias -> @www.primary from Sendmail %1 rewrite) into explicit
+  1:1 localpart mappings so smtpd_reject_unlisted_recipient can reject
+  unknown recipients at RCPT and stop accept-then-bounce backscatter.
+  Keep the wildcard when the primary has a real catch-all or no exact
+  addresses. Existing exact alias entries still win. Based on analysis
+  and patch from Ken Marcus / report from Christoph Schneeberger.
+
 * Thu Oct 29 2026 Michael Stauber <mstauber@solarspeed.net> 2.2.8-10
 - Security: /etc/pki/tls/certs/postfix.pem holds the System private key
   (key+cert bundle copied from sendmail.pem) but was chmod 0644 while

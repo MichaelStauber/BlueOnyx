@@ -160,6 +160,21 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+* Thu Nov 26 2026 Michael Stauber <mstauber@solarspeed.net> 4.10-6
+- ui/chorizo/web/Controllers/VsiteList.php: keep the SSL feature badge
+  label short as SSL for layout; show certificate expiry from
+  Vsite.SSL.expires only in the hover tooltip as SSL (YYYY-MM-DD).
+  Warn/danger badge colors unchanged from 4.10-5.
+
+* Thu Nov 26 2026 Michael Stauber <mstauber@solarspeed.net> 4.10-5
+- ui/chorizo/web/Controllers/VsiteList.php: SSL feature badge on the
+  virtual site list used Vsite.SSL.expires in the visible label as
+  SSL (YYYY-MM-DD). Badge color is warning when the cert expires within
+  14 days or the latest Let's Encrypt client status indicates failure,
+  and danger when the cert is expired or expires is missing while SSL
+  is enabled. No new locale strings. (Superseded for label layout by
+  4.10-6: date moved to tooltip only.)
+
 * Sun Nov 15 2026 Greg Kuhnert <gkuhnert@compassnetworks.com.au> 4.10-4
 - ui/chorizo/web/Controllers/VsiteList.php: the Subdomain feature icon is
   now gated on Vsite.subdomains.vsite_enabled, the per-site switch the

@@ -244,12 +244,69 @@ class VsiteList extends BaseController {
                 }
             }
 
-            // SSL:
-            if (isset($vsites[$oid_vsite]['SSL'])) {
-                $vsiteSettings['FEATURE']['SSL'] = $vsites[$oid_vsite]['SSL']['enabled'];
-            }
-            else {
-                $vsiteSettings['FEATURE']['SSL'] = array('enabled' => '0');
+            // SSL: enabled badge plus expiry / LE health (list overview).
+            // Visible label stays short "SSL" (layout); expiry and status live in the
+            // hover tooltip. Color: danger=expired/missing, warning=LE renew fail or
+            // expires within 14 days, else theme default.
+            $sslNs = (isset($vsites[$oid_vsite]['SSL']) && is_array($vsites[$oid_vsite]['SSL']))
+                ? $vsites[$oid_vsite]['SSL']
+                : array();
+            $sslEnabled = (isset($sslNs['enabled']) && (string)$sslNs['enabled'] === '1') ? '1' : '0';
+            $vsiteSettings['FEATURE']['SSL'] = $sslEnabled;
+            $vsiteSettings['SSL_BADGE'] = array(
+                'color' => '',
+                'label' => 'SSL',
+                'tooltip' => 'SSL',
+            );
+            if ($sslEnabled === '1') {
+                $sslWarnDays = 14;
+                $sslExpRaw = isset($sslNs['expires']) ? trim((string)$sslNs['expires']) : '';
+                $sslExpTs = ($sslExpRaw !== '') ? strtotime($sslExpRaw) : false;
+                $sslLabel = 'SSL';
+                $sslTooltip = 'SSL';
+                $sslColor = '';
+
+                if ($sslExpTs !== false) {
+                    $sslExpDate = date('Y-m-d', $sslExpTs);
+                    $sslTooltip = 'SSL (' . $sslExpDate . ')';
+                    $sslDaysLeft = (int) floor(($sslExpTs - time()) / 86400);
+                    if ($sslDaysLeft < 0) {
+                        $sslColor = 'danger';
+                    }
+                    elseif ($sslDaysLeft <= $sslWarnDays) {
+                        $sslColor = 'warning';
+                    }
+                }
+                else {
+                    // SSL on but no usable expires field in CODB
+                    $sslColor = 'danger';
+                    $sslTooltip = 'SSL';
+                }
+
+                $sslIsLe = (isset($sslNs['uses_letsencrypt']) && (string)$sslNs['uses_letsencrypt'] === '1')
+                    || (isset($sslNs['ACME']) && (string)$sslNs['ACME'] === '1')
+                    || (isset($sslNs['caCerts']) && strpos((string)$sslNs['caCerts'], 'LetsEncrypt') !== false);
+                if ($sslIsLe && !empty($sslNs['LEclientRet'])) {
+                    $leRaw = (string)$sslNs['LEclientRet'];
+                    if (str_starts_with($leRaw, '"') && str_ends_with($leRaw, '"')) {
+                        $leRaw = substr($leRaw, 1, -1);
+                    }
+                    $leRet = json_decode(stripcslashes($leRaw), true);
+                    if (!is_array($leRet)) {
+                        $leRet = json_decode($leRaw, true);
+                    }
+                    if (is_array($leRet) && isset($leRet['Status']) && (string)$leRet['Status'] === '1') {
+                        if ($sslColor !== 'danger') {
+                            $sslColor = 'warning';
+                        }
+                    }
+                }
+
+                $vsiteSettings['SSL_BADGE'] = array(
+                    'color' => $sslColor,
+                    'label' => $sslLabel,
+                    'tooltip' => $sslTooltip,
+                );
             }
 
             // Shell:
@@ -359,8 +416,15 @@ class VsiteList extends BaseController {
                     $php_suffix = $known_php_versions['PHPOS'];
                 }
 
-                if ($key == "SSL") { $F_text = "SSL"; $F_tooltip = "SSL"; }
-                elseif ($key === "Email (+)") { $F_text = "Email (+)"; $F_tooltip = $Email_plus_helptext;  }
+                if ($key == "SSL") {
+                    $sslBadge = isset($vsiteSettings['SSL_BADGE']) && is_array($vsiteSettings['SSL_BADGE'])
+                        ? $vsiteSettings['SSL_BADGE']
+                        : array('label' => 'SSL', 'tooltip' => 'SSL', 'color' => '');
+                    $F_text = $sslBadge['label'];
+                    $F_tooltip = $sslBadge['tooltip'];
+                    $ssl_badge_color = isset($sslBadge['color']) ? $sslBadge['color'] : '';
+                }
+                elseif ($key === "Email (+)") { $F_text = "Email (+)"; $F_tooltip = $Email_plus_helptext;  $ssl_badge_color = ''; }
                 elseif ($key == "MYSQL_Vsite") { $F_text = "SQL"; $F_tooltip = "MySQL or MariaDB"; }
                 elseif ($key == "Java") { $F_text = "JSP"; $F_tooltip = "JSP";  }
                 elseif ($key == "USERWEBS") { $F_text = "~"; $F_tooltip = "User owned webs";  }
@@ -390,12 +454,18 @@ class VsiteList extends BaseController {
                     elseif ($value == '2') { $F_text = "-RPM->"; $F_tooltip = "Permanent Redirect enabled"; }
                     elseif ($value == '3') { $F_text = "-PXY->"; $F_tooltip = "Proxy enabled"; }
                 }
-                else { $F_text = $key; $F_tooltip = $key; }
+                else { $F_text = $key; $F_tooltip = $key; $ssl_badge_color = ''; }
+                if ($key !== "SSL") {
+                    $ssl_badge_color = '';
+                }
                 if ($value > "0") {
                     $FeatureIcon = $factory->getFeatureButton('javascript:void(0);', $F_text);
                     $FeatureIcon->MakeTooltip($i18n->getHtml($F_tooltip), 'top');
                     $FeatureIcon->setDescription($i18n->getHtml($F_tooltip));
-                    if ($BX_SESSION['gui_theme'] === 'adminica') {
+                    if ($key === "SSL" && $ssl_badge_color !== '') {
+                        $FeatureIcon->setButtonColor($ssl_badge_color);
+                    }
+                    elseif ($BX_SESSION['gui_theme'] === 'adminica') {
                         $FeatureIcon->setButtonColor('primary');
                     }
                     $iconlist[] = $FeatureIcon->toHtml();

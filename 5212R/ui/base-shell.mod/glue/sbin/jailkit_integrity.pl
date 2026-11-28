@@ -199,6 +199,58 @@ sub write_jk_policy {
     return 1;
 }
 
+# Mirror host jk_lsh.ini into a jail. jk_lsh reads the in-chroot path only.
+sub install_jk_lsh_ini_into_jail {
+    my ($jailroot, $src) = @_;
+
+    return 0 if (!defined $jailroot || $jailroot eq '' || $jailroot eq '/');
+    return 0 if (!-d $jailroot);
+    return 0 if (!defined $src || !-f $src || !-s $src);
+    return 0 if (!-d "$jailroot/etc" && !-d "$jailroot/usr" && !-d "$jailroot/bin");
+
+    my $dest_dir = "$jailroot/etc/jailkit";
+    if (!-d $dest_dir) {
+        return 0 if $dry_run;
+        system('/bin/mkdir', '-p', $dest_dir);
+        return 0 unless -d $dest_dir;
+        chmod(0755, $dest_dir);
+    }
+
+    my $dest = "$dest_dir/jk_lsh.ini";
+    my $need = 1;
+    if (-f $dest && -s $dest) {
+        my $src_sz = -s $src;
+        my $dst_sz = -s $dest;
+        if (defined $src_sz && defined $dst_sz && $src_sz == $dst_sz) {
+            # Cheap equality: size match + cmp
+            my $rc = system('/usr/bin/cmp', '-s', $src, $dest);
+            $need = 0 if (($rc >> 8) == 0);
+        }
+    }
+
+    if (!$need) {
+        return 1;
+    }
+
+    say_msg("  Syncing host jk_lsh.ini into $jailroot/etc/jailkit/\n");
+    return 1 if $dry_run;
+
+    my $tmp = "$dest.$$.tmp";
+    my $data = '';
+    open(my $in, '<', $src) or return 0;
+    {
+        local $/;
+        $data = <$in>;
+    }
+    close($in);
+    open(my $out, '>', $tmp) or return 0;
+    print $out $data;
+    close($out) or return 0;
+    chmod(0644, $tmp);
+    rename($tmp, $dest) or do { unlink($tmp); return 0; };
+    return 1;
+}
+
 sub jail_libraries {
     my ($binary) = @_;
     my @libraries;
@@ -317,11 +369,21 @@ for my $site (@sites) {
         unless (-d $jail->{root}) {
             say_msg(" Missing Jail $kind ($jail->{root})\n");
             $errors++ unless repair_jail($jail->{root}, "$site/$kind", []);
+            # After create, still push current host policy into the new jail:
+            if (-d $jail->{root}) {
+                $errors++ unless install_jk_lsh_ini_into_jail($jail->{root}, $policy_file);
+            }
             next;
         }
         say_msg(" Checking Jail $kind ($jail->{root})\n");
         for my $user (@{$jail->{users}}) {
             say_msg("  Checking User $user->[0] (shell mode $user->[1])\n");
+        }
+
+        # Always ensure in-jail jk_lsh.ini matches host (chrooted SFTP policy).
+        unless (install_jk_lsh_ini_into_jail($jail->{root}, $policy_file)) {
+            fail_msg("  ERROR: could not sync jk_lsh.ini into $kind jail\n");
+            $errors++;
         }
 
         my $broken = 0;

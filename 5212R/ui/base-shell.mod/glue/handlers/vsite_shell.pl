@@ -63,6 +63,11 @@ my $home_dir = $site_dir . '/home';                                      # /home
 # Ensure jk_lsh.ini has DEFAULT + [group <site>] entries for all jailed sites:
 update_jk_lsh_ini($cce);
 
+# jk_lsh runs inside the chroot and reads $JAILROOT/etc/jailkit/jk_lsh.ini,
+# not the host file. Mirror the host policy into every active jail after
+# the host file is up to date (jk_init may have copied a stale snapshot).
+sync_jk_lsh_ini_into_jails($cce);
+
 # Ensure /etc/jailkit/jk_socketd.ini has all the proper entries for jailed sites:
 update_jk_socketd_ini($cce);
 
@@ -420,6 +425,94 @@ sub strip_jk_lsh_managed_block {
 
     $txt =~ s/# --- BlueOnyx managed: BEGIN.*?# --- BlueOnyx managed: END ---\n?//s;
     return $txt;
+}
+
+# ----------------------------------------------------------------------
+# Push host /etc/jailkit/jk_lsh.ini into each active jail.
+# Without this, chrooted SFTP fails with:
+#   did neither find a section '<user>', nor 'group <site>' nor 'DEFAULT'
+# even when the host file is correct - jk_lsh only sees the in-jail path.
+# ----------------------------------------------------------------------
+
+sub sync_jk_lsh_ini_into_jails {
+    my ($cce) = @_;
+    my $cfg = "/etc/jailkit/jk_lsh.ini";
+
+    if (!-f $cfg || !-s $cfg) {
+        &debug_msg("WARN: $cfg missing or empty - cannot mirror into jails\n");
+        return;
+    }
+
+    my @oids = $cce->find('Vsite');
+    foreach my $oid (@oids) {
+        my ($ok, $v) = $cce->get($oid);
+        next if (!$ok);
+        next if ($v->{suspend});
+
+        my ($ok2, $sh) = $cce->get($oid, 'Shell');
+        next if (!$ok2);
+        next if (($sh->{enabled} ne "1") && ($sh->{enabled} ne "2"));
+
+        my $site_dir = homedir_get_group_dir($v->{name}, $v->{volume});
+        next if (!$site_dir);
+        my $home_dir = $site_dir . '/home';
+
+        # SiteAdmin jail + regular-user jail
+        install_jk_lsh_ini_into_jail($site_dir, $cfg);
+        install_jk_lsh_ini_into_jail($home_dir, $cfg);
+    }
+}
+
+sub install_jk_lsh_ini_into_jail {
+    my ($jailroot, $src) = @_;
+
+    return 0 if (!defined $jailroot || $jailroot eq '' || $jailroot eq '/');
+    return 0 if (!-d $jailroot);
+    return 0 if (!defined $src || !-f $src || !-s $src);
+
+    # Only touch trees that already look like a jail (or are mid-init with etc/).
+    return 0 if (!-d "$jailroot/etc" && !-d "$jailroot/usr" && !-d "$jailroot/bin");
+
+    my $dest_dir = "$jailroot/etc/jailkit";
+    if (!-d $dest_dir) {
+        system('/bin/mkdir', '-p', $dest_dir);
+        if (!-d $dest_dir) {
+            &debug_msg("ERROR: could not create $dest_dir\n");
+            return 0;
+        }
+        chmod(0755, $dest_dir);
+    }
+
+    my $dest = "$dest_dir/jk_lsh.ini";
+    my $tmp  = "$dest.$$.tmp";
+
+    my $data = '';
+    if (open(my $in, '<', $src)) {
+        local $/;
+        $data = <$in>;
+        close($in);
+    }
+    else {
+        &debug_msg("ERROR: could not read $src: $!\n");
+        return 0;
+    }
+
+    if (open(my $out, '>', $tmp)) {
+        print $out $data;
+        close($out);
+        chmod(0644, $tmp);
+        if (!rename($tmp, $dest)) {
+            &debug_msg("ERROR: could not install $dest: $!\n");
+            unlink($tmp);
+            return 0;
+        }
+        &debug_msg("Mirrored $src -> $dest\n");
+        return 1;
+    }
+
+    &debug_msg("ERROR: could not write temp $tmp: $!\n");
+    unlink($tmp);
+    return 0;
 }
 
 # ----------------------------------------------------------------------

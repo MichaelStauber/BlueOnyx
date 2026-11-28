@@ -131,6 +131,14 @@ fi
 
 <begin $CHANGELOG>
 
+* Sat Nov 28 2026 Michael Stauber <mstauber@solarspeed.net> 1.4-19
+- Mirror host /etc/jailkit/jk_lsh.ini into every active Vsite jail
+  (siteAdmin + user jailroots) after update_jk_lsh_ini().
+- jk_lsh reads the in-chroot path only; host-only policy left chrooted
+  SFTP failing with "did neither find a section ... nor DEFAULT".
+- jailkit_integrity.pl now syncs the same host policy into jails on
+  daily/manual repair so stale or missing in-jail INI files heal.
+
 * Tue Oct 20 2026 Greg Kuhnert <gkuhnert@compassnetworks.com.au> 1.4-18
 - Release number bump due to partial commit.
 

@@ -153,6 +153,14 @@ fi
 
 <begin $CHANGELOG>
 
+* Sat Nov 28 2026 Michael Stauber <mstauber@solarspeed.net> 2.3.2-4
+- pam_abl host_whitelist: accept IPv4 and IPv6 CIDR (InetAddressCIDRv4v6).
+- Default and always-merge 127.0.0.1/32 and ::1/128 so local webmail via
+  ::1 cannot lock out the whole server after three failed logins.
+- GUI Ablsettings uses ipcidr_list_IPv4IPv6; constructor migrates existing
+  objects. Report: Ken Marcus / Precision Web Hosting.
+
+
 * Sun Nov 22 2026 Michael Stauber <mstauber@solarspeed.net> 2.3.2-3
 - glue/handlers/update_pam_abl_settings.pl: use absolute /usr/bin/logger
   in pam_abl host/user block and clear cmds (Dovecot auth has no PATH;

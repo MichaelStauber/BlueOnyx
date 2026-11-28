@@ -196,7 +196,8 @@ class Ablsettings extends BaseController {
 
         $greylist_extraField = $factory->getTextList("host_whitelist", $CODBDATA["host_whitelist"], 'rw');
         $greylist_extraField->setOptional(true);
-        $greylist_extraField->setType('InetAddressList');
+        // IPv4 and IPv6 CIDR list (must accept ::1/128; InetAddressList is IPv4-only)
+        $greylist_extraField->setType('ipcidr_list_IPv4IPv6');
         $block->addFormField(
             $greylist_extraField,
             $factory->getLabel("host_whitelist"),

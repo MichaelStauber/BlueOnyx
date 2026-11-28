@@ -1,7 +1,8 @@
 #!/usr/bin/perl -I/usr/sausalito/perl
 # $Id: update_pam_abl_settings.pl
-
+#
 # This handler is run whenever pam_abl is modified through the GUI.
+#
 
 # Debugging switch:
 $DEBUG = "0";
@@ -42,12 +43,16 @@ if ((($cce->event_is_create()) || ($cce->event_is_modify())) && ($PAM_ABL_OID eq
         $host_rule = $abl_settings->{"host_rule"};
         @host_whitelist_array = $cce->scalar_to_array($abl_settings->{"host_whitelist"});
 
+        # Always keep IPv4 and IPv6 localhost in the on-disk whitelist.
+        # Roundcube/Dovecot often authenticate via ::1; three failed local
+        # logins would otherwise block host ::1 and take down all webmail.
+        @host_whitelist_array = ensure_localhost_whitelist(@host_whitelist_array);
+
         $host_whitelist = '';
         foreach $wl_ip (@host_whitelist_array) {
+            next if (!defined($wl_ip) || $wl_ip eq '');
             $host_whitelist .= $wl_ip . ';';
         }
-        $host_whitelist .= '';
-
 
         # Edit config:
         if (!Sauce::Util::editfile($pam_abl_config, *edit_pam_abl_config, $host_purge, $host_rule, $host_whitelist)) {
@@ -57,7 +62,7 @@ if ((($cce->event_is_create()) || ($cce->event_is_modify())) && ($PAM_ABL_OID eq
     }
     else {
         # Ok, we have a problem: No config found.
-        # So we just weep silently and exit. 
+        # So we just weep silently and exit.
         $cce->bye('FAIL', "$pam_abl_config not found!");
         exit(1);
     }
@@ -65,6 +70,43 @@ if ((($cce->event_is_create()) || ($cce->event_is_modify())) && ($PAM_ABL_OID eq
 
 $cce->bye('SUCCESS');
 exit(0);
+
+# Normalize and ensure 127.0.0.1/32 + ::1/128 are present.
+sub ensure_localhost_whitelist {
+    my (@list) = @_;
+    my %seen;
+    my @out;
+
+    foreach my $e (@list) {
+        next if (!defined($e));
+        $e =~ s/^\s+|\s+$//g;
+        next if ($e eq '');
+
+        # Bare loopback -> CIDR form (CCE/GUI type requires prefix)
+        if ($e eq '127.0.0.1') {
+            $e = '127.0.0.1/32';
+        }
+        if (($e eq '::1') || ($e eq '0:0:0:0:0:0:0:1') || ($e eq '0:0:0:0:0:0:0:1/128')) {
+            $e = '::1/128';
+        }
+
+        my $key = $e;
+        $key =~ tr/A-F/a-f/;
+        next if ($seen{$key}++);
+        push @out, $e;
+    }
+
+    foreach my $must (qw(127.0.0.1/32 ::1/128)) {
+        my $key = $must;
+        $key =~ tr/A-F/a-f/;
+        if (!$seen{$key}) {
+            push @out, $must;
+            $seen{$key} = 1;
+        }
+    }
+
+    return @out;
+}
 
 sub edit_pam_abl_config {
 
@@ -89,12 +131,9 @@ EOF
     return 1;
 }
 
-$cce->bye('SUCCESS');
-exit(0);
-
 # 
-# Copyright (c) 2008-2022 Michael Stauber, SOLARSPEED.NET
-# Copyright (c) 2008-2022 Team BlueOnyx, BLUEONYX.IT
+# Copyright (c) 2008-2026 Michael Stauber, SOLARSPEED.NET
+# Copyright (c) 2008-2026 Team BlueOnyx, BLUEONYX.IT
 # All Rights Reserved.
 # 
 # 1. Redistributions of source code must retain the above copyright 

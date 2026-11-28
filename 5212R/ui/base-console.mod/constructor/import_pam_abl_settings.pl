@@ -187,7 +187,8 @@ sub verify {
                 $CONFIG{"$entry"} = "*:30/1h";
             }
             if ($entry eq "host_whitelist") {
-                $CONFIG{"$entry"} = "127.0.0.1/32";
+                # Localhost both families (webmail/IMAP via ::1 must not trip pam_abl)
+                $CONFIG{"$entry"} = "127.0.0.1/32;::1/128";
             }
         }
 

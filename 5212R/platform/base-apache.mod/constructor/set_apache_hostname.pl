@@ -84,10 +84,15 @@ while (<HTTPD>) {
   s/^ServerName\s.+$/ServerName $fqdn/;
   s/^#ServerName\s.+$/ServerName $fqdn/;
   s/^Listen\s.+$/Listen $httpPort/;
-  # Stock conf uses relative logs/ under ServerRoot; BX wants absolute path.
-  # Comment stock ErrorLog/CustomLog, then ensure absolute ErrorLog below.
-  s|^ErrorLog|#ErrorLog|g;
-  s|^CustomLog|#CustomLog|g;
+  # Stock conf uses relative logs/ under ServerRoot. Only comment relative
+  # stock paths here - NEVER blanket s|^ErrorLog|#ErrorLog| on the BX absolute
+  # ErrorLog. That ran every constructor pass, then _ensure_error_log added a
+  # fresh active line, producing endless "#ErrorLog \"/var/log/httpd/error_log\""
+  # piles (seen on builder10 and customer boxes).
+  s|^ErrorLog\s+"logs/|#ErrorLog "logs/|;
+  s|^ErrorLog\s+logs/|#ErrorLog logs/|;
+  s|^CustomLog\s+"logs/|#CustomLog "logs/|;
+  s|^CustomLog\s+logs/|#CustomLog logs/|;
 
   print STAGE;
 }
@@ -362,24 +367,33 @@ sub _ensure_perl_config_require
 sub _has_active_error_log
 {
   my ($file) = @_;
-  # Require the BX absolute path, not any leftover relative/conditional ErrorLog.
+  # Require exactly one column-0 BX absolute ErrorLog (not indented IfModule copies).
   return _has_line($file, qr|^ErrorLog\s+"/var/log/httpd/error_log"\s*$|);
 }
 
 sub _ensure_error_log
 {
   my ($file, $path) = @_;
-  return 1 if _has_active_error_log($file);
-
   my $line = "ErrorLog \"$path\"";
+
   open(my $in, '<', $file) or return 0;
   my @lines = <$in>;
   close($in);
 
-  # Drop other active ErrorLog lines (stock relative logs/, odd leftovers).
-  @lines = grep { $_ !~ /^ErrorLog\s+/ } @lines;
+  # Always scrub BX absolute ErrorLog lines - active OR commented - so repeated
+  # constructor runs cannot accumulate "#ErrorLog \"/var/log/httpd/error_log\"".
+  # Also drop other column-0 active ErrorLog (stock leftovers); keep indented
+  # lines inside <IfModule log_config_module> alone.
+  my @kept;
+  for my $l (@lines) {
+    next if ($l =~ /^#?ErrorLog\s+"\/var\/log\/httpd\/error_log"\s*$/);
+    next if ($l =~ /^#?ErrorLog\s+\/var\/log\/httpd\/error_log\s*$/);
+    next if ($l =~ /^ErrorLog\s+/);
+    push @kept, $l;
+  }
+  @lines = @kept;
 
-  # Insert global ErrorLog before conf.d include (works outside IfModule).
+  # Insert exactly one global ErrorLog before conf.d include.
   my $out = '';
   my $inserted = 0;
   for my $l (@lines) {
@@ -391,6 +405,14 @@ sub _ensure_error_log
   }
   if (!$inserted) {
     $out .= "$line\n";
+  }
+
+  # Idempotent: if already clean and correct, skip rewrite.
+  if (_has_active_error_log($file)) {
+    open(my $chk, '<', $file) or return 0;
+    my $cur = do { local $/; <$chk> };
+    close($chk);
+    return 1 if (defined $cur && $cur eq $out);
   }
 
   open(my $fh, '>', "$file~") or return 0;
@@ -575,11 +597,14 @@ sub _strip_and_read_httpd_site_includes
   open(my $in, '<', $httpd_conf) or return (0, undef);
   my @lines = <$in>;
   close($in);
+  # Strip real Include lines and mangled leftovers (e.g. "lude /.../vhosts/..."
+  # after the first three characters of "Include" were lost). Corrupted lines
+  # must not survive - the old Include-only regex left them forever and httpd -t failed.
   @lines = grep {
-    $_ !~ m{^\s*#?\s*Include\s+\Q$dir\E/site\d+\s*$}
+    $_ !~ m{^\s*#?\s*(?:Include\s+|\S*lude\s+)\Q$dir\E/site\d+\s*$}
   } @lines;
   @lines = grep {
-    $_ !~ m{^\s*#?\s*Include\s+\Q$dir\E/preview\s*$}
+    $_ !~ m{^\s*#?\s*(?:Include\s+|\S*lude\s+)\Q$dir\E/preview\s*$}
   } @lines;
   return (1, \@lines);
 }

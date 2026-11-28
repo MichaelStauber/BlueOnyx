@@ -297,6 +297,15 @@ fi
 <end %POST-UNINSTALL>
 
 <begin $CHANGELOG>
+
+* Sat Nov 28 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.9-16
+- set_apache_hostname.pl: stop infinite #ErrorLog "/var/log/httpd/error_log"
+  pile-up. Blanket s|^ErrorLog|#ErrorLog| ran every constructor pass, then
+  _ensure_error_log re-added an active line. Scrub active+commented BX ErrorLog
+  and keep exactly one. Only comment stock relative logs/ paths.
+- Strip mangled vhost Include leftovers (e.g. "lude /.../vhosts/...") so
+  corrupted Include lines cannot stick and break httpd -t.
+
 * Sun Nov 15 2026 Michael Stauber <mstauber@solarspeed.net> 2.4.9-15
 - set_apache_hostname.pl: rehydrate vhost Includes from CODB only
   (VirtualHost name must match an existing Vsite).

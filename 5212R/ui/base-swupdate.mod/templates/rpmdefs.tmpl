@@ -149,6 +149,15 @@ fi
 
 <begin $CHANGELOG>
 
+* Sat Nov 28 2026 Greg Kuhnert <gkuhnert@compassnetworks.com.au> 1.8.9-9
+- ui/chorizo/web/Controllers/Swupdate.php: Software-Updates banner only
+  reports updates for packages already installed (same name, different
+  version). The 'new' flag marks NewLinQ feed recency and was also set for
+  brand-new shop PKGs never installed here, which falsely raised
+  "There are updates available for packages that you already have installed."
+  (GitHub PR #10; landed as 1.8.9-9 after rebase past 1.8.9-8)
+
+
 * Sun Nov 15 2026 Michael Stauber <mstauber@solarspeed.net> 1.8.9-8
 - templates/rpmdefs.tmpl %files glue: ship pkg_update_all.pl
   (%attr 0700 under %{RootDir}/sbin).

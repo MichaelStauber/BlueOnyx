@@ -53,10 +53,37 @@ class Swupdate extends BaseController {
         //
 
         // Don't poll via get_updates.pl. Instead use CODB's last result:
-        // Do we have any PKGs listed in CODB that are visible and have the 'new' flag set?
+        // Visible Available PKGs with the 'new' flag. Note: 'new' marks feed
+        // recency (first seen / changed on NewLinQ), not "update to something
+        // installed". grab_updates.pl also sets new=1 for brand-new shop PKGs
+        // never installed here (undef ne version). The banner text claims
+        // updates to installed packages - require the same name installed at a
+        // different version (same flat-name test as grab_updates.pl).
+        // Credit: Greg Kuhnert (GitHub PR #10).
         $search = array('new' => '1', 'isVisible' => '1', 'installState' => 'Available');
         $oids = $CI->cceClient->findNSorted("Package", 'version', $search);
+        $update_oids = array();
         if (count($oids) > "0") {
+            $i_search = array('installState' => 'Installed');
+            $i_oids = $CI->cceClient->findNSorted("Package", 'name', $i_search);
+            $installed_package = array();
+            foreach ($i_oids as $i_pkg_oid) {
+                $inst_pkg = $CI->cceClient->get($i_pkg_oid);
+                if ((isset($inst_pkg['name'])) && (isset($inst_pkg['version']))) {
+                    $installed_package[$inst_pkg['name']] = $inst_pkg['version'];
+                }
+            }
+            foreach ($oids as $oid) {
+                $avail_pkg = $CI->cceClient->get($oid);
+                if ((!isset($avail_pkg['name'])) || (!isset($avail_pkg['version']))) {
+                    continue;
+                }
+                if ((isset($installed_package[$avail_pkg['name']])) && ($installed_package[$avail_pkg['name']] != $avail_pkg['version'])) {
+                    $update_oids[] = $oid;
+                }
+            }
+        }
+        if (count($update_oids) > "0") {
             $errors[] = ErrorMessage($i18n->get('[[base-swupdate.UpdatesAvailablePackagesBody]]'), 'alert_red', 'alarm_bell', TRUE);
         }
 
